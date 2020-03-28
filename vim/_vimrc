@@ -1,8 +1,8 @@
 """"""""""""
 " Behaviour
 
-" Incompatible with vi 
-set nocompatible 
+" Incompatible with vi
+set nocompatible
 
 " ignore case when searching
 set ignorecase 
@@ -35,12 +35,6 @@ endif
 
 " selection includes the last character
 set selection=inclusive
-
-" right click extends selection
-set mousemodel=extend
-set mouse=a
-set ttymouse=xterm
-
 
 " disable auto insertion of comments
 autocmd BufEnter * set formatoptions-=cro
