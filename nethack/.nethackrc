@@ -1,0 +1,94 @@
+###############################
+# Distribution default options
+
+# "Nethack mode" colors
+OPTIONS=windowcolors:status white/#000000 message white/#000000 text white/#000000 menu white/#000000 menutext white/#000000
+OPTIONS=vary_msgcount:4
+
+# Status hilites
+OPTIONS=statushilites
+# HP
+OPTIONS=hitpointbar
+OPTIONS=hilite_status:hitpoints/100%/gray&normal
+OPTIONS=hilite_status:hitpoints/<100%/green&normal
+OPTIONS=hilite_status:hitpoints/<66%/yellow&normal
+OPTIONS=hilite_status:hitpoints/<50%/orange&normal
+OPTIONS=hilite_status:hitpoints/<33%/red&bold
+OPTIONS=hilite_status:hitpoints/<15%/red&inverse
+
+## Pw
+OPTIONS=hilite_status:power/100%/gray&normal
+OPTIONS=hilite_status:power/<100%/green&normal
+OPTIONS=hilite_status:power/<66%/yellow&normal
+OPTIONS=hilite_status:power/<50%/orange&normal
+OPTIONS=hilite_status:power/<33%/red&bold
+
+## Carry
+OPTIONS=hilite_status:cap/burdened/yellow/stressed/orange/strained/red&bold/overtaxed/red&inverse/overloaded/red&inverse
+
+## Hunger
+OPTIONS=hilite_status:hunger/satiated/yellow/hungry/orange/weak/red&bold/fainting/red&inverse/fainted/red&inverse
+
+## Mental
+OPTIONS=hilite_status:condition/hallu/yellow
+OPTIONS=hilite_status:condition/conf/orange
+OPTIONS=hilite_status:condition/stun/red&bold
+
+## Health
+OPTIONS=hilite_status:condition/termill/red&inverse
+OPTIONS=hilite_status:condition/foodpois/red&inverse
+OPTIONS=hilite_status:condition/slime/red&inverse
+
+# gold
+OPTIONS=hilite_status:gold/up/yellow/down/brown
+
+# St, Dx, Co, In, Wi, Ch
+OPTIONS=hilite_status:characteristics/up/green/down/red
+
+#################
+# Custom options
+
+OPTIONS=menucolors
+MENUCOLOR=" blessed " = green
+MENUCOLOR=" holy " = cyan
+MENUCOLOR=" unholy " = red
+MENUCOLOR=" cursed" = red
+MENUCOLOR=" empty" = yellow
+MENUCOLOR="(gone)" = orange
+MENUCOLOR=" cursed .* (being worn)" = orange&underline
+
+OPTIONS=number_pad:0
+OPTIONS=time,noshowexp,lit_corridor,force_invmenu
+OPTIONS=hilite_pet,hilite_pile
+OPTIONS=scroll_margin:10
+OPTIONS=mouse_support:1
+OPTIONS=name:player
+OPTIONS=msg_window:reversed
+OPTIONS=msghistory:50
+OPTIONS=fruit:raspberry
+OPTIONS=boulder:0
+#OPTIONS=!bones
+OPTIONS=pile_limit:2
+OPTIONS=windowtype:curses
+OPTIONS=symset:curses
+SYMBOLS=S_corr:#,S_litcorr:#
+OPTIONS=popup_dialog
+OPTIONS=perm_invent
+OPTIONS=!toptenwin
+OPTIONS=scores:10t 2a o
+OPTIONS=paranoid_confirmation:attack pray
+OPTIONS=packorder:")[?+!=(/%$*`0_
+
+OPTIONS=autopickup,pickup_thrown
+AUTOPICKUP_EXCEPTION=">.*"
+
+MSGTYPE=stop "You fail to cast the spell correctly."
+MSGTYPE=stop "You don't have enough energy to cast .*"
+MSGTYPE=stop ".* pleading for help."
+MSGTYPE=stop "You feel more confident .*"
+MSGTYPE=stop "You begin bashing monsters .*"
+MSGTYPE=stop ".* has made a hole in the floor."
+MSGTYPE=stop ".* wave of psychic energy."
+MSGTYPE=stop "You are slowing down."
+MSGTYPE=stop "You cannot escape .*"
+MSGTYPE=stop ".* swings itself around you."

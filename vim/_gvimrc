@@ -1,0 +1,40 @@
+fun! TrySource(script)
+  if filereadable(expand(a:script))
+    exe 'source '.a:script
+  endif
+endf
+
+""""""""""""""""""""""""""""""""""""""""""""""""""
+" s:hideMarkup - hide some highlight groups using 
+" the highlight scheme background
+
+function! s:hideMarkup()
+  redir => group_details
+  exe "silent hi Normal"
+  redir END
+
+  " resolve linked groups to find the root highlighting scheme
+  while group_details =~ "links to"
+    let index = stridx(group_details, "links to") + len("links to")
+    let linked_group =  strpart(linked_group, index + 1)
+    redir => linked_group
+    exe "silent hi " . linked_group
+    redir END
+  endwhile
+
+  " extract the highlighting details (the bit after "xxx")
+  let match_groups = matchlist(group_details, '\<xxx\>\s\+\(.*\)')
+  let existing_highlight = match_groups[1]
+
+  " check whether there's an existing guibg= block
+  let match_groups = matchlist(existing_highlight, '\vguibg\=\s*(\S+)')
+  if match_groups != []
+    let bg_color = match_groups[1]
+
+    exe "hi VimpanelPart guifg=" . bg_color . " guibg=" . bg_color
+    exe "hi VimpanelOpenable guifg=" . bg_color . " guibg=" . bg_color
+    exe "hi VimpanelClosable guifg=" . bg_color . " guibg=" . bg_color
+    exe "hi VimpanelPartFile guifg=" . bg_color . " guibg=" . bg_color
+    exe "hi VimpanelEndSlash guifg=" . bg_color . " guibg=" . bg_color
+  endif
+endfunction
