@@ -7,6 +7,6 @@ Windows
 
     :e D:\Tools\Vim\_vimrc
 
-    set rtp+=D:\Dropbox\Projects\vimfiles
-    source D:\Dropbox\Projects\vimfiles\_vimrc
+	set rtp+=D:\Syncbox\Projects\dotfiles\vim
+	source D:\Syncbox\Projects\dotfiles\vim\_vimrc
 

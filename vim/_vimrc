@@ -95,7 +95,7 @@ if has("gui_running")
 
   if has("win32") 
     " maximize corectly
-    au GUIEnter * simalt ~x 
+    " au GUIEnter * simalt ~x
   endif
 endif
 
