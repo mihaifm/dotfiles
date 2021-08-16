@@ -1,8 +1,8 @@
 """"""""""""
 " Behaviour
 
-" Incompatible with vi
-set nocompatible
+" Incompatible with vi 
+set nocompatible 
 
 " ignore case when searching
 set ignorecase 
@@ -35,6 +35,12 @@ endif
 
 " selection includes the last character
 set selection=inclusive
+
+" right click extends selection
+set mousemodel=extend
+set mouse=a
+set ttymouse=xterm
+
 
 " disable auto insertion of comments
 autocmd BufEnter * set formatoptions-=cro
@@ -224,10 +230,13 @@ noremap <leader>ff :let @+=expand("%:p")<CR>
 noremap <leader>fn :let @+=expand("%")<CR>
 noremap <leader>fp :let @+=expand("%:p:h")<CR>
 
+noremap <leader>v :vs<CR>:Bufstop<CR>
+
 map <leader>e :silent r! explorer .<CR>
 
 map <leader>b :Bufstop<CR>
 map <leader>a :BufstopModeFast<CR>
+map <leader>w :BufstopPreview<CR>
 map <leader>q :BckOpen<CR>
 
 " if has("win32")
