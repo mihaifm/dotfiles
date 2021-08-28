@@ -84,6 +84,8 @@ if has("gui_running")
 
   if has("X11")
     set guifont=Monospace\ 12,Consolas\ 11,Courier\ New\ 10
+  elseif has("gui_macvim")
+    set guifont=Fira\ Mono\ for\ Powerline:h16
   else
     set guifont=Ubuntu_Mono:h12,Consolas:h11,Courier_New:h10
   endif
@@ -100,7 +102,7 @@ if has("gui_running")
 endif
 
 set background=dark
-colorscheme meditation
+colorscheme 4colors
 
 " fill vertical bar with dots
 set fillchars+=vert:.
@@ -350,7 +352,6 @@ call pathogen#infect()
 filetype plugin indent on
 
 " Easy motion
-" let g:EasyMotion_leader_key = 'g'
 nmap ss <Plug>(easymotion-s2)
 nmap st <Plug>(easymotion-t2)
 map sl <Plug>(easymotion-lineforward)
@@ -381,6 +382,14 @@ let g:BckPrg = 'ag --nocolor --nogroup --column'
 let g:ctrlp_working_path_mode='r'
 let g:ctrlp_use_caching = 0
 let g:ctrlp_show_hidden = 1
+
+" vim-airline
+if has("gui_running")
+  let g:airline_theme='4colors'
+  let g:airline_powerline_fonts = 1
+  " full file path up to 200 chars, modifier and readonly flags
+  let g:airline_section_c = '%<%1.200F%m%r'
+endif
 
 " Vimpanel
 if !has("win32")
@@ -418,7 +427,7 @@ command! -nargs=1 Findo call Findo(<q-args>)
 
 autocmd FileType markdown setlocal tabstop=4|set shiftwidth=4|set expandtab
 autocmd FileType vim setlocal iskeyword-=# 
-autocmd * setlocal iskeyword-=:
+autocmd FileType * setlocal iskeyword-=:
 autocmd FileType css,scss,html,eruby setlocal iskeyword +=-
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
