@@ -36,10 +36,12 @@ endif
 " selection includes the last character
 set selection=inclusive
 
-" right click extends selection
-set mousemodel=extend
-set mouse=a
-set ttymouse=xterm
+if has("gui_running")
+  " right click extends selection
+  set mousemodel=extend
+  set mouse=a
+  set ttymouse=xterm
+endif
 
 
 " disable auto insertion of comments
