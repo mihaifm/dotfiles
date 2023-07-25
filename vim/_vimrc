@@ -1,14 +1,14 @@
 """"""""""""
 " Behaviour
 
-" Incompatible with vi 
-set nocompatible 
+" Incompatible with vi
+set nocompatible
 
 " ignore case when searching
-set ignorecase 
-" case sensitive search only if uppercase characters are used 
-set smartcase 
-" highlight search term while typing 
+set ignorecase
+" case sensitive search only if uppercase characters are used
+set smartcase
+" highlight search term while typing
 set incsearch
 
 " encoding
@@ -65,7 +65,7 @@ set splitright
 
 " keep 1 line visible at top/bottom of screen
 set scrolloff=1
-" keep 5 chars visible at sides of screen 
+" keep 5 chars visible at sides of screen
 set sidescrolloff=5
 
 if has("win32")
@@ -77,9 +77,9 @@ endif
 
 if has("gui_running")
   " remove menu bar
-  set guioptions-=m 
+  set guioptions-=m
   " remove toolbar
-  set guioptions-=T 
+  set guioptions-=T
   " remove left scroll bar
   set guioptions+=Ll
   set guioptions-=Ll
@@ -92,12 +92,12 @@ if has("gui_running")
     set guifont=Ubuntu_Mono:h12,Consolas:h11,Courier_New:h10
   endif
 
-  set lines=40 
+  set lines=40
   set columns=130
 
   set foldcolumn=3
 
-  if has("win32") 
+  if has("win32")
     " maximize corectly
     " au GUIEnter * simalt ~x
   endif
@@ -113,10 +113,10 @@ set fillchars+=vert:.
 " Interface
 
 " Turn on WiLd menu
-set wildmenu 
+set wildmenu
 
 " always show position
-set ruler 
+set ruler
 
 """""""""""""""
 " Key mappings
@@ -194,7 +194,7 @@ noremap <C-S>		:update<CR>
 vnoremap <C-S>		<C-C>:update<CR>
 inoremap <C-S>		<C-O>:update<CR><Esc>
 
-" Bufstop way to get to the previous buffer 
+" Bufstop way to get to the previous buffer
 nmap <C-tab> <leader>2
 vmap <C-tab> <leader>2
 
@@ -208,7 +208,7 @@ inoremap <C-Y> <C-O><C-R>
 cnoremap <C-c> <C-y>
 
 " mappings for F3
-nmap <F3> *zz 
+nmap <F3> *zz
 nmap <S-F3> #zz
 
 " search inside project with F4 (via Bufstop-search)
@@ -281,7 +281,7 @@ cabbrev vr VimpanelRemove
 """"""""""""""
 " Indentation
 
-set expandtab 
+set expandtab
 set shiftwidth=2
 set tabstop=2
 set softtabstop=2
@@ -300,7 +300,7 @@ function! GetIndent()
 endfunction
 
 
-" keep autoindent after moving cursor in insert mode 
+" keep autoindent after moving cursor in insert mode
 set cpoptions+=I
 
 " disable limit on inserted text
@@ -320,27 +320,27 @@ set laststatus=2
 set statusline=
 set statusline+=%1*                   "switch to User1 highlight
 set statusline+=%n                    " buffer number
-set statusline+=%1*                   
+set statusline+=%1*
 set statusline+=%{'/'.bufnr('$')}\    " total buffers
-set statusline+=%2*                   
+set statusline+=%2*
 set statusline+=%<%1.200F              " filename
-set statusline+=%3* 
+set statusline+=%3*
 set statusline+=\ %y%h%w              " filetype, help, example flags
-set statusline+=%3* 
+set statusline+=%3*
 set statusline+=%r%m                  " read-only, modified flags
-set statusline+=%3* 
+set statusline+=%3*
 set statusline+=%=\                   " indent right
-set statusline+=%1* 
+set statusline+=%1*
 set statusline+=%l                    " line number
-set statusline+=%1* 
+set statusline+=%1*
 set statusline+=/%{line('$')}         " total lines
-set statusline+=%1* 
+set statusline+=%1*
 set statusline+=,                     " ,
-set statusline+=%1* 
+set statusline+=%1*
 set statusline+=%c%V                  " [virtual] column numberV
-set statusline+=%3* 
+set statusline+=%3*
 set statusline+=\                     " [ ]
-set statusline+=%3* 
+set statusline+=%3*
 set statusline+=%<%P                  " percent
 
 """"""""""
@@ -379,7 +379,7 @@ let g:BufstopKeys = "1234asfcvzx5qwertyuiopbnm67890ABCEFGHIJKLMNOPQRSTUVZ"
 " Bck
 let g:BckPrg = 'ag --nocolor --nogroup --column'
 
-" CtrlP 
+" CtrlP
 " use project directory as search root
 let g:ctrlp_working_path_mode='r'
 let g:ctrlp_use_caching = 0
@@ -388,7 +388,7 @@ let g:ctrlp_show_hidden = 1
 " vim-airline
 if has("gui_running")
   let g:airline_theme='4colors'
-  let g:airline_powerline_fonts = 1
+  " let g:airline_powerline_fonts = 1
   " full file path up to 200 chars, modifier and readonly flags
   let g:airline_section_c = '%<%1.200F%m%r'
 endif
@@ -400,10 +400,10 @@ endif
 
 function! g:VimpanelCallback()
   if executable('rg')
-    let g:MyGlobalSearchPath = '' 
+    let g:MyGlobalSearchPath = ''
     for root in g:VimpanelRoots
       let g:MyGlobalSearchPath = g:MyGlobalSearchPath . ' ' . root
-    endfor 
+    endfor
 
     let g:ctrlp_user_command = 'echo %s && rg --files' . g:MyGlobalSearchPath
   endif
@@ -413,8 +413,8 @@ endfunction
 " Commands
 
 " show highlight group
-command! Hgroup :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . "> " 
-                  \ . "trans<". synIDattr(synID(line("."),col("."),0),"name") . "> " 
+command! Hgroup :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . "> "
+                  \ . "trans<". synIDattr(synID(line("."),col("."),0),"name") . "> "
                   \ . "lo<". synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"
 
 " find text in all open buffers (in case Bck doesn't work)
@@ -428,7 +428,7 @@ command! -nargs=1 Findo call Findo(<q-args>)
 " File type settings
 
 autocmd FileType markdown setlocal tabstop=4|set shiftwidth=4|set expandtab
-autocmd FileType vim setlocal iskeyword-=# 
+autocmd FileType vim setlocal iskeyword-=#
 autocmd FileType * setlocal iskeyword-=:
 autocmd FileType css,scss,html,eruby setlocal iskeyword +=-
 
