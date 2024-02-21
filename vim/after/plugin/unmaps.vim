@@ -1,23 +1,5 @@
-" easymotion
-
-silent! sunmap  g%
-silent! sunmap  gw
-silent! sunmap  gt
-silent! sunmap  gn
-silent! sunmap  gk
-silent! sunmap  gj
-silent! sunmap  gf
-silent! sunmap  ge
-silent! sunmap  gb
-silent! sunmap  gW
-silent! sunmap  gT
-silent! sunmap  gN
-silent! sunmap  gF
-silent! sunmap  gE
-silent! sunmap  gB
-
-silent! unmap gge
-silent! unmap ggE
+" unmap here any mappings added by plugins
+" this cannot be done in vimrc
 
 " matchit
 
