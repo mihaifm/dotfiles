@@ -20,14 +20,14 @@ if [[ -z "${LOCAL_DOTFILES_INSTALL}" ]]; then
   git clone https://github.com/easymotion/vim-easymotion ~/.vim/pack/mybundle/start/vim-easymotion
   rm -rf ~/.vim/pack/mybundle/start/vim-easymotion/.git
 
-  git clone https://github.com/vim-airline/vim-airline ~/.vim/pack/mybundle/start/vim-airline
-  rm -rf ~/.vim/pack/mybundle/start/vim-airline/.git
+  git clone https://github.com/itchyny/lightline.vim ~/.vim/pack/mybundle/start/lightline
+  rm -rf ~/.vim/pack/mybundle/start/lightline/.git
 else
   cp -r clones/bufstop ~/.vim/pack/mybundle/start/bufstop
   cp -r clones/vimpanel ~/.vim/pack/mybundle/start/vimpanel
   cp -r clones/4colors ~/.vim/pack/mybundle/start/4colors
   cp -r clones/vim-easymotion ~/.vim/pack/mybundle/start/vim-easymotion
-  cp -r clones/vim-airline ~/.vim/pack/mybundle/start/vim-airline
+  cp -r clones/lightline ~/.vim/pack/mybundle/start/lightline
 fi
 
 # NetHack

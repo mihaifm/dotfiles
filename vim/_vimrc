@@ -43,7 +43,6 @@ if has("gui_running")
   set ttymouse=xterm
 endif
 
-
 " disable auto insertion of comments
 autocmd BufEnter * set formatoptions-=cro
 
@@ -63,8 +62,6 @@ set splitbelow
 " splitting a window will put it to the right of the current one.
 set splitright
 
-" keep 1 line visible at top/bottom of screen
-set scrolloff=1
 " keep 5 chars visible at sides of screen
 set sidescrolloff=5
 
@@ -96,11 +93,6 @@ if has("gui_running")
   set columns=130
 
   set foldcolumn=3
-
-  if has("win32")
-    " maximize corectly
-    " au GUIEnter * simalt ~x
-  endif
 endif
 
 set background=dark
@@ -115,7 +107,7 @@ set fillchars+=vert:.
 " Turn on WiLd menu
 set wildmenu
 
-" always show position
+" always show cursor position
 set ruler
 
 """""""""""""""
@@ -125,16 +117,6 @@ set ruler
 let mapleader = ","
 let g:mapleader = ","
 let maplocalleader = ","
-
-" Use the arrows to something usefull
-map <up> <nop>
-map <down> <nop>
-
-" backspace and cursor keys wrap to previous/next line
-set backspace=indent,eol,start whichwrap+=<,>,[,]
-
-" backspace in Visual mode deletes selection
-vnoremap <BS> d
 
 if has("clipboard")
   vmap <C-x> "+x
@@ -211,9 +193,6 @@ cnoremap <C-c> <C-y>
 nmap <F3> *zz
 nmap <S-F3> #zz
 
-" search inside project with F4 (via Bufstop-search)
-nmap <F4> :Bck<CR>
-
 " better movement in command line
 if has("gui_running")
   cnoremap <C-H> <Left>
@@ -224,8 +203,6 @@ endif
 
 " remap : in select mode, which normally inserts text
 smap : <Esc>:
-
-" leader mappings
 
 " close(wipe) the current buffer without closing the window
 map <leader>d :BufstopBack<CR>:bw #<CR>
@@ -243,10 +220,6 @@ map <leader>a :BufstopModeFast<CR>
 map <leader>w :BufstopPreview<CR>
 map <leader>q :BckOpen<CR>
 
-" if has("win32")
-"  map <leader>c :!start cmd<CR>
-" end
-
 nmap <leader>z :let &scrolloff=999-&scrolloff<CR>
 
 " awesome keyboard scrolling
@@ -254,16 +227,13 @@ nmap <C-j> 3j3<C-e>
 nmap <C-k> 3k3<C-y>
 
 " insert line in normal mode
-" nmap <C-Space> mpo<Esc>`p
 if has("gui_running")
   nmap <C-Space> o<Esc>
 else
   nnoremap <NUL> o<Esc>
 end
 
-" change current dir, replaces:
-"   set autochdir
-"   autocmd BufEnter * lcd %:p:h
+" change current dir
 nmap <leader>cd :cd\ %:p:h<CR>
 
 """"""""""""""""
@@ -299,17 +269,12 @@ function! GetIndent()
    return ind
 endfunction
 
-
 " keep autoindent after moving cursor in insert mode
 set cpoptions+=I
 
-" disable limit on inserted text
-set textwidth=0
 " long lines don't break at screen end
 set nowrap
 
-" when at end of screan, scroll only 5 characters
-set sidescroll=5
 " long lines are market with > and < at end of screen
 set listchars+=precedes:<,extends:>
 
@@ -347,10 +312,6 @@ set statusline+=%<%P                  " percent
 " Plugins
 
 filetype off
-
-" Pathogen
-call pathogen#infect()
-
 filetype plugin indent on
 
 " Easy motion
@@ -376,22 +337,12 @@ let g:BufstopAutoSpeedToggle = 1
 let g:BufstopSplit = "topleft"
 let g:BufstopKeys = "1234asfcvzx5qwertyuiopbnm67890ABCEFGHIJKLMNOPQRSTUVZ"
 
-" Bck
-let g:BckPrg = 'ag --nocolor --nogroup --column'
-
-" CtrlP
-" use project directory as search root
-let g:ctrlp_working_path_mode='r'
-let g:ctrlp_use_caching = 0
-let g:ctrlp_show_hidden = 1
-
-" vim-airline
-if has("gui_running")
-  let g:airline_theme='4colors'
-  " let g:airline_powerline_fonts = 1
-  " full file path up to 200 chars, modifier and readonly flags
-  let g:airline_section_c = '%<%1.200F%m%r'
-endif
+" lightline
+set noshowmode
+let g:lightline = { 'component_function': { 'filename': 'LightlineFilename' } }
+function! LightlineFilename()
+  return expand('%:p')
+endfunction
 
 " Vimpanel
 if !has("win32")
@@ -417,7 +368,7 @@ command! Hgroup :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . ">
                   \ . "trans<". synIDattr(synID(line("."),col("."),0),"name") . "> "
                   \ . "lo<". synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"
 
-" find text in all open buffers (in case Bck doesn't work)
+" find text in all open buffers
 function! Findb(text)
     exe "cex [] | silent! bufdo vimgrepa /" . a:text . "/ %"
     :copen
