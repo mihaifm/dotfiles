@@ -29,9 +29,8 @@ set hid
 set bufhidden=hide
 
 " switch syntax highlighting on, when the terminal has colors
-if &t_Co > 2 || has("gui_running")
-  syntax on
-endif
+syntax on
+set termguicolors
 
 " selection includes the last character
 set selection=inclusive
