@@ -43,6 +43,9 @@ if has("gui_running")
   set ttymouse=xterm
 endif
 
+" backspace and cursor keys wrap to previous/next line
+set backspace=indent,eol,start whichwrap+=<,>,[,]
+
 " disable auto insertion of comments
 autocmd BufEnter * set formatoptions-=cro
 
@@ -171,21 +174,10 @@ xnoremap p pgvy
 " Use CTRL-Q to do what CTRL-V used to do
 noremap <C-Q>   <C-V>
 
-" Use CTRL-S for saving, also in Insert mode
-noremap <C-S>		:update<CR>
-vnoremap <C-S>		<C-C>:update<CR>
-inoremap <C-S>		<C-O>:update<CR><Esc>
-
 " Bufstop way to get to the previous buffer
 nmap <C-tab> <leader>2
 vmap <C-tab> <leader>2
 
-" CTRL-Z is Undo; not in cmdline though
-noremap <C-Z> u
-inoremap <C-Z> <C-O>u
-
-" CTRL-Y is Redo in insert mode
-inoremap <C-Y> <C-O><C-R>
 " CTRL-C to copy text from cmd line
 cnoremap <C-c> <C-y>
 
@@ -339,9 +331,43 @@ let g:BufstopKeys = "1234asfcvzx5qwertyuiopbnm67890ABCEFGHIJKLMNOPQRSTUVZ"
 
 " lightline
 set noshowmode
-let g:lightline = { 'component_function': { 'filename': 'LightlineFilename' } }
-function! LightlineFilename()
-  return expand('%:p')
+let g:lightline = {
+  \ 'inactive': { 'left': [['imode'], ['filename']] },
+  \ 'component' : { 'imode': 'INACT' },
+  \ 'component_function': { 
+    \ 'filename': 'LightFilename', 'modified': 'LightModified', 'mode': 'LightMode',
+    \ 'fileformat': 'LightFileformat', 'filetype': 'LightFiletype' },
+  \ 'colorscheme': '4colors' }
+
+function! LightFilename()
+  if expand('%:t') ==# '--Bufstop--'
+    return ''
+  endif
+  if winwidth(0) > 70
+    return expand('%:t')
+  else
+    return expand('%:t') !=# '' ? expand('%:t') : '[No Name]'
+  endif
+endfunction
+
+function! LightMode()
+  return expand('%:t') ==# '--Bufstop--' ? 'BUFSTOP' : lightline#mode()
+  " return expand('%:t') ==# '--Bufstop--' ? 'BUFSTOP' : mode()
+endfunction
+
+function! LightModified()
+  if expand('%:t') ==# '--Bufstop--'
+    return ''
+  endif
+  return &modified ? '+' : &modifiable ? '' : '-' 
+endfunction
+
+function! LightFileformat()
+  return winwidth(0) > 70 ? &fileformat : ''
+endfunction
+
+function! LightFiletype()
+  return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
 endfunction
 
 " Vimpanel
