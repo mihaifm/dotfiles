@@ -90,7 +90,7 @@ if has("gui_running")
     set guifont=Fira\ Mono\ for\ Powerline:h16
   elseif has("win32")
     set renderoptions=type:directx
-    set guifont=Consolas:h11,Courier_New:h10
+    set guifont=RobotoMono_Nerd_Font_Mono:h11,Consolas:h11,Courier_New:h10
   endif
 
   set lines=40

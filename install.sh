@@ -1,10 +1,14 @@
 # Vim
 
 find ../dotfiles -type f | xargs sed -i 's/\r$//'
+rm -rf ~/.oldvim
+mv ~/.vim ~/.oldvim
+mv ~/.vimrc ~/.oldvimrc
 mkdir -p ~/.vim
-ln -sf $PWD/vim/_vimrc ~/.vimrc
-ln -sf $PWD/vim/* ~/.vim/
-rm -rf ~/.vim/pack/mybundle
+cp -r vim/* ~/.vim/
+mv ~/.vim/_vimrc ~/.vimrc
+mv ~/.vim/_gvimrc ~/.gvimrc
+
 mkdir -p ~/.vim/pack/mybundle/start
 
 if [[ -z "${LOCAL_DOTFILES_INSTALL}" ]]; then
@@ -31,4 +35,6 @@ else
 fi
 
 # NetHack
-ln -sf $PWD/nethack/.nethackrc ~/.nethackrc
+
+mv ~/.nethackrc ~/.oldnethackrc
+cp nethack/.nethackrc ~/.nethackrc
