@@ -13,6 +13,7 @@ set incsearch
 
 " encoding
 set encoding=utf8
+scriptencoding utf-8
 
 " EOL settings
 set ffs=unix,dos,mac
@@ -87,8 +88,9 @@ if has("gui_running")
     set guifont=Monospace\ 12,Consolas\ 11,Courier\ New\ 10
   elseif has("gui_macvim")
     set guifont=Fira\ Mono\ for\ Powerline:h16
-  else
-    set guifont=Ubuntu_Mono:h12,Consolas:h11,Courier_New:h10
+  elseif has("win32")
+    set renderoptions=type:directx
+    set guifont=Consolas:h11,Courier_New:h10
   endif
 
   set lines=40
@@ -368,6 +370,11 @@ endfunction
 function! LightFiletype()
   return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
 endfunction
+
+" devicons for Bufstop
+let g:BufstopFileSymbolFunc = 'MyGetFileTypeSymbol'
+exe 'highlight! bufstopIcon1 ' . g:fourcolors#warmFg
+exe 'highlight! bufstopIcon2 ' . g:fourcolors#chillFg
 
 " Vimpanel
 if !has("win32")
