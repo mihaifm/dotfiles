@@ -1,38 +1,38 @@
 # Vim
 
 find ../dotfiles -type f | xargs sed -i 's/\r$//'
+
 rm -rf ~/.oldvim
 mv ~/.vim ~/.oldvim
-mv ~/.vimrc ~/.oldvimrc
 mkdir -p ~/.vim
 cp -r vim/* ~/.vim/
-mv ~/.vim/_vimrc ~/.vimrc
-mv ~/.vim/_gvimrc ~/.gvimrc
-
 mkdir -p ~/.vim/pack/mybundle/start
 
-if [[ -z "${LOCAL_DOTFILES_INSTALL}" ]]; then
-  git clone https://github.com/mihaifm/bufstop ~/.vim/pack/mybundle/start/bufstop
-  rm -rf ~/.vim/pack/mybundle/start/bufstop/.git
+if [[ $DOTFILES_INSTALL == 1 ]]; then
+  rm -rf stage
+  mkdir stage
 
-  git clone https://github.com/mihaifm/vimpanel ~/.vim/pack/mybundle/start/vimpanel
-  rm -rf ~/.vim/pack/mybundle/start/vimpanel/.git
+  git clone https://github.com/mihaifm/bufstop stage/bufstop
+  rm -rf stage/bufstop/.git
 
-  git clone https://github.com/mihaifm/4colors ~/.vim/pack/mybundle/start/4colors
-  rm -rf ~/.vim/pack/mybundle/start/4colors/.git
+  git clone https://github.com/mihaifm/vimpanel stage/vimpanel
+  rm -rf stage/vimpanel/.git
 
-  git clone https://github.com/easymotion/vim-easymotion ~/.vim/pack/mybundle/start/vim-easymotion
-  rm -rf ~/.vim/pack/mybundle/start/vim-easymotion/.git
+  git clone https://github.com/mihaifm/4colors stage/4colors
+  rm -rf stage/4colors/.git
 
-  git clone https://github.com/itchyny/lightline.vim ~/.vim/pack/mybundle/start/lightline
-  rm -rf ~/.vim/pack/mybundle/start/lightline/.git
-else
-  cp -r clones/bufstop ~/.vim/pack/mybundle/start/bufstop
-  cp -r clones/vimpanel ~/.vim/pack/mybundle/start/vimpanel
-  cp -r clones/4colors ~/.vim/pack/mybundle/start/4colors
-  cp -r clones/vim-easymotion ~/.vim/pack/mybundle/start/vim-easymotion
-  cp -r clones/lightline ~/.vim/pack/mybundle/start/lightline
+  git clone https://github.com/easymotion/vim-easymotion stage/vim-easymotion
+  rm -rf stage/vim-easymotion/.git
+
+  git clone https://github.com/itchyny/lightline.vim stage/lightline
+  rm -rf stage/lightline/.git
 fi
+
+cp -r stage/bufstop ~/.vim/pack/mybundle/start/bufstop
+cp -r stage/vimpanel ~/.vim/pack/mybundle/start/vimpanel
+cp -r stage/4colors ~/.vim/pack/mybundle/start/4colors
+cp -r stage/vim-easymotion ~/.vim/pack/mybundle/start/vim-easymotion
+cp -r stage/lightline ~/.vim/pack/mybundle/start/lightline
 
 # NetHack
 
