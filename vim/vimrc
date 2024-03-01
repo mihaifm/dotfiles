@@ -29,9 +29,11 @@ set hid
 " hide buffers instead of deleting them
 set bufhidden=hide
 
+" infect with plugins (for older versions of vim)
+execute pathogen#infect()
+
 " switch syntax highlighting on, when the terminal has colors
 syntax on
-set termguicolors
 
 " selection includes the last character
 set selection=inclusive
@@ -99,6 +101,12 @@ if has("gui_running")
   set foldcolumn=3
 endif
 
+" highlight with gui colors when running in terminal
+if v:version > 800
+  set termguicolors
+endif
+
+" load colorscheme
 set background=dark
 colorscheme 4colors
 
@@ -108,7 +116,7 @@ set fillchars+=vert:.
 """""""""""
 " Interface
 
-" Turn on WiLd menu
+" Turn on Wild menu
 set wildmenu
 
 " always show cursor position
