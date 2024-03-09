@@ -35,9 +35,6 @@ execute pathogen#infect()
 " switch syntax highlighting on, when the terminal has colors
 syntax on
 
-" selection includes the last character
-set selection=inclusive
-
 if has("gui_running")
   " right click extends selection
   set mousemodel=extend
@@ -53,7 +50,7 @@ autocmd BufEnter * set formatoptions-=cro
 
 set viminfo=
 
-" disable annoying formatting for html
+" disable annoying formatting for html (help html.vim)
 let html_no_rendering=1
 
 " disable searching in include files for autocomplete
@@ -186,10 +183,6 @@ noremap <C-Q>   <C-V>
 " CTRL-C to copy text from cmd line
 cnoremap <C-c> <C-y>
 
-" mappings for F3
-nmap <F3> *zz
-nmap <S-F3> #zz
-
 " better movement in command line
 if has("gui_running")
   cnoremap <C-H> <Left>
@@ -215,20 +208,12 @@ map <leader>e :silent r! explorer .<CR>
 map <leader>b :Bufstop<CR>
 map <leader>a :BufstopModeFast<CR>
 map <leader>w :BufstopPreview<CR>
-map <leader>q :BckOpen<CR>
 
 nmap <leader>z :let &scrolloff=999-&scrolloff<CR>
 
 " awesome keyboard scrolling
 nmap <C-j> 3j3<C-e>
 nmap <C-k> 3k3<C-y>
-
-" insert line in normal mode
-if has("gui_running")
-  nmap <C-Space> o<Esc>
-else
-  nnoremap <NUL> o<Esc>
-end
 
 " change current dir
 nmap <leader>cd :cd\ %:p:h<CR>
@@ -255,19 +240,6 @@ set softtabstop=2
 set smarttab
 
 set autoindent
-set nosmartindent
-set nocindent
-
-set indentexpr=GetIndent()
-
-function! GetIndent()
-   let lnum = prevnonblank(v:lnum - 1)
-   let ind = indent(lnum)
-   return ind
-endfunction
-
-" keep autoindent after moving cursor in insert mode
-set cpoptions+=I
 
 " long lines don't break at screen end
 set nowrap
@@ -308,7 +280,6 @@ set statusline+=%<%P                  " percent
 """"""""""
 " Plugins
 
-filetype off
 filetype plugin indent on
 
 " Easy motion
@@ -379,11 +350,6 @@ endfunction
 let g:BufstopFileSymbolFunc = 'MyGetFileTypeSymbol'
 exe 'highlight! bufstopIcon1 ' . g:fourcolors#warmFg
 exe 'highlight! bufstopIcon2 ' . g:fourcolors#chillFg
-
-" Vimpanel
-if !has("win32")
-    let g:VimpanelStorage = '~/.vimpanel'
-endif
 
 function! g:VimpanelCallback()
   if executable('rg')
