@@ -183,10 +183,6 @@ xnoremap p pgvy
 " Use CTRL-Q to do what CTRL-V used to do
 noremap <C-Q>   <C-V>
 
-" Bufstop way to get to the previous buffer
-nmap <C-tab> <leader>2
-vmap <C-tab> <leader>2
-
 " CTRL-C to copy text from cmd line
 cnoremap <C-c> <C-y>
 
@@ -206,7 +202,7 @@ endif
 smap : <Esc>:
 
 " close(wipe) the current buffer without closing the window
-map <leader>d :BufstopBack<CR>:bw #<CR>
+map <leader>d :BufstopBack<CR>:bw! #<CR>
 
 noremap <leader>ff :let @+=expand("%:p")<CR>
 noremap <leader>fn :let @+=expand("%")<CR>
@@ -337,6 +333,7 @@ let g:EasyMotion_keys = 'asdghkqwertyuiopzxcvbnmfjl'
 let g:BufstopAutoSpeedToggle = 1
 let g:BufstopSplit = "topleft"
 let g:BufstopKeys = "1234asfcvzx5qwertyuiopbnm67890ABCEFGHIJKLMNOPQRSTUVZ"
+let g:BufstopShowUnlisted = 1
 
 " lightline
 set noshowmode
@@ -353,7 +350,7 @@ function! LightFilename()
     return ''
   endif
   if winwidth(0) > 70
-    return expand('%:t')
+    return MyGetFileTypeSymbol(expand('%:t')) . expand('%:t')
   else
     return expand('%:t') !=# '' ? expand('%:t') : '[No Name]'
   endif
@@ -361,7 +358,6 @@ endfunction
 
 function! LightMode()
   return expand('%:t') ==# '--Bufstop--' ? 'BUFSTOP' : lightline#mode()
-  " return expand('%:t') ==# '--Bufstop--' ? 'BUFSTOP' : mode()
 endfunction
 
 function! LightModified()
@@ -419,6 +415,7 @@ command! -nargs=1 Findo call Findo(<q-args>)
 " File type settings
 
 autocmd FileType markdown setlocal tabstop=4|set shiftwidth=4|set expandtab
+highlight link markdownError Normal
 autocmd FileType vim setlocal iskeyword-=#
 autocmd FileType * setlocal iskeyword-=:
 autocmd FileType css,scss,html,eruby setlocal iskeyword +=-
