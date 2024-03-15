@@ -36,12 +36,14 @@ set splitright
 """""""""""
 " GUI setup
 
+" font
+" set guifont=RobotoMono_Nerd_Font_Mono,Consolas,Courier_New:h11
+
 " highlight with gui colors when running in terminal
 set termguicolors
 
 " load colorscheme
 set background=dark
-colorscheme 4colors
 
 " fill vertical bar with dots
 set fillchars+=vert:.
@@ -83,8 +85,17 @@ function! CutNonEmptyLineToCReg()
 endfunction
 
 if has("clipboard")
-  " CTRL-C is copy, CTRL-V paste is enabled by default
+  " CTRL-C is Copy
   vmap <C-C> "+y
+
+  " CTRL-V is Paste
+  map <C-V>	"+gP
+
+  " enable Paste in command mode
+  cmap <C-v> <C-R>+
+
+  exe 'inoremap <script> <C-V>' paste#paste_cmd['i']
+  exe 'vnoremap <script> <C-V>' paste#paste_cmd['v']
 endif
 
 " paste over a visual selection yanks previous selection rather than selected text
@@ -244,8 +255,14 @@ endfunction
 
 " devicons for Bufstop
 let g:BufstopFileSymbolFunc = 'MyGetFileTypeSymbol'
-exe 'highlight! bufstopIcon1 ' . g:fourcolors#warmFg
-exe 'highlight! bufstopIcon2 ' . g:fourcolors#chillFg
+" exe 'highlight! bufstopIcon1 ' . g:fourcolors#warmFg
+" exe 'highlight! bufstopIcon2 ' . g:fourcolors#chillFg
+
+" neovide
+let g:neovide_padding_left = 5
+let g:neovide_padding_right = 5
+let g:neovide_transparency = 0.96
+let g:neovide_hide_mouse_when_typing = v:true
 
 """"""""""
 " Commands
@@ -272,3 +289,5 @@ autocmd FileType * setlocal iskeyword-=:
 autocmd FileType css,scss,html,eruby setlocal iskeyword +=-
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+lua require("lazysetup")
