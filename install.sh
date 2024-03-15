@@ -42,4 +42,4 @@ cp nethack/.nethackrc ~/.nethackrc
 # Tmux
 
 mv ~/.tmux.conf ~/.oldtmux.conf
-cp tmux/.tmux.conf ~/tmux.conf
+cp tmux/.tmux.conf ~/.tmux.conf
