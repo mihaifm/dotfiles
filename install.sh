@@ -38,3 +38,8 @@ cp -r stage/lightline ~/.vim/pack/mybundle/start/lightline
 
 mv ~/.nethackrc ~/.oldnethackrc
 cp nethack/.nethackrc ~/.nethackrc
+
+# Tmux
+
+mv ~/.tmux.conf ~/.oldtmux.conf
+cp tmux/.tmux.conf ~/tmux.conf

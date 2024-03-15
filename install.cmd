@@ -60,10 +60,3 @@ rd /S /Q %USERPROFILE%\AppData\Local\oldnvim
 robocopy %USERPROFILE%\AppData\Local\nvim %USERPROFILE%\AppData\Local\oldnvim /E /MOVE  /NFL /NDL /NJH /NJS /NC /NS /NP 
 mkdir %USERPROFILE%\AppData\Local\nvim
 xcopy /Y /S /E /H /Q nvim\* %USERPROFILE%\AppData\Local\nvim\
-mkdir %USERPROFILE%\AppData\Local\nvim\pack\mybundle\start
-
-xcopy /Y /S /E /H /Q stage\bufstop %USERPROFILE%\AppData\Local\nvim\pack\mybundle\start\bufstop\
-xcopy /Y /S /E /H /Q stage\vimpanel %USERPROFILE%\AppData\Local\nvim\pack\mybundle\start\vimpanel\
-xcopy /Y /S /E /H /Q stage\4colors %USERPROFILE%\AppData\Local\nvim\pack\mybundle\start\4colors\
-xcopy /Y /S /E /H /Q stage\vim-easymotion %USERPROFILE%\AppData\Local\nvim\pack\mybundle\start\vim-easymotion\
-xcopy /Y /S /E /H /Q stage\lightline %USERPROFILE%\AppData\Local\nvim\pack\mybundle\start\lightline\
