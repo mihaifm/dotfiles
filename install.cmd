@@ -60,3 +60,10 @@ rd /S /Q %USERPROFILE%\AppData\Local\oldnvim
 robocopy %USERPROFILE%\AppData\Local\nvim %USERPROFILE%\AppData\Local\oldnvim /E /MOVE  /NFL /NDL /NJH /NJS /NC /NS /NP 
 mkdir %USERPROFILE%\AppData\Local\nvim
 xcopy /Y /S /E /H /Q nvim\* %USERPROFILE%\AppData\Local\nvim\
+
+:: Neovide
+
+rd /S /Q %USERPROFILE%\AppData\Roaming\oldneovide
+robocopy %USERPROFILE%\AppData\Roaming\neovide %USERPROFILE%\AppData\Roaming\oldneovide /E /MOVE /NFL /NDL /NJH /NJS /NC /NS /NP
+mkdir %USERPROFILE%\AppData\Roaming\neovide
+xcopy /Y /S /E /H /Q neovide\* %USERPROFILE%\AppData\Roaming\neovide\
