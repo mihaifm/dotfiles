@@ -8,7 +8,7 @@ mkdir -p ~/.vim
 cp -r vim/* ~/.vim/
 mkdir -p ~/.vim/pack/mybundle/start
 
-if [[ $DOTFILES_INSTALL == 1 ]]; then
+if [[ $1 == "web" ]]; then
   rm -rf stage
   mkdir stage
 
@@ -33,6 +33,13 @@ cp -r stage/vimpanel ~/.vim/pack/mybundle/start/vimpanel
 cp -r stage/4colors ~/.vim/pack/mybundle/start/4colors
 cp -r stage/vim-easymotion ~/.vim/pack/mybundle/start/vim-easymotion
 cp -r stage/lightline ~/.vim/pack/mybundle/start/lightline
+
+# Neovim
+
+rm -rf ~/.config/oldnvim
+mv ~/.config/nvim ~/.config/oldnvim
+mkdir -p ~/.config/nvim
+cp -r nvim/* ~/.config/nvim/
 
 # NetHack
 
