@@ -396,5 +396,8 @@ if &term == "dtterm"
   fixdel
 endif
 
+let g:terminal_ansi_colors = ['white', 'white', 'white', 'white', 'white', 'white', 'white', 'white',
+                            \ 'white', 'white', 'white', 'white', 'white', 'white', 'white', 'white']
+
 set secure
 
