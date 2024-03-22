@@ -1,7 +1,5 @@
 # Vim
 
-find ../dotfiles -type f | xargs sed -i 's/\r$//'
-
 rm -rf ~/.oldvim
 mv ~/.vim ~/.oldvim
 mkdir -p ~/.vim

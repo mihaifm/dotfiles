@@ -1,0 +1,6 @@
+# set all text files to lf by default
+* text eol=lf
+
+# set Windows specific files to crlf
+*.cmd text eol=crlf
+	
