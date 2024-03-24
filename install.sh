@@ -5,6 +5,7 @@ mv ~/.vim ~/.oldvim
 mkdir -p ~/.vim
 cp -r vim/* ~/.vim/
 mkdir -p ~/.vim/pack/mybundle/start
+mkdir -p ~/.vim/pack/mybundle/opt
 
 if [[ $1 == "web" ]]; then
   rm -rf stage
@@ -24,6 +25,9 @@ if [[ $1 == "web" ]]; then
 
   git clone https://github.com/itchyny/lightline.vim stage/lightline
   rm -rf stage/lightline/.git
+
+  git clone https://github.com/puremourning/vimspector stage/vimspector
+  rm -rf stage/vimspector/.git
 fi
 
 cp -r stage/bufstop ~/.vim/pack/mybundle/start/bufstop
@@ -31,6 +35,7 @@ cp -r stage/vimpanel ~/.vim/pack/mybundle/start/vimpanel
 cp -r stage/4colors ~/.vim/pack/mybundle/start/4colors
 cp -r stage/vim-easymotion ~/.vim/pack/mybundle/start/vim-easymotion
 cp -r stage/lightline ~/.vim/pack/mybundle/start/lightline
+cp -r stage/vimspector ~/.vim/pack/mybundle/opt/vimspector
 
 # Neovim
 

@@ -286,10 +286,10 @@ map sl <Plug>(easymotion-lineforward)
 map sj <Plug>(easymotion-j)
 map sk <Plug>(easymotion-k)
 map sh <Plug>(easymotion-linebackward)
-map  s/ <Plug>(easymotion-sn)
+map s/ <Plug>(easymotion-sn)
 omap s/ <Plug>(easymotion-tn)
-map  sn <Plug>(easymotion-next)
-map  sN <Plug>(easymotion-prev)
+map sn <Plug>(easymotion-next)
+map sN <Plug>(easymotion-prev)
 map sw <Plug>(easymotion-w)
 map sb <Plug>(easymotion-bd-w)
 map se <Plug>(easymotion-e)
@@ -392,5 +392,7 @@ endif
 
 let g:terminal_ansi_colors = ['white', 'white', 'white', 'white', 'white', 'white', 'white', 'white',
                             \ 'white', 'white', 'white', 'white', 'white', 'white', 'white', 'white']
+
+let g:vimspector_enable_mappings = 'HUMAN'
 
 set secure

@@ -7,6 +7,7 @@ robocopy %USERPROFILE%\vimfiles %USERPROFILE%\oldvimfiles /E /MOVE  /NFL /NDL /N
 mkdir %USERPROFILE%\vimfiles
 xcopy /Y /S /E /H /Q vim\* %USERPROFILE%\vimfiles\
 mkdir %USERPROFILE%\vimfiles\pack\mybundle\start
+mkdir %USERPROFILE%\vimfiles\pack\mybundle\opt
 
 if [%1]==[web] (
     rd /S /Q stage
@@ -26,6 +27,9 @@ if [%1]==[web] (
 
     git clone https://github.com/itchyny/lightline.vim stage\lightline
     rmdir /S /Q stage\lightline\.git
+
+    git clone https://github.com/puremourning/vimspector stage\vimspector
+    rmdir /S /Q stage\vimspector\.git
 ) else ( 
     if [%1]==[dev] (
         rd /S /Q stage
@@ -53,6 +57,7 @@ xcopy /Y /S /E /H /Q stage\vimpanel %USERPROFILE%\vimfiles\pack\mybundle\start\v
 xcopy /Y /S /E /H /Q stage\4colors %USERPROFILE%\vimfiles\pack\mybundle\start\4colors\
 xcopy /Y /S /E /H /Q stage\vim-easymotion %USERPROFILE%\vimfiles\pack\mybundle\start\vim-easymotion\
 xcopy /Y /S /E /H /Q stage\lightline %USERPROFILE%\vimfiles\pack\mybundle\start\lightline\
+xcopy /Y /S /E /H /Q stage\vimspector %USERPROFILE%\vimfiles\pack\mybundle\opt\vimspector\
 
 :: Neovim
 
