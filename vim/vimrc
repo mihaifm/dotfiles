@@ -309,11 +309,20 @@ let g:lightline = {
   \ 'inactive': { 'left': [['imode'], ['filename']] },
   \ 'component' : { 'imode': 'INACT' },
   \ 'component_function': { 
-    \ 'filename': 'LightFilename', 'modified': 'LightModified', 'mode': 'LightMode',
-    \ 'fileformat': 'LightFileformat', 'filetype': 'LightFiletype' },
+    \ 'readonly': 'LightReadOnly', 'filename': 'LightFilename', 'modified': 'LightModified', 'mode': 'LightMode',
+    \ 'fileformat': 'LightFileformat', 'fileencoding': 'LightEncoding', 'filetype': 'LightFiletype',
+    \ 'percent': 'LightPercent'},
   \ 'colorscheme': '4colors' }
 
-function! LightFilename()
+func! LightReadOnly()
+  if expand('%:t') =~# '^vimspector'
+    return ''
+  endif
+
+  return &readonly ? 'RO' : ''
+endfunc
+
+func! LightFilename()
   if expand('%:t') ==# '--Bufstop--'
     return ''
   endif
@@ -322,26 +331,54 @@ function! LightFilename()
   else
     return expand('%:t') !=# '' ? expand('%:t') : '[No Name]'
   endif
-endfunction
+endfunc
 
-function! LightMode()
+funct! LightMode()
   return expand('%:t') ==# '--Bufstop--' ? 'BUFSTOP' : lightline#mode()
-endfunction
+endfunc
 
-function! LightModified()
+func! LightModified()
   if expand('%:t') ==# '--Bufstop--'
     return ''
   endif
+  if expand('%:t') =~# '^vimspector'
+    return ''
+  endif
+
   return &modified ? '+' : &modifiable ? '' : '-' 
-endfunction
+endfunc
 
-function! LightFileformat()
+func! LightFileformat()
+  if expand('%:t') =~# '^vimspector'
+    return ''
+  endif
+
   return winwidth(0) > 70 ? &fileformat : ''
-endfunction
+endfunc
 
-function! LightFiletype()
+func! LightEncoding()
+  if expand('%:t') =~# '^vimspector'
+    return ''
+  endif
+
+  return &encoding
+endfunc
+
+func! LightFiletype()
+  if expand('%:t') =~# '^vimspector'
+    return ''
+  endif
+
   return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
-endfunction
+endfunc
+
+func! LightPercent()
+  if expand('%:t') =~# '^vimspector'
+    return ''
+  endif
+
+  return (line('.') * 100 / line('$') . '%')
+endfunc
 
 " devicons for Bufstop
 let g:BufstopFileSymbolFunc = 'MyGetFileTypeSymbol'
