@@ -1,3 +1,6 @@
+#!/bin/bash
+
+###################
 # Build a snapshot
 
 if [[ $1 == "snap" ]]; then
@@ -30,6 +33,7 @@ if [[ $1 == "snap" ]]; then
   exit
 fi
 
+########################
 # Restore from snapshot
 
 if [[ $1 == "rest" ]]; then
@@ -67,6 +71,26 @@ if [[ $1 == "rest" ]]; then
   exit
 fi
 
+####################
+# Clean plugin data
+
+if [[ $1 == "clean" ]]; then
+
+  # Vim
+  rm -rf ~/.oldvimdata
+  mv ~/.vimdata ~/.oldvimdata
+
+  # Neovim
+  rm -rf ~/.local/share/oldnvim
+  mv ~/.local/share/nvim ~/.local/share/oldnvim
+
+  rm -rf ~/.local/state/oldnvim
+  mv ~/.local/state/nvim ~/.local/state/oldnvim
+
+  exit
+fi
+
+#########################
 # Install from this repo
 
 if [[ $1 == "repo" ]]; then
@@ -91,4 +115,6 @@ if [[ $1 == "repo" ]]; then
   # Tmux
   mv ~/.tmux.conf ~/.oldtmux.conf
   cp tmux/.tmux.conf ~/.tmux.conf
+
+  exit
 fi
