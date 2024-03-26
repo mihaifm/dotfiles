@@ -1,74 +1,102 @@
 @echo off
 
-:: Vim
+REM -----------------
+REM Build a snapshot
 
-rd /S /Q %USERPROFILE%\oldvimfiles
-robocopy %USERPROFILE%\vimfiles %USERPROFILE%\oldvimfiles /E /MOVE  /NFL /NDL /NJH /NJS /NC /NS /NP 
-mkdir %USERPROFILE%\vimfiles
-xcopy /Y /S /E /H /Q vim\* %USERPROFILE%\vimfiles\
-mkdir %USERPROFILE%\vimfiles\pack\mybundle\start
-mkdir %USERPROFILE%\vimfiles\pack\mybundle\opt
+if [%1]==[snap] (
+  mkdir snap
 
-if [%1]==[web] (
-    rd /S /Q stage
-    mkdir stage
+  REM Vim
+  mkdir snap\vimfiles
+  xcopy /I /Y /S /E /H /Q "%USERPROFILE%\vimfiles\*" snap\vimfiles
+  mkdir snap\.vimdata
+  xcopy /I /Y /S /E /H /Q "%USERPROFILE%\.vimdata\*" snap\.vimdata
 
-    git clone https://github.com/mihaifm/bufstop stage\bufstop
-    rmdir /S /Q stage\bufstop\.git
+  REM Neovim
+  mkdir snap\AppData\Local\nvim
+  xcopy /I /Y /S /E /H /Q "%USERPROFILE%\AppData\Local\nvim\*" snap\AppData\Local\nvim
+  mkdir snap\AppData\Local\nvim-data
+  xcopy /I /Y /S /E /H /Q "%USERPROFILE%\AppData\Local\nvim-data\*" snap\AppData\Local\nvim-data
 
-    git clone https://github.com/mihaifm/vimpanel stage\vimpanel
-    rmdir /S /Q stage\vimpanel\.git
+  REM Neovide
+  mkdir snap\AppData\Roaming\neovide
+  xcopy /I /Y /S /E /H /Q "%USERPROFILE%\AppData\Roaming\neovide\*" snap\AppData\Roaming\neovide
 
-    git clone https://github.com/mihaifm/4colors stage\4colors
-    rmdir /S /Q stage\4colors\.git
+  tar -czf ..\dotfiles.tar.gz -C .. dotfiles
 
-    git clone https://github.com/easymotion/vim-easymotion stage\vim-easymotion
-    rmdir /S /Q stage\vim-easymotion\.git
-
-    git clone https://github.com/itchyny/lightline.vim stage\lightline
-    rmdir /S /Q stage\lightline\.git
-
-    git clone https://github.com/puremourning/vimspector stage\vimspector
-    rmdir /S /Q stage\vimspector\.git
-) else ( 
-    if [%1]==[dev] (
-        rd /S /Q stage
-        mkdir stage
-
-        xcopy /Y /S /E /H /Q D:\Syncbox\Projects\bufstop stage\bufstop\
-        rmdir /S /Q stage\bufstop\.git
-
-        xcopy /Y /S /E /H /Q D:\Syncbox\Projects\vimpanel stage\vimpanel\
-        rmdir /S /Q stage\vimpanel\.git
-
-        xcopy /Y /S /E /H /Q D:\Syncbox\Projects\4colors stage\4colors\
-        rmdir /S /Q stage\4colors\.git
-
-        xcopy /Y /S /E /H /Q D:\Clone\vim-easymotion stage\vim-easymotion\
-        rmdir /S /Q stage\vim-easymotion\.git
-
-        xcopy /Y /S /E /H /Q D:\Clone\lightline stage\lightline\
-        rmdir /S /Q stage\lightline\.git
-    )
+  rmdir /S /Q snap
 )
 
-xcopy /Y /S /E /H /Q stage\bufstop %USERPROFILE%\vimfiles\pack\mybundle\start\bufstop\
-xcopy /Y /S /E /H /Q stage\vimpanel %USERPROFILE%\vimfiles\pack\mybundle\start\vimpanel\
-xcopy /Y /S /E /H /Q stage\4colors %USERPROFILE%\vimfiles\pack\mybundle\start\4colors\
-xcopy /Y /S /E /H /Q stage\vim-easymotion %USERPROFILE%\vimfiles\pack\mybundle\start\vim-easymotion\
-xcopy /Y /S /E /H /Q stage\lightline %USERPROFILE%\vimfiles\pack\mybundle\start\lightline\
-xcopy /Y /S /E /H /Q stage\vimspector %USERPROFILE%\vimfiles\pack\mybundle\opt\vimspector\
+REM ----------------------
+REM Restore from snapshot
 
-:: Neovim
+if [%1]==[restore] (
+  REM Vim
+  rmdir /S /Q "%USERPROFILE%\oldvimfiles"
+  move "%USERPROFILE%\vimfiles" "%USERPROFILE%\oldvimfiles"
+  mkdir "%USERPROFILE%\vimfiles"
+  xcopy /I /Y /S /E /H /Q "snap\vimfiles\*" "%USERPROFILE%\vimfiles"
 
-rd /S /Q %USERPROFILE%\AppData\Local\oldnvim
-robocopy %USERPROFILE%\AppData\Local\nvim %USERPROFILE%\AppData\Local\oldnvim /E /MOVE  /NFL /NDL /NJH /NJS /NC /NS /NP 
-mkdir %USERPROFILE%\AppData\Local\nvim
-xcopy /Y /S /E /H /Q nvim\* %USERPROFILE%\AppData\Local\nvim\
+  rmdir /S /Q "%USERPROFILE%\.oldvimdata"
+  move "%USERPROFILE%\.vimdata" "%USERPROFILE%\.oldvimdata"
+  mkdir "%USERPROFILE%\.vimdata"
+  xcopy /I /Y /S /E /H /Q "snap\.vimdata\*" "%USERPROFILE%\.vimdata"
 
-:: Neovide
+  REM Neovim
+  rmdir /S /Q "%USERPROFILE%\AppData\Local\oldnvim" 
+  move "%USERPROFILE%\AppData\Local\nvim" "%USERPROFILE%\AppData\Local\oldnvim" 
+  mkdir "%USERPROFILE%\AppData\Local\nvim"
+  xcopy /I /Y /S /E /H /Q "snap\AppData\Local\nvim\*" "%USERPROFILE%\AppData\Local\nvim"
 
-rd /S /Q %USERPROFILE%\AppData\Roaming\oldneovide
-robocopy %USERPROFILE%\AppData\Roaming\neovide %USERPROFILE%\AppData\Roaming\oldneovide /E /MOVE /NFL /NDL /NJH /NJS /NC /NS /NP
-mkdir %USERPROFILE%\AppData\Roaming\neovide
-xcopy /Y /S /E /H /Q neovide\* %USERPROFILE%\AppData\Roaming\neovide\
+  rmdir /S /Q "%USERPROFILE%\AppData\Local\oldnvim-data" 
+  move "%USERPROFILE%\AppData\Local\nvim-data" "%USERPROFILE%\AppData\Local\oldnvim-data" 
+  mkdir "%USERPROFILE%\AppData\Local\nvim-data"
+  xcopy /I /Y /S /E /H /Q "snap\AppData\Local\nvim-data\*" "%USERPROFILE%\AppData\Local\nvim-data"
+
+  REM Neovide
+  rmdir /S /Q "%USERPROFILE%\AppData\Roaming\oldneovide" 
+  move "%USERPROFILE%\AppData\Roaming\neovide" "%USERPROFILE%\AppData\Roaming\oldneovide"
+  mkdir "%USERPROFILE%\AppData\Roaming\neovide"
+  xcopy /I /Y /S /E /H /Q "snap\AppData\Roaming\neovide\*" "%USERPROFILE%\AppData\Roaming\neovide"
+)
+
+REM ------------------
+REM Clean plugin data
+
+if [%1]==[clean] (
+  REM Vim
+  rmdir /S /Q "%USERPROFILE%\.oldvimdata"
+  move "%USERPROFILE%\.vimdata" "%USERPROFILE%\.oldvimdata"
+
+  REM Neovim
+  rmdir /S /Q "%USERPROFILE%\AppData\Local\oldnvim-data" 
+  move "%USERPROFILE%\AppData\Local\nvim-data" "%USERPROFILE%\AppData\Local\oldnvim-data" 
+
+  REM Neovide
+  rmdir /S /Q "%USERPROFILE%\AppData\Roaming\oldneovide" 
+  move "%USERPROFILE%\AppData\Local\neovide" "%USERPROFILE%\AppData\Roaming\oldneovide" 
+)
+
+REM -----------------------
+REM Install from this repo
+
+if [%1]==[repo] (
+  REM Vim
+  rmdir /S /Q %USERPROFILE%\oldvimfiles
+  move "%USERPROFILE%\vimfiles" "%USERPROFILE%\oldvimfiles"
+  mkdir "%USERPROFILE%\vimfiles"
+  xcopy /I /Y /S /E /H /Q vim\* "%USERPROFILE%\vimfiles"
+
+  REM Neovim
+  rmdir /S /Q "%USERPROFILE%\AppData\Local\oldnvim" 
+  move "%USERPROFILE%\AppData\Local\nvim" "%USERPROFILE%\AppData\Local\oldnvim" 
+  mkdir "%USERPROFILE%\AppData\Local\nvim"
+  xcopy /I /Y /S /E /H /Q nvim\* "%USERPROFILE%\AppData\Local\nvim"
+
+  REM Neovide
+  rmdir /S /Q "%USERPROFILE%\AppData\Roaming\oldneovide" 
+  move "%USERPROFILE%\AppData\Roaming\neovide" "%USERPROFILE%\AppData\Roaming\oldneovide" 
+  mkdir "%USERPROFILE%\AppData\Roaming\neovide"
+  xcopy /I /Y /S /E /H /Q neovide\* "%USERPROFILE%\AppData\Roaming\neovide"
+)
+
