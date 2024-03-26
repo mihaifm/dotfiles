@@ -36,7 +36,7 @@ fi
 ########################
 # Restore from snapshot
 
-if [[ $1 == "rest" ]]; then
+if [[ $1 == "restore" ]]; then
 
   # Vim
   rm -rf ~/.oldvim
@@ -100,7 +100,6 @@ if [[ $1 == "repo" ]]; then
   mv ~/.vim ~/.oldvim
   mkdir -p ~/.vim
   cp -r vim/* ~/.vim/
-  mkdir -p ~/.vimdata
 
   # Neovim
   rm -rf ~/.config/oldnvim
