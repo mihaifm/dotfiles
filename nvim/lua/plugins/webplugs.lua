@@ -9,7 +9,8 @@ return {
 	},
 
 	{
-		"folke/tokyonight.nvim", enabled = true,
+		"folke/tokyonight.nvim",
+		enabled = true,
 		config = function()
 			vim.cmd.colorscheme("tokyonight")
 		end,
@@ -24,7 +25,10 @@ return {
 		end,
 	},
 
-	{ "itchyny/lightline.vim", enabled = false },
+	{
+		"itchyny/lightline.vim",
+		enabled = false,
+	},
 
 	{
 		"nvim-lualine/lualine.nvim",
@@ -39,6 +43,8 @@ return {
 		enabled = true,
 		build = ":TSUpdate",
 		config = function()
+			require("nvim-treesitter.install").compilers = { "/opt/rh/devtoolset-12/root/usr/bin/gcc" }
+
 			local configs = require("nvim-treesitter.configs")
 
 			configs.setup({
@@ -75,7 +81,11 @@ return {
 		"williamboman/mason-lspconfig.nvim",
 		config = function()
 			require("mason-lspconfig").setup({
-				ensure_installed = { "lua_ls", "tsserver" },
+				ensure_installed = {
+					"lua_ls",
+					--"tsserver",
+					"clangd",
+				},
 			})
 		end,
 	},
@@ -88,7 +98,7 @@ return {
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 			lspconfig.lua_ls.setup({ capabilities = capabilities })
-			lspconfig.tsserver.setup({ capabilities = capabilities })
+			-- lspconfig.tsserver.setup({ capabilities = capabilities })
 
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("UserLspConfig", {}),
@@ -107,13 +117,137 @@ return {
 					end, opts)
 					vim.keymap.set("n", "<leader>D", vim.lsp.buf.type_definition, opts)
 					vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
-					vim.keymap.set({ "n", "v" }, "<space>ca", vim.lsp.buf.code_action, opts)
+					vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
 					vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
 					vim.keymap.set("n", "<leader>kf", function()
 						vim.lsp.buf.format({ async = true })
 					end, opts)
 				end,
 			})
+		end,
+	},
+
+	{
+		"mfussenegger/nvim-dap",
+		dependencies = {
+			"rcarriga/nvim-dap-ui",
+		},
+		config = function()
+			local dap = require("dap")
+			local dapui = require("dapui")
+
+			dapui.setup()
+
+			dap.adapters.gdb = {
+				id = "gdb",
+				type = "executable",
+				command = "gdb",
+				args = { "--quiet", "--interpreter=dap" },
+			}
+
+			dap.configurations.c = {
+				{
+					name = "Run executable (GDB)",
+					type = "gdb",
+					request = "launch",
+					-- This requires special handling of 'run_last', see
+					-- https://github.com/mfussenegger/nvim-dap/issues/1025#issuecomment-1695852355
+					program = function()
+						local path = vim.fn.input({
+							prompt = "Path to executable: ",
+							default = vim.fn.getcwd() .. "/",
+							completion = "file",
+						})
+
+						return (path and path ~= "") and path or dap.ABORT
+					end,
+				},
+				{
+					name = "Run executable with arguments (GDB)",
+					type = "gdb",
+					request = "launch",
+					-- This requires special handling of 'run_last', see
+					-- https://github.com/mfussenegger/nvim-dap/issues/1025#issuecomment-1695852355
+					program = function()
+						local path = vim.fn.input({
+							prompt = "Path to executable: ",
+							default = vim.fn.getcwd() .. "/",
+							completion = "file",
+						})
+
+						return (path and path ~= "") and path or dap.ABORT
+					end,
+					args = function()
+						local args_str = vim.fn.input({
+							prompt = "Arguments: ",
+						})
+						return vim.split(args_str, " +")
+					end,
+				},
+				{
+					name = "Attach to process (GDB)",
+					type = "gdb",
+					request = "attach",
+					processId = require("dap.utils").pick_process,
+				},
+			}
+
+			dap.configurations.cpp = dap.configurations.c
+
+			dap.listeners.before.attach.dapui_config = function()
+				dapui.open()
+			end
+			dap.listeners.before.launch.dapui_config = function()
+				dapui.open()
+			end
+			dap.listeners.before.event_terminated.dapui_config = function()
+				dapui.close()
+			end
+			dap.listeners.before.event_exited.dapui_config = function()
+				dapui.close()
+			end
+
+			vim.keymap.set("n", "<F5>", function()
+				require("dap").continue()
+			end)
+			vim.keymap.set("n", "<F10>", function()
+				require("dap").step_over()
+			end)
+			vim.keymap.set("n", "<F11>", function()
+				require("dap").step_into()
+			end)
+			vim.keymap.set("n", "<F12>", function()
+				require("dap").step_out()
+			end)
+			vim.keymap.set("n", "<F9>", function()
+				require("dap").toggle_breakpoint()
+			end)
+			vim.keymap.set("n", "<Leader>B", function()
+				require("dap").set_breakpoint()
+			end)
+			vim.keymap.set("n", "<Leader>lp", function()
+				require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: "))
+			end)
+			vim.keymap.set("n", "<Leader>dr", function()
+				require("dap").repl.open()
+			end)
+			vim.keymap.set("n", "<Leader>dl", function()
+				require("dap").run_last()
+			end)
+			vim.keymap.set({ "n", "v" }, "<Leader>dh", function()
+				require("dap.ui.widgets").hover()
+			end)
+			vim.keymap.set({ "n", "v" }, "<Leader>dp", function()
+				require("dap.ui.widgets").preview()
+			end)
+			vim.keymap.set("n", "<Leader>df", function()
+				local widgets = require("dap.ui.widgets")
+				widgets.centered_float(widgets.frames)
+			end)
+			vim.keymap.set("n", "<Leader>ds", function()
+				local widgets = require("dap.ui.widgets")
+				widgets.centered_float(widgets.scopes)
+			end)
 		end,
 	},
 
@@ -169,6 +303,7 @@ return {
 
 	{
 		"nvimtools/none-ls.nvim",
+		enabled = false,
 		config = function()
 			local null_ls = require("null-ls")
 			null_ls.setup({
@@ -176,7 +311,7 @@ return {
 					null_ls.builtins.formatting.stylua,
 					null_ls.builtins.formatting.prettier,
 					null_ls.builtins.formatting.black,
-          null_ls.builtins.completion.spell,
+					null_ls.builtins.completion.spell,
 				},
 			})
 		end,

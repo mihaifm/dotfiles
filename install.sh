@@ -1,55 +1,94 @@
-# Vim
+# Build a snapshot
 
-rm -rf ~/.oldvim
-mv ~/.vim ~/.oldvim
-mkdir -p ~/.vim
-cp -r vim/* ~/.vim/
-mkdir -p ~/.vim/pack/mybundle/start
-mkdir -p ~/.vim/pack/mybundle/opt
+if [[ $1 == "snap" ]]; then
+  mkdir -p snap
 
-if [[ $1 == "web" ]]; then
-  rm -rf stage
-  mkdir stage
+  # Vim
+  cp -r ~/.vim snap
+  cp -r ~/.vimdata snap
 
-  git clone https://github.com/mihaifm/bufstop stage/bufstop
-  rm -rf stage/bufstop/.git
+  # Neovim
+  mkdir -p snap/.config
+  cp -r ~/.config/nvim snap/.config
 
-  git clone https://github.com/mihaifm/vimpanel stage/vimpanel
-  rm -rf stage/vimpanel/.git
+  mkdir -p snap/.local/share
+  cp -r ~/.local/share/nvim snap/.local/share
 
-  git clone https://github.com/mihaifm/4colors stage/4colors
-  rm -rf stage/4colors/.git
+  mkdir -p snap/.local/state
+  cp -r ~/.local/state/nvim snap/.local/state
 
-  git clone https://github.com/easymotion/vim-easymotion stage/vim-easymotion
-  rm -rf stage/vim-easymotion/.git
+  # Nethack
+  cp ~/.nethackrc snap
 
-  git clone https://github.com/itchyny/lightline.vim stage/lightline
-  rm -rf stage/lightline/.git
+  # Tmux
+  cp ~/.tmux.conf snap
 
-  git clone https://github.com/puremourning/vimspector stage/vimspector
-  rm -rf stage/vimspector/.git
+  tar -czf ../dotfiles.tar.gz -C .. dotfiles
+
+  rm -rf snap
+
+  exit
 fi
 
-cp -r stage/bufstop ~/.vim/pack/mybundle/start/bufstop
-cp -r stage/vimpanel ~/.vim/pack/mybundle/start/vimpanel
-cp -r stage/4colors ~/.vim/pack/mybundle/start/4colors
-cp -r stage/vim-easymotion ~/.vim/pack/mybundle/start/vim-easymotion
-cp -r stage/lightline ~/.vim/pack/mybundle/start/lightline
-cp -r stage/vimspector ~/.vim/pack/mybundle/opt/vimspector
+# Restore from snapshot
 
-# Neovim
+if [[ $1 == "rest" ]]; then
 
-rm -rf ~/.config/oldnvim
-mv ~/.config/nvim ~/.config/oldnvim
-mkdir -p ~/.config/nvim
-cp -r nvim/* ~/.config/nvim/
+  # Vim
+  rm -rf ~/.oldvim
+  mv ~/.vim ~/.oldvim
+  cp -r snap/.vim ~/
 
-# NetHack
+  rm -rf ~/.oldvimdata
+  mv ~/.vimdata ~/.oldvimdata
+  cp -r snap/.vimdata ~/
 
-mv ~/.nethackrc ~/.oldnethackrc
-cp nethack/.nethackrc ~/.nethackrc
+  # Neovim
+  rm -rf ~/.config/oldnvim
+  mv ~/.config/nvim ~/.config/oldnvim
+  cp -r snap/.config/nvim ~/.config/
 
-# Tmux
+  rm -rf ~/.local/share/oldnvim
+  mv ~/.local/share/nvim ~/.local/share/oldnvim
+  cp -r snap/.local/share/nvim ~/.local/share/
 
-mv ~/.tmux.conf ~/.oldtmux.conf
-cp tmux/.tmux.conf ~/.tmux.conf
+  rm -rf ~/.local/state/oldnvim
+  mv ~/.local/state/nvim ~/.local/state/oldnvim
+  cp -r snap/.local/state/nvim ~/.local/state/
+
+  # Nethack
+  mv ~/.nethackrc ~/.oldnethackrc
+  cp snap/.nethackrc ~/
+
+  # Tmux
+  mv ~/.tmux.conf ~/.oldtmux.conf
+  cp snap/.tmux.conf ~/
+
+  exit
+fi
+
+# Install from this repo
+
+if [[ $1 == "repo" ]]; then
+
+  # Vim
+  rm -rf ~/.oldvim
+  mv ~/.vim ~/.oldvim
+  mkdir -p ~/.vim
+  cp -r vim/* ~/.vim/
+  mkdir -p ~/.vimdata
+
+  # Neovim
+  rm -rf ~/.config/oldnvim
+  mv ~/.config/nvim ~/.config/oldnvim
+  mkdir -p ~/.config/nvim
+  cp -r nvim/* ~/.config/nvim/
+
+  # NetHack
+  mv ~/.nethackrc ~/.oldnethackrc
+  cp nethack/.nethackrc ~/.nethackrc
+
+  # Tmux
+  mv ~/.tmux.conf ~/.oldtmux.conf
+  cp tmux/.tmux.conf ~/.tmux.conf
+fi

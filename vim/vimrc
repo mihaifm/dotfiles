@@ -32,9 +32,6 @@ set bufhidden=hide
 " infect with plugins (for older versions of vim)
 execute pathogen#infect()
 
-" switch syntax highlighting on, when the terminal has colors
-syntax on
-
 " enable mouse support
 set mouse=a
 
@@ -107,7 +104,6 @@ endif
 
 " load colorscheme
 set background=dark
-colorscheme 4colors
 
 " fill vertical bar with dots
 set fillchars+=vert:.
@@ -277,7 +273,6 @@ set statusline+=%<%P                  " percent
 """"""""""
 " Plugins
 
-filetype plugin indent on
 
 " Easy motion
 nmap ss <Plug>(easymotion-s2)
@@ -382,8 +377,8 @@ endfunc
 
 " devicons for Bufstop
 let g:BufstopFileSymbolFunc = 'MyGetFileTypeSymbol'
-exe 'highlight! bufstopIcon1 ' . g:fourcolors#warmFg
-exe 'highlight! bufstopIcon2 ' . g:fourcolors#chillFg
+" exe 'highlight! bufstopIcon1 ' . g:fourcolors#warmFg
+" exe 'highlight! bufstopIcon2 ' . g:fourcolors#chillFg
 
 function! g:VimpanelCallback()
   if executable('rg')
@@ -431,5 +426,21 @@ let g:terminal_ansi_colors = ['white', 'white', 'white', 'white', 'white', 'whit
                             \ 'white', 'white', 'white', 'white', 'white', 'white', 'white', 'white']
 
 let g:vimspector_enable_mappings = 'HUMAN'
+
+call plug#begin('~/.vimdata')
+
+Plug 'mihaifm/bufstop'
+Plug 'mihaifm/vimpanel'
+Plug 'mihaifm/4colors', { 'do': ':colorscheme 4colors' }
+Plug 'easymotion/vim-easymotion'
+Plug 'itchyny/lightline.vim'
+Plug 'puremourning/vimspector'
+
+call plug#end()
+
+colorscheme 4colors
+
+filetype plugin indent on
+syntax on
 
 set secure
