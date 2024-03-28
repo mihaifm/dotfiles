@@ -165,6 +165,11 @@ if has("clipboard")
 
   exe 'inoremap <script> <C-V>' paste#paste_cmd['i']
   exe 'vnoremap <script> <C-V>' paste#paste_cmd['v']
+else
+  " clipboard unavailable, use c registry
+  vmap <C-C> "cy
+  map <C-V>	"cgP
+  cmap <C-v> <C-R>c
 endif
 
 " Enable yanked text to be pasted multiple times
@@ -426,6 +431,7 @@ let g:terminal_ansi_colors = ['white', 'white', 'white', 'white', 'white', 'whit
                             \ 'white', 'white', 'white', 'white', 'white', 'white', 'white', 'white']
 
 let g:vimspector_enable_mappings = 'HUMAN'
+let g:vim_tmux_clipboard#loadb_option = '-w'
 
 call plug#begin('~/.vimdata')
 
@@ -435,6 +441,7 @@ Plug 'mihaifm/4colors', { 'do': ':colorscheme 4colors' }
 Plug 'easymotion/vim-easymotion'
 Plug 'itchyny/lightline.vim'
 Plug 'puremourning/vimspector'
+Plug 'roxma/vim-tmux-clipboard'
 
 call plug#end()
 
