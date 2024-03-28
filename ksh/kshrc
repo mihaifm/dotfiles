@@ -1,0 +1,48 @@
+alias h='history -30'
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+alias la='ls -altr'
+
+export PATH=/home/mihai/u99n/local/bin:/home/mihai/u99n/util:/opt/nvim-linux64/bin:$PATH
+
+if [ -z "$LD_LIBRARY_PATH" ]; then
+  export LD_LIBRARY_PATH=/home/mihai/u99n/local/lib
+else
+  export LD_LIBRARY_PATH=/home/mihai/u99n/local/lib:$LD_LIBRARY_PATH
+fi
+
+export DOTFILES=/home/mihai/dotfiles
+export EDITOR=vim
+
+check_git_branch()
+{
+  GIT_BRANCH=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
+  if [[ ! -z ${GIT_BRANCH} ]]; then
+    echo ' '$'\ue0a0' ${GIT_BRANCH}' '
+  else
+    echo ''
+  fi
+}
+
+SEP1=$'\ue0b1'
+SEP2=$'\n'
+SEP3=$'\e'
+set -A SEPZ $'\uea9c' $'\ueb44' $'\uf005' $'\uf1bb' $'\uf0e9' $'\ue286' $'\ue267' $'\ue238' $'\ue239' $'\ue217'
+SEP4=${SEPZ[$((RANDOM%10))]}
+
+export PS1='$SEP2$SEP3[34m${PWD} $SEP1$SEP3[00m$SEP3[32m$(check_git_branch)$SEP1$SEP3[00m$SEP2$SEP3[34m$SEP4$SEP3[00m  '
+
+keybd_trap() {
+  case ${.sh.edchar} in
+    $'\e[1~') .sh.edchar=$'\001';; # Home = beginning-of-line
+    $'\e[4~') .sh.edchar=$'\005';; # End = end-of-line
+    $'\e[3~') .sh.edchar=$'\004';; # Delete = delete-char
+  esac
+}
+trap keybd_trap KEYBD
+set -o emacs
+
+# cd to a file's parent directory
+cdd() { test -d "$1" && cd "$1" || cd $(dirname "$1") ; }
+

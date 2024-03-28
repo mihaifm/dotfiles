@@ -1,0 +1,10 @@
+#!/bin/ksh
+
+tmux new -d -s $1 \; send-keys 'vim' C-m
+tmux new-window \; send-keys 'nvim' C-m
+tmux new-window
+tmux new-window \; send-keys 'git status' C-m
+tmux new-window \; send-keys 'ls -altr' C-m
+tmux new-window
+tmux select-window -t 0
+tmux attach -t $1
