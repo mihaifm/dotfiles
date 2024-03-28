@@ -250,8 +250,8 @@ function! MyGetFileTypeSymbol(...) abort
   return symbol . ' '
 endfunction
 
-autocmd BufWinEnter --Bufstop-- call matchadd('bufstopIcon1', '\v' . '|||')
-autocmd BufWinEnter --Bufstop-- call matchadd('bufstopIcon2', '\v' . '|')
+" autocmd BufWinEnter --Bufstop-- call matchadd('bufstopIcon1', '\v' . '|||')
+" autocmd BufWinEnter --Bufstop-- call matchadd('bufstopIcon2', '\v' . '|')
 
 let g:termdebug_config = {
   \ 'command' : ['gdb', '-ex', 'set history save on'],
