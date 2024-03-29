@@ -198,12 +198,19 @@ map <leader>d :BufstopBack<CR>:bw! #<CR>
 if has("clipboard")
   noremap <leader>ff :let @+=expand("%:p")<CR>
   noremap <leader>fn :let @+=expand("%:t")<CR>
-  noremap <leader>fp :let @+=expand("%:p:h")<CR>
+  noremap <leader>fd :let @+=expand("%:p:h")<CR>
 else
-  noremap <leader>ff :let @c=expand("%:p")<CR>
-  noremap <leader>fn :let @c=expand("%:t")<CR>
-  noremap <leader>fp :let @c=expand("%:p:h")<CR>
+  noremap <leader>ff :let @c=expand("%:p") \| call TmuxCopyReg("c")<CR>
+  noremap <leader>fn :let @c=expand("%:t") \| call TmuxCopyReg("c")<CR>
+  noremap <leader>fd :let @c=expand("%:p:h") \| call TmuxCopyReg("c")<CR>
 endif
+
+function TmuxCopyReg(r)
+  if $TMUX==''
+        return
+    endif
+  call system('tmux loadb -w -', getreg(a:r))
+endfunc
 
 noremap <leader>v :vs<CR>:Bufstop<CR>
 
