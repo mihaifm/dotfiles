@@ -18,4 +18,4 @@ local options = {
   change_detection = { enabled = false },
 }
 
-require("lazy").setup("plugins", options)
+require("lazy").setup("pluginspecs", options)
