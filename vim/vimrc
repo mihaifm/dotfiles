@@ -176,7 +176,7 @@ endif
 xnoremap p pgvy
 
 " Use CTRL-Q to do what CTRL-V used to do
-noremap <C-Q>   <C-V>
+noremap <C-Q> <C-V>
 
 " CTRL-C to copy text from cmd line
 cnoremap <C-c> <C-y>
@@ -206,7 +206,7 @@ else
 endif
 
 function TmuxCopyReg(r)
-  if $TMUX==''
+  if $TMUX == ''
         return
     endif
   call system('tmux loadb -w -', getreg(a:r))
@@ -263,7 +263,7 @@ set listchars+=precedes:<,extends:>
 
 set laststatus=2
 set statusline=
-set statusline+=%1*                   "switch to User1 highlight
+set statusline+=%1*                   " switch to User1 highlight
 set statusline+=%n                    " buffer number
 set statusline+=%1*
 set statusline+=%{'/'.bufnr('$')}\    " total buffers

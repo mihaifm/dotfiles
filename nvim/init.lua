@@ -40,7 +40,7 @@ vim.opt.timeoutlen = 900
 
 -- show whitespace characters
 vim.opt.list = true
-vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣', precedes = '<', extends = '>' }
 
 -- search settings
 vim.opt.ignorecase = true
@@ -70,6 +70,39 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.highlight.on_yank()
   end,
 })
+
+--------------
+-- Statusline
+
+vim.opt.laststatus = 2
+
+local sl = ''
+sl = sl .. "%1*"                  -- switch to User1 highlight
+sl = sl .. "%n"                   -- buffer number
+sl = sl .. "%1*"
+sl = sl .. "%{'/'.bufnr('$')} "   -- total buffers
+sl = sl .. "%2*"                  -- switch to User2 hightlight
+sl = sl .. "%<%1.200F"            -- filename
+sl = sl .. "%3*"                  -- switch to User3 highlight
+sl = sl .. " %y%h%w"              -- filetype, help, example flags
+sl = sl .. "%3*"
+sl = sl .. "%r%m"                 -- read-only, modified flags
+sl = sl .. "%3*"
+sl = sl .. "%= "                  -- indent right
+sl = sl .. "%1*"
+sl = sl .. "%l"                   -- line number
+sl = sl .. "%1*"
+sl = sl .. "/%{line('$')}"        -- total lines
+sl = sl .. "%1*"
+sl = sl .. ","                    -- ,
+sl = sl .. "%1*"
+sl = sl .. "%c%V"                 -- [virtual] column numberV
+sl = sl .. "%3*"
+sl = sl .. " "                    -- [ ]
+sl = sl .. "%3*"
+sl = sl .. "%<%P"                 -- percent
+
+vim.opt.statusline = sl
 
 ------------
 -- Mappings
@@ -104,7 +137,7 @@ vim.keymap.set('n', '<leader>ff', function() vim.cmd('let @+=expand("%:p")') end
   { desc = 'Copy full file path' })
 vim.keymap.set('n', '<leader>fn', function() vim.cmd('let @+=expand("%:t")') end,
   { desc = 'Copy file name' })
-vim.keymap.set('n', '<leader>fp', function() vim.cmd('let @+=expand("%:p:h")') end,
+vim.keymap.set('n', '<leader>fd', function() vim.cmd('let @+=expand("%:p:h")') end,
   { desc = 'Copy directory path for current file' })
 
 -- open Windows Explorer

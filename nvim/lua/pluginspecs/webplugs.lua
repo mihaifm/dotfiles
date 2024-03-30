@@ -1,5 +1,26 @@
 return {
-  { "easymotion/vim-easymotion" },
+  {
+    "easymotion/vim-easymotion",
+    enabled = false,
+    config = function()
+      vim.keymap.set('n', 'ss', '<Plug>(easymotion-s2)', { desc = 'EasyMotion search 2 characters' })
+      vim.keymap.set('n', 'st', '<Plug>(easymotion-t2)', { desc = 'EasyMotion till 2 characters' })
+      vim.keymap.set('n', 'sl', '<Plug>(easymotion-lineforward)', { desc = 'EasyMotion line forward' })
+      vim.keymap.set('n', 'sj', '<Plug>(easymotion-j)', { desc = 'EasyMotion line below' })
+      vim.keymap.set('n', 'sk', '<Plug>(easymotion-k)', { desc = 'EasyMotion line above' })
+      vim.keymap.set('n', 'sh', '<Plug>(easymotion-linebackward)', { desc = 'EasyMotion line backward' })
+      vim.keymap.set('n', 's/', '<Plug>(easymotion-sn)', { desc = 'EasyMotion search n characters' })
+      vim.keymap.set('o', 's/', '<Plug>(easymotion-tn)', { desc = 'EasyMotion till n characters' })
+      vim.keymap.set('n', 'sn', '<Plug>(easymotion-next)', { desc = 'EasyMotion jump to next match' })
+      vim.keymap.set('n', 'sN', '<Plug>(easymotion-prev)', { desc = 'EasyMotion jump to previous match' })
+      vim.keymap.set('n', 'sw', '<Plug>(easymotion-w)', { desc = 'EasyMotion jump to word' })
+      vim.keymap.set('n', 'sb', '<Plug>(easymotion-bd-w)', { desc = 'EasyMotion jump to word backwards' })
+      vim.keymap.set('n', 'se', '<Plug>(easymotion-e)', { desc = 'EasyMotion jump to end of word' })
+
+      vim.g.EasyMotion_startofline = 0
+      vim.g.EasyMotion_keys = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    end
+  },
 
   { "tpope/vim-fugitive" },
 
