@@ -1,3 +1,5 @@
+vim.g.BufstopAutoSpeedToggle = 1
+
 function BufstopConfig()
   vim.keymap.set('n', '<leader>D',
     function()
@@ -7,14 +9,13 @@ function BufstopConfig()
 
   vim.keymap.set('n', '<leader>b', function() vim.cmd('Bufstop') end,
     { desc = 'Bufstop' })
-  vim.keymap.set('n', '<leader>b', function() vim.cmd('BufstopPreview') end,
+  vim.keymap.set('n', '<leader>w', function() vim.cmd('BufstopPreview') end,
     { desc = 'Bufstop Preview' })
   vim.keymap.set('n', '<leader>a', function() vim.cmd('BufstopModeFast') end,
     { desc = 'Bufstop in the command line' })
 
-  vim.g.BufstopAutoSpeedToggle = 1
   vim.g.BufstopSplit = 'topleft'
-  -- vim.g.BufstopFileSymbolFunc = 'MyGetFileTypeSymbol'
+  vim.g.BufstopFileSymbolFunc = 'MyGetFileTypeSymbol'
 end
 
 function VimpanelConfig()

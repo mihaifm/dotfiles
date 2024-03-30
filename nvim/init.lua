@@ -112,6 +112,7 @@ vim.g.maplocalleader = ','
 
 -- delete without yanking
 vim.keymap.set({ 'n', 'v' }, '<leader>d', '"_d', { desc = 'Delete without yanking' })
+vim.keymap.set({ 'n', 'v' }, '<leader>c', '"_c', { desc = 'Change without yanking' })
 
 -- Copy-paste with CTRL-C CTRL-V
 vim.keymap.set({ 'n', 'v' }, '<C-c>', '"+y', { desc = 'Copy with CTRL-C' })
