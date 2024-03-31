@@ -42,6 +42,10 @@ vim.opt.timeoutlen = 900
 vim.opt.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣', precedes = '<', extends = '>' }
 
+-- keep some rows/columns visible when moving cursor at the edges of the screen
+vim.opt.scrolloff = 3
+vim.opt.sidescrolloff = 3
+
 -- search settings
 vim.opt.ignorecase = true
 vim.opt.smartcase = true

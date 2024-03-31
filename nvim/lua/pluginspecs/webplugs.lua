@@ -29,6 +29,33 @@ return {
   },
 
   { "tpope/vim-fugitive" },
+  { "tpope/vim-sleuth" },
+  { "tpope/vim-surround" },
+
+  { "numToStr/Comment.nvim", opts = {} },
+
+  { "lewis6991/gitsigns.nvim", opts = {} },
+
+  {
+    'folke/which-key.nvim',
+    event = 'VimEnter',
+    config = function()
+      local wk = require('which-key')
+      wk.setup()
+
+      wk.register({
+        ['<C-w>'] = { name = "+Window" },
+        ['g'] = { name = "+Go" },
+        ['z'] = { name = "+Fold" },
+        ['<space>'] = { name = "+LSP" },
+        ['<leader>'] = {
+          name = "+Leader",
+          f = { name = "+Copy file info" },
+          t = { name = "+Telescope"},
+        }
+      })
+    end
+  },
 
   {
     "mbbill/undotree",
@@ -135,16 +162,16 @@ return {
           vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
           vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
           vim.keymap.set("n", "gk", vim.lsp.buf.signature_help, opts)
-          vim.keymap.set("n", "<leader>wa", vim.lsp.buf.add_workspace_folder, opts)
-          vim.keymap.set("n", "<leader>wr", vim.lsp.buf.remove_workspace_folder, opts)
-          vim.keymap.set("n", "<leader>wl", function()
+          vim.keymap.set("n", "<space>wa", vim.lsp.buf.add_workspace_folder, opts)
+          vim.keymap.set("n", "<space>wr", vim.lsp.buf.remove_workspace_folder, opts)
+          vim.keymap.set("n", "<space>wl", function()
             print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
           end, opts)
-          vim.keymap.set("n", "<leader>D", vim.lsp.buf.type_definition, opts)
-          vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
-          vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
+          vim.keymap.set("n", "<space>D", vim.lsp.buf.type_definition, opts)
+          vim.keymap.set("n", "<space>rn", vim.lsp.buf.rename, opts)
+          vim.keymap.set({ "n", "v" }, "<space>ca", vim.lsp.buf.code_action, opts)
           vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
-          vim.keymap.set("n", "<leader>kf", function()
+          vim.keymap.set("n", "<space>kf", function()
             vim.lsp.buf.format({ async = true })
           end, opts)
         end,
