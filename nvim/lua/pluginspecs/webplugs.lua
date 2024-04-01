@@ -114,18 +114,36 @@ return {
     enabled = true,
     build = ":TSUpdate",
     config = function()
-      require("nvim-treesitter.install").compilers = { "/opt/rh/devtoolset-12/root/usr/bin/gcc" }
+      if not vim.fn.has('win32') then
+        require("nvim-treesitter.install").compilers = { "/opt/rh/devtoolset-12/root/usr/bin/gcc" }
+      end
 
-      local configs = require("nvim-treesitter.configs")
-
-      configs.setup({
-        ensure_installed = { "c", "lua", "vim", "vimdoc", "javascript", "python", "html" },
+      require("nvim-treesitter.configs").setup({
+        ensure_installed = { "c", "lua", "vim", "vimdoc", "javascript", "python", "html", "bash" },
         sync_install = false,
         highlight = { enable = true },
         indent = { enable = true },
+        incremental_selection = {
+          enable = true,
+          keymaps = {
+            init_selection = "gnn",
+            node_incremental = "grn",
+            scope_incremental = "grc",
+            node_decremental = "grm",
+          },
+        }
       })
     end,
     desc = "open nvim from the VS2022 Command Prompt to install parsers on Windows",
+  },
+
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+    config = function()
+      require'treesitter-context'.setup({
+        max_lines = 3
+      })
+    end
   },
 
   {
@@ -193,7 +211,7 @@ return {
       { 'folke/neodev.nvim', opts = {} },
       { 'j-hui/fidget.nvim', opts = {} },
     },
-      config = function()
+    config = function()
       local servers = {
         -- clangd = {},
         -- gopls = {},
