@@ -5,29 +5,6 @@ vim.g.neovide_transparency = 0.96
 vim.g.neovide_hide_mouse_when_typing = true
 
 return {
-  {
-    "easymotion/vim-easymotion",
-    enabled = false,
-    config = function()
-      vim.keymap.set('n', 'ss', '<Plug>(easymotion-s2)', { desc = 'EasyMotion search 2 characters' })
-      vim.keymap.set('n', 'st', '<Plug>(easymotion-t2)', { desc = 'EasyMotion till 2 characters' })
-      vim.keymap.set('n', 'sl', '<Plug>(easymotion-lineforward)', { desc = 'EasyMotion line forward' })
-      vim.keymap.set('n', 'sj', '<Plug>(easymotion-j)', { desc = 'EasyMotion line below' })
-      vim.keymap.set('n', 'sk', '<Plug>(easymotion-k)', { desc = 'EasyMotion line above' })
-      vim.keymap.set('n', 'sh', '<Plug>(easymotion-linebackward)', { desc = 'EasyMotion line backward' })
-      vim.keymap.set('n', 's/', '<Plug>(easymotion-sn)', { desc = 'EasyMotion search n characters' })
-      vim.keymap.set('o', 's/', '<Plug>(easymotion-tn)', { desc = 'EasyMotion till n characters' })
-      vim.keymap.set('n', 'sn', '<Plug>(easymotion-next)', { desc = 'EasyMotion jump to next match' })
-      vim.keymap.set('n', 'sN', '<Plug>(easymotion-prev)', { desc = 'EasyMotion jump to previous match' })
-      vim.keymap.set('n', 'sw', '<Plug>(easymotion-w)', { desc = 'EasyMotion jump to word' })
-      vim.keymap.set('n', 'sb', '<Plug>(easymotion-bd-w)', { desc = 'EasyMotion jump to word backwards' })
-      vim.keymap.set('n', 'se', '<Plug>(easymotion-e)', { desc = 'EasyMotion jump to end of word' })
-
-      vim.g.EasyMotion_startofline = 0
-      vim.g.EasyMotion_keys = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    end
-  },
-
   { "tpope/vim-fugitive" },
   { "tpope/vim-sleuth" },
   { "tpope/vim-surround" },
@@ -37,29 +14,74 @@ return {
   { "lewis6991/gitsigns.nvim", opts = {} },
 
   {
+    "mbbill/undotree",
+    desc = "requires diff utility (it comes with the vim91 distribution)",
+  },
+
+  {
     'folke/which-key.nvim',
     event = 'VimEnter',
     config = function()
       local wk = require('which-key')
       wk.setup()
 
+      vim.opt.timeoutlen = 500
+
       wk.register({
         ['<C-w>'] = { name = "+Window" },
         ['g'] = { name = "+Go" },
         ['z'] = { name = "+Fold" },
-        ['<space>'] = { name = "+LSP" },
+        ['t'] = { name = "+Telescope"},
+        ['s'] = { name = "+Flash search"},
+        ['<space>'] = {
+          name = "+LSP",
+          ['g'] = {
+            name = "+Goto",
+            ['d'] = 'Goto definition',
+            ['D'] = 'Goto declaration',
+            ['i'] = 'Goto implementation',
+            ['t'] = 'Goto type definition',
+            ['r'] = 'Goto references'
+          },
+          ['w'] = {
+            name = "+Workspace folders",
+            ['a'] = 'Add document folder',
+            ['r'] = 'Remove document folder',
+            ['l'] = 'List document folders'
+          },
+          ['s'] = {
+            name = "+View symbols",
+            ['d'] = 'Document symbols',
+            ['w'] = 'Workspace symbols'
+          },
+          ['K'] = { 'Hover documentation' },
+          ['r'] = { 'Rename variable' },
+          ['f'] = { 'Format code' }
+        },
         ['<leader>'] = {
           name = "+Leader",
-          f = { name = "+Copy file info" },
-          t = { name = "+Telescope"},
+          ['f'] = { name = "+Copy file info" },
         }
       })
     end
   },
 
   {
-    "mbbill/undotree",
-    desc = "requires diff utility (it comes with the vim91 distribution)",
+    "folke/flash.nvim",
+    event = "VeryLazy",
+    opts = {
+      modes = {
+        search = { enabled = false },
+        char = { enabled = false },
+      }
+    },
+    keys = {
+      { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
+      -- { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
+      { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
+      { "<C-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+    },
   },
 
   {
@@ -77,11 +99,6 @@ return {
       vim.g.nord_italic = false
       require("nord").set()
     end,
-  },
-
-  {
-    "itchyny/lightline.vim",
-    enabled = false,
   },
 
   {
@@ -113,17 +130,13 @@ return {
 
   {
     "nvim-telescope/telescope.nvim",
-    tag = "0.1.5",
+    branch = '0.1.x',
+    event = 'VimEnter',
     dependencies = {
       "nvim-lua/plenary.nvim",
       'nvim-telescope/telescope-ui-select.nvim',
     },
     config = function()
-      local builtin = require("telescope.builtin")
-      vim.keymap.set("n", "<leader>tf", builtin.find_files, {})
-      vim.keymap.set("n", "<leader>tg", builtin.live_grep, {})
-      vim.keymap.set("n", "<C-p>", builtin.git_files, {})
-
       require('telescope').setup {
         extensions = {
           ['ui-select'] = {
@@ -131,67 +144,136 @@ return {
           },
         },
       }
+
+      pcall(require('telescope').load_extension, 'ui-select')
+
+      local builtin = require("telescope.builtin")
+
+      local telekey = "t"
+
+      vim.keymap.set("n", telekey .. 'f', function()
+          builtin.find_files({ hidden = true, no_ignore = true })
+        end, { desc = 'Find files' })
+
+      vim.keymap.set("n", telekey .. 'g', builtin.live_grep, { desc = 'Grep files' })
+      vim.keymap.set("n", telekey .. 't', builtin.git_files, { desc = 'Find git files' })
+      vim.keymap.set("n", telekey .. 'h', builtin.help_tags, { desc = 'Search help' })
+      vim.keymap.set("n", telekey .. 'k', builtin.keymaps, { desc = 'Search keymaps' })
+      vim.keymap.set("n", telekey .. 'u', builtin.builtin, { desc = 'Select Telescope builtin' })
+      vim.keymap.set('n', telekey .. 'w', builtin.grep_string, { desc = 'Search current word' })
+      vim.keymap.set("n", telekey .. 'd', builtin.diagnostics, { desc = 'Search diagnostics' })
+      vim.keymap.set("n", telekey .. 'r', builtin.resume, { desc = 'Resume previous search' })
+      vim.keymap.set("n", telekey .. 'p', builtin.oldfiles, { desc = 'Find recent files' })
+      vim.keymap.set("n", telekey .. 'b', builtin.buffers, { desc = 'Find buffers' })
+
+      vim.keymap.set('n', telekey .. 'c', function()
+        builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+          winblend = 10,
+          previewer = false,
+        })
+      end, { desc = 'Search current buffer' })
+
+      vim.keymap.set('n', telekey .. 'o', function()
+        builtin.live_grep { grep_open_files = true, prompt_title = 'Grep open files' }
+      end, { desc = 'Search in open files' })
+
+      vim.keymap.set('n', telekey .. 'n', function()
+        builtin.find_files { cwd = vim.fn.stdpath 'config' }
+      end, { desc = 'Search Neovim files' })
+
     end,
     desc = "requires ripgrep",
   },
 
   {
-    "williamboman/mason.nvim",
-    config = function()
-      require("mason").setup()
-    end,
-  },
+    'neovim/nvim-lspconfig',
+    dependencies = {
+      { "williamboman/mason.nvim" },
+      { "williamboman/mason-lspconfig.nvim", },
+      { 'folke/neodev.nvim', opts = {} },
+      { 'j-hui/fidget.nvim', opts = {} },
+    },
+      config = function()
+      local servers = {
+        -- clangd = {},
+        -- gopls = {},
+        -- pyright = {},
+        -- rust_analyzer = {},
+        -- tsserver = {},
+        lua_ls = {},
+      }
 
-  {
-    "neovim/nvim-lspconfig",
-    config = function()
-      local lspconfig = require("lspconfig")
+      local capabilities = vim.lsp.protocol.make_client_capabilities()
 
-      local capabilities = require("cmp_nvim_lsp").default_capabilities()
+      -- unclear if this is needed
+      capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
-      lspconfig.lua_ls.setup({ capabilities = capabilities })
-      -- lspconfig.tsserver.setup({ capabilities = capabilities })
+      require('mason').setup()
+      local ensure_installed = vim.tbl_keys(servers or {})
+
+      require('mason-lspconfig').setup {
+        ensure_installed = ensure_installed,
+        handlers = {
+          function(server_name)
+            local server = servers[server_name] or {}
+            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+            require('lspconfig')[server_name].setup(server)
+          end,
+        },
+      }
 
       vim.api.nvim_create_autocmd("LspAttach", {
-        group = vim.api.nvim_create_augroup("UserLspConfig", {}),
-        callback = function(ev)
-          -- Buffer local mappings. See :help vim.lsp.*
-          local opts = { buffer = ev.buf }
-          vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
-          vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-          vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-          vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
-          vim.keymap.set("n", "gk", vim.lsp.buf.signature_help, opts)
-          vim.keymap.set("n", "<space>wa", vim.lsp.buf.add_workspace_folder, opts)
-          vim.keymap.set("n", "<space>wr", vim.lsp.buf.remove_workspace_folder, opts)
-          vim.keymap.set("n", "<space>wl", function()
+        group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
+        callback = function(event)
+          local map = function(mode, keys, func, desc)
+            vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = desc })
+          end
+
+          local lspkey = '<space>'
+
+          map("n", lspkey .. 'gD', vim.lsp.buf.declaration, 'Goto declaration')
+
+          map("n", lspkey .. 'gd', require('telescope.builtin').lsp_definitions, 'Goto definition')
+          map("n", lspkey .. 'gi', require('telescope.builtin').lsp_implementations, 'Goto implementation')
+          map("n", lspkey .. 'gt', require('telescope.builtin').lsp_type_definitions, 'Goto type definition')
+          map("n", lspkey .. 'gr', require('telescope.builtin').lsp_references, 'Goto references')
+
+          map('n', lspkey .. 'sd', require('telescope.builtin').lsp_document_symbols, 'Document symbols')
+          map('n', lspkey .. 'sw', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Workspace symbols')
+
+          map("n", lspkey .. 'K', vim.lsp.buf.hover, 'Hover documentation')
+          map("n", lspkey .. 'S', vim.lsp.buf.signature_help, 'Signature help')
+          map("n", lspkey .. 'r', vim.lsp.buf.rename, 'Rename variable')
+          map({ "n", "v" }, lspkey .. 'c', vim.lsp.buf.code_action, 'Code action')
+
+          map("n", lspkey .. 'wa', vim.lsp.buf.add_workspace_folder, 'Add workspace folder')
+          map("n", lspkey .. 'wr', vim.lsp.buf.remove_workspace_folder, 'Remove workspace folder')
+          map("n", lspkey .. 'wl', function()
             print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-          end, opts)
-          vim.keymap.set("n", "<space>D", vim.lsp.buf.type_definition, opts)
-          vim.keymap.set("n", "<space>rn", vim.lsp.buf.rename, opts)
-          vim.keymap.set({ "n", "v" }, "<space>ca", vim.lsp.buf.code_action, opts)
-          vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
-          vim.keymap.set("n", "<space>kf", function()
-            vim.lsp.buf.format({ async = true })
-          end, opts)
+          end, 'List workspace folders')
+
+          map({ 'n', 'v'}, lspkey .. 'f', function()
+            require("conform").format({ bufnr = event.buf })
+            -- uncomment if using null-ls instead of conform.nvim
+            -- vim.lsp.buf.format({ async = true })
+          end, 'Format code')
+
+          -- highlight references to the word under cursor (see :help CursorHold)
+          local client = vim.lsp.get_client_by_id(event.data.client_id)
+          if client and client.server_capabilities.documentHighlightProvider then
+            vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+              buffer = event.buf,
+              callback = vim.lsp.buf.document_highlight,
+            })
+
+            vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+              buffer = event.buf,
+              callback = vim.lsp.buf.clear_references,
+            })
+          end
         end,
       })
-    end,
-    dependencies = {
-      {
-        "williamboman/mason-lspconfig.nvim",
-        config = function()
-          require("mason-lspconfig").setup({
-            ensure_installed = {
-              "lua_ls",
-              --"tsserver",
-              "clangd",
-            },
-          })
-        end,
-      },
-      { 'folke/neodev.nvim', opts = {} },
-    }
+    end
   },
 
   {
@@ -301,13 +383,34 @@ return {
 
   {
     "hrsh7th/nvim-cmp",
+    dependencies = {
+      {
+        "L3MON4D3/LuaSnip",
+        dependencies = {
+          { "saadparwaiz1/cmp_luasnip" },
+          {
+            "rafamadriz/friendly-snippets",
+            config = function()
+              require("luasnip.loaders.from_vscode").lazy_load()
+            end,
+          }
+        },
+      },
+      { "hrsh7th/cmp-path" },
+      { "hrsh7th/cmp-nvim-lsp" },
+      { "hrsh7th/cmp-nvim-lsp-signature-help" },
+      { "hrsh7th/cmp-buffer" },
+      { "hrsh7th/cmp-cmdline" },
+    },
     config = function()
       local cmp = require("cmp")
+      local luasnip = require('luasnip')
+      luasnip.config.setup({})
 
       cmp.setup({
         snippet = {
           expand = function(args)
-            require("luasnip").lsp_expand(args.body)
+            luasnip.lsp_expand(args.body)
           end,
         },
         window = {
@@ -319,34 +422,56 @@ return {
           ["<C-f>"] = cmp.mapping.scroll_docs(4),
           ["<C-Space>"] = cmp.mapping.complete(),
           ["<C-e>"] = cmp.mapping.abort(),
-          ["<CR>"] = cmp.mapping.confirm({ select = true }),
+          ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+
+          ['<C-l>'] = cmp.mapping(function()
+            if luasnip.expand_or_locally_jumpable() then
+              luasnip.expand_or_jump()
+            end
+          end, { 'i', 's' }),
+          ['<C-h>'] = cmp.mapping(function()
+            if luasnip.locally_jumpable(-1) then
+              luasnip.jump(-1)
+            end
+          end, { 'i', 's' }),
         }),
-        sources = cmp.config.sources({
-          { name = "luasnip" },
-          { name = "nvim_lsp" },
-          { name = "nvim_lsp_signature_help" },
-        }, {
-          { name = "buffer" },
-        }),
+        sources = {
+          -- sources in group 2 won't appear if the ones in group 1 are available
+          { name = "luasnip", group_index = 1 },
+          { name = "nvim_lsp", group_index = 1 },
+          { name = "nvim_lsp_signature_help", group_index = 1 },
+          { name = "path", option = { trailing_slash = true }, group_index = 1 },
+          { name = "buffer", group_index = 1 }
+        }
+      })
+
+      cmp.setup.cmdline({ '/', '?' }, {
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = {
+          { name = 'buffer' }
+        }
+      })
+
+      cmp.setup.cmdline(':', {
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = {
+          { name = 'path' },
+          { name = 'cmdline' }
+        },
+        matching = { disallow_symbol_nonprefix_matching = false }
       })
     end,
   },
 
-  { "hrsh7th/cmp-nvim-lsp" },
-
-  { "hrsh7th/cmp-nvim-lsp-signature-help" },
-
-  { "hrsh7th/cmp-buffer" },
-
   {
-    "L3MON4D3/LuaSnip",
-    dependencies = {
-      "saadparwaiz1/cmp_luasnip",
-      "rafamadriz/friendly-snippets",
+    'stevearc/conform.nvim',
+    opts = {
+      formatters_by_ft = {
+        lua = { 'stylua' },
+        -- use a sub-list to run only the first available formatter
+        javascript = { { "prettierd", "prettier" } },
+      },
     },
-    config = function()
-      require("luasnip.loaders.from_vscode").lazy_load()
-    end,
   },
 
   {

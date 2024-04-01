@@ -38,6 +38,9 @@ vim.opt.ttimeoutlen = 50
 -- time to complete a keymap sequence
 vim.opt.timeoutlen = 900
 
+-- time before the word under cursor is highlighted
+vim.opt.updatetime = 350
+
 -- show whitespace characters
 vim.opt.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣', precedes = '<', extends = '>' }
@@ -119,8 +122,8 @@ vim.keymap.set({ 'n', 'v' }, '<leader>d', '"_d', { desc = 'Delete without yankin
 vim.keymap.set({ 'n', 'v' }, '<leader>c', '"_c', { desc = 'Change without yanking' })
 
 -- Copy-paste with CTRL-C CTRL-V
-vim.keymap.set({ 'n', 'v' }, '<C-c>', '"+y', { desc = 'Copy with CTRL-C' })
-vim.keymap.set('n', '<C-v>', '"+gP', { desc = 'Paste with CTRL-V' })
+vim.keymap.set({ 'n', 'v'}, '<C-c>', '"+y', { desc = 'Copy with CTRL-C' })
+vim.keymap.set({'n', 'v'}, '<C-v>', '"+gP', { desc = 'Paste with CTRL-V' })
 vim.keymap.set('c', '<C-v>', '<C-r>+', { desc = 'Paste in command mode' })
 vim.keymap.set('i', '<C-v>', '<C-r>+', { desc = 'Paste in insert mode' })
 
@@ -147,7 +150,7 @@ vim.keymap.set('n', '<leader>fd', function() vim.cmd('let @+=expand("%:p:h")') e
 
 -- open Windows Explorer
 if vim.fn.has("win32") then
-  vim.keymap.set('n', '<leader>e', function() vim.cmd('silent r! explorer .') end,
+  vim.keymap.set('n', '<leader>x', function() vim.cmd('silent r! explorer .') end,
     { desc = 'Open Windows Explorer' })
 end
 
