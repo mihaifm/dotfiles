@@ -103,9 +103,26 @@ return {
 
   {
     "nvim-lualine/lualine.nvim",
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
     enabled = true,
     config = function()
-      require("lualine").setup()
+      vim.opt.statusline = ' '
+      require('lualine').setup({
+        options = {
+          section_separators = { left = '', right = '' },
+          component_separators = { left = '', right = '' },
+          disabled_filetypes = {
+            statusline = { 'vimpanel' }
+          }
+        },
+        sections = {
+          lualine_x = {
+            { 'filetype' },
+            { 'encoding', cond = function() return (vim.opt.fileencoding:get() ~= 'utf-8') end },
+            { 'fileformat', symbols = { unix = 'lf', dos = 'crlf', mac = 'cr'}}
+          }
+        }
+      })
     end,
   },
 
