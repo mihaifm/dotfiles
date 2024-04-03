@@ -13,6 +13,9 @@ vim.opt.signcolumn = 'yes'
 vim.opt.splitright = true
 vim.opt.splitbelow = true
 
+-- show at most 10 items in the completion menu
+vim.opt.pumheight = 10
+
 -------------------
 -- Editor settings
 

@@ -158,7 +158,7 @@ return {
     'nvim-treesitter/nvim-treesitter-context',
     config = function()
       require'treesitter-context'.setup({
-        max_lines = 3
+        max_lines = 2
       })
     end
   },
@@ -170,17 +170,32 @@ return {
     dependencies = {
       "nvim-lua/plenary.nvim",
       'nvim-telescope/telescope-ui-select.nvim',
+      "nvim-telescope/telescope-live-grep-args.nvim",
     },
     config = function()
-      require('telescope').setup {
+      local telescope = require("telescope")
+      local lga_actions = require("telescope-live-grep-args.actions")
+
+      telescope.setup {
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
           },
-        },
+          ['live_grep_args'] = {
+            auto_quoting = false,
+            mappings = {
+              i = {
+                ['<C-k><C-k>'] = lga_actions.quote_prompt(),
+                ['<C-k><C-c>'] = lga_actions.quote_prompt({ postfix = ' -t cpp'}),
+                ['<C-k><C-h>'] = lga_actions.quote_prompt({ postfix = ' -t h'}),
+              }
+            }
+          }
+        }
       }
 
       pcall(require('telescope').load_extension, 'ui-select')
+      pcall(require('telescope').load_extension, 'live_grep_args')
 
       local builtin = require("telescope.builtin")
 
@@ -216,6 +231,8 @@ return {
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = 'Search Neovim files' })
 
+      vim.keymap.set("n", telekey .. "a", ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>",
+        { desc = 'Grep with args' })
     end,
     desc = "requires ripgrep",
   },
@@ -312,9 +329,9 @@ return {
   },
 
   {
-    "mfussenegger/nvim-dap",
+    "rcarriga/nvim-dap-ui",
     dependencies = {
-      "rcarriga/nvim-dap-ui",
+      "mfussenegger/nvim-dap",
       "nvim-neotest/nvim-nio"
     },
     config = function()
@@ -392,27 +409,27 @@ return {
         dapui.close()
       end
 
-      vim.keymap.set("n", "<F5>", function() require("dap").continue() end)
-      vim.keymap.set("n", "<F10>", function() require("dap").step_over() end)
-      vim.keymap.set("n", "<F11>", function() require("dap").step_into() end)
-      vim.keymap.set("n", "<F12>", function() require("dap").step_out() end)
-      vim.keymap.set("n", "<F9>", function() require("dap").toggle_breakpoint() end)
-      -- vim.keymap.set("n", "<Leader>B", function() require("dap").set_breakpoint() end)
-      -- vim.keymap.set("n", "<Leader>lp", function()
-      --   require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: "))
-      -- end)
-      -- vim.keymap.set("n", "<Leader>dr", function() require("dap").repl.open() end)
-      -- vim.keymap.set("n", "<Leader>dl", function() require("dap").run_last() end)
-      -- vim.keymap.set({ "n", "v" }, "<Leader>dh", function() require("dap.ui.widgets").hover() end)
-      -- vim.keymap.set({ "n", "v" }, "<Leader>dp", function() require("dap.ui.widgets").preview() end)
-      -- vim.keymap.set("n", "<Leader>df", function()
-      --   local widgets = require("dap.ui.widgets")
-      --   widgets.centered_float(widgets.frames)
-      -- end)
-      -- vim.keymap.set("n", "<Leader>ds", function()
-      --   local widgets = require("dap.ui.widgets")
-      --   widgets.centered_float(widgets.scopes)
-      -- end)
+      vim.keymap.set("n", "<F5>", function() require("dap").continue() end, { desc = "DAP continue" })
+      vim.keymap.set("n", "<F10>", function() require("dap").step_over() end, { desc = "DAP step over"})
+      vim.keymap.set("n", "<F11>", function() require("dap").step_into() end, { desc = "DAP step into"})
+      vim.keymap.set("n", "<F12>", function() require("dap").step_out() end, { desc = "DAP step out"})
+      vim.keymap.set("n", "<F9>", function() require("dap").toggle_breakpoint() end, { desc = "DAP Toggle breakpoint"})
+
+      vim.keymap.set("n", "<Leader>pm", function()
+        require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: "))
+      end)
+      vim.keymap.set("n", "<Leader>pr", function() require("dap").repl.open() end)
+      vim.keymap.set("n", "<Leader>pl", function() require("dap").run_last() end)
+      vim.keymap.set({ "n", "v" }, "<Leader>ph", function() require("dap.ui.widgets").hover() end)
+      vim.keymap.set({ "n", "v" }, "<Leader>pp", function() require("dap.ui.widgets").preview() end)
+      vim.keymap.set("n", "<Leader>pf", function()
+        local widgets = require("dap.ui.widgets")
+        widgets.centered_float(widgets.frames)
+      end)
+      vim.keymap.set("n", "<Leader>ps", function()
+        local widgets = require("dap.ui.widgets")
+        widgets.centered_float(widgets.scopes)
+      end)
     end,
   },
 
@@ -480,21 +497,25 @@ return {
         }
       })
 
-      cmp.setup.cmdline({ '/', '?' }, {
+      ---@diagnostic disable-next-line
+      local searchOpts = {
         mapping = cmp.mapping.preset.cmdline(),
         sources = {
           { name = 'buffer' }
         }
-      })
+      }
+      -- cmp.setup.cmdline({ '/', '?' }, searchOpts)
 
-      cmp.setup.cmdline(':', {
+      ---@diagnostic disable-next-line
+      local cmdOpts = {
         mapping = cmp.mapping.preset.cmdline(),
         sources = {
           { name = 'path' },
           { name = 'cmdline' }
         },
         matching = { disallow_symbol_nonprefix_matching = false }
-      })
+      }
+      -- cmp.setup.cmdline(':', cmdOpts)
     end,
   },
 
