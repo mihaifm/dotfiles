@@ -1057,12 +1057,12 @@ func s:InstallWinbar(force)
   endif
 
   if has('menu') && &mouse != '' && (winbar || a:force)
-    nnoremenu WinBar.  :Step<CR>
-    nnoremenu WinBar.   :Over<CR>
-    nnoremenu WinBar.      :Finish<CR>:
-    nnoremenu WinBar.   :Continue<CR>
-    nnoremenu WinBar.   :Stop<CR>
-    nnoremenu WinBar.   :Evaluate<CR>
+    nnoremenu WinBar.  :Over<CR>
+    nnoremenu WinBar.  :Step<CR>
+    nnoremenu WinBar.  :Finish<CR>:
+    nnoremenu WinBar.  :Continue<CR>
+    nnoremenu WinBar.  :Stop<CR>
+    nnoremenu WinBar.  :Evaluate<CR>
     call add(s:winbar_winids, win_getid())
   endif
 endfunc
@@ -1124,12 +1124,12 @@ func s:DeleteCommands()
     let curwinid = win_getid()
     for winid in s:winbar_winids
       if win_gotoid(winid)
-	aunmenu WinBar. 
-	aunmenu WinBar. 
-	aunmenu WinBar.
-	aunmenu WinBar. 
-	aunmenu WinBar. 
-	aunmenu WinBar. 
+        aunmenu WinBar. 
+        aunmenu WinBar. 
+        aunmenu WinBar.
+        aunmenu WinBar. 
+        aunmenu WinBar. 
+        aunmenu WinBar. 
       endif
     endfor
     call win_gotoid(curwinid)

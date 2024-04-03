@@ -125,11 +125,22 @@ vim.g.maplocalleader = ','
 vim.keymap.set({ 'n', 'v' }, '<leader>d', '"_d', { desc = 'Delete without yanking' })
 vim.keymap.set({ 'n', 'v' }, '<leader>c', '"_c', { desc = 'Change without yanking' })
 
--- Copy-paste with CTRL-C CTRL-V
+-- copy-paste with CTRL-C CTRL-V
 vim.keymap.set({ 'n', 'v'}, '<C-c>', '"+y', { desc = 'Copy with CTRL-C' })
 vim.keymap.set({'n', 'v'}, '<C-v>', '"+gP', { desc = 'Paste with CTRL-V' })
 vim.keymap.set('c', '<C-v>', '<C-r>+', { desc = 'Paste in command mode' })
 vim.keymap.set('i', '<C-v>', '<C-r>+', { desc = 'Paste in insert mode' })
+
+vim.keymap.set('v', '<C-x>', '"+x', { desc = 'Cut in visual mode' })
+
+-- cut with CTRL-X, empty lines go the black hole registry
+vim.keymap.set('n', '<C-x>', function()
+  if vim.fn.match(vim.fn.getline('.'), '^\\s*$') == -1 then
+    vim.cmd('normal 0"+d$')
+  else
+    vim.cmd('normal "_dd')
+  end
+end, { desc = 'Cut in normal mode' })
 
 -- use CTRL-Q instead of CTRL-V to start visual block
 vim.keymap.set('n', '<C-q>', '<C-v>', { desc = 'Start visual block mode' })

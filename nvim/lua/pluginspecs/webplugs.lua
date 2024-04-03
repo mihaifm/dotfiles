@@ -4,6 +4,8 @@ vim.g.neovide_padding_right = 5
 vim.g.neovide_transparency = 0.96
 vim.g.neovide_hide_mouse_when_typing = true
 
+vim.g.termdebug_config = { wide = 1 }
+
 return {
   { "tpope/vim-fugitive" },
   { "tpope/vim-sleuth" },
@@ -118,8 +120,15 @@ return {
         sections = {
           lualine_x = {
             { 'filetype' },
-            { 'encoding', cond = function() return (vim.opt.fileencoding:get() ~= 'utf-8') end },
-            { 'fileformat', symbols = { unix = 'lf', dos = 'crlf', mac = 'cr'}}
+            {
+              'encoding',
+              cond = function() return (vim.opt.fileencoding:get() ~= 'utf-8') end
+            },
+            {
+              'fileformat',
+              cond = function() return (vim.opt.fileformat:get() ~= 'unix') end,
+              symbols = { unix = 'lf', dos = 'crlf', mac = 'cr' }
+            }
           }
         }
       })
@@ -177,6 +186,15 @@ return {
       local lga_actions = require("telescope-live-grep-args.actions")
 
       telescope.setup {
+        pickers = {
+          live_grep = {
+            mappings = {
+              i = {
+                ["<C-k><C-z>"] = require("telescope.actions").to_fuzzy_refine
+              }
+            }
+          }
+        },
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
@@ -188,6 +206,7 @@ return {
                 ['<C-k><C-k>'] = lga_actions.quote_prompt(),
                 ['<C-k><C-c>'] = lga_actions.quote_prompt({ postfix = ' -t cpp'}),
                 ['<C-k><C-h>'] = lga_actions.quote_prompt({ postfix = ' -t h'}),
+                ["<C-k><C-z>"] = require("telescope.actions").to_fuzzy_refine
               }
             }
           }
@@ -326,111 +345,6 @@ return {
         end,
       })
     end
-  },
-
-  {
-    "rcarriga/nvim-dap-ui",
-    dependencies = {
-      "mfussenegger/nvim-dap",
-      "nvim-neotest/nvim-nio"
-    },
-    config = function()
-      local dap = require("dap")
-      local dapui = require("dapui")
-
-      dapui.setup()
-
-      dap.adapters.gdb = {
-        id = "gdb",
-        type = "executable",
-        command = "gdb",
-        args = { "--quiet", "--interpreter=dap" },
-      }
-
-      dap.configurations.c = {
-        {
-          name = "Run executable (GDB)",
-          type = "gdb",
-          request = "launch",
-          -- This requires special handling of 'run_last', see
-          -- https://github.com/mfussenegger/nvim-dap/issues/1025#issuecomment-1695852355
-          program = function()
-            local path = vim.fn.input({
-              prompt = "Path to executable: ",
-              default = vim.fn.getcwd() .. "/",
-              completion = "file",
-            })
-
-            return (path and path ~= "") and path or dap.ABORT
-          end,
-        },
-        {
-          name = "Run executable with arguments (GDB)",
-          type = "gdb",
-          request = "launch",
-          -- This requires special handling of 'run_last', see
-          -- https://github.com/mfussenegger/nvim-dap/issues/1025#issuecomment-1695852355
-          program = function()
-            local path = vim.fn.input({
-              prompt = "Path to executable: ",
-              default = vim.fn.getcwd() .. "/",
-              completion = "file",
-            })
-
-            return (path and path ~= "") and path or dap.ABORT
-          end,
-          args = function()
-            local args_str = vim.fn.input({
-              prompt = "Arguments: ",
-            })
-            return vim.split(args_str, " +")
-          end,
-        },
-        {
-          name = "Attach to process (GDB)",
-          type = "gdb",
-          request = "attach",
-          processId = require("dap.utils").pick_process,
-        },
-      }
-
-      dap.configurations.cpp = dap.configurations.c
-
-      dap.listeners.before.attach.dapui_config = function()
-        dapui.open()
-      end
-      dap.listeners.before.launch.dapui_config = function()
-        dapui.open()
-      end
-      dap.listeners.before.event_terminated.dapui_config = function()
-        dapui.close()
-      end
-      dap.listeners.before.event_exited.dapui_config = function()
-        dapui.close()
-      end
-
-      vim.keymap.set("n", "<F5>", function() require("dap").continue() end, { desc = "DAP continue" })
-      vim.keymap.set("n", "<F10>", function() require("dap").step_over() end, { desc = "DAP step over"})
-      vim.keymap.set("n", "<F11>", function() require("dap").step_into() end, { desc = "DAP step into"})
-      vim.keymap.set("n", "<F12>", function() require("dap").step_out() end, { desc = "DAP step out"})
-      vim.keymap.set("n", "<F9>", function() require("dap").toggle_breakpoint() end, { desc = "DAP Toggle breakpoint"})
-
-      vim.keymap.set("n", "<Leader>pm", function()
-        require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: "))
-      end)
-      vim.keymap.set("n", "<Leader>pr", function() require("dap").repl.open() end)
-      vim.keymap.set("n", "<Leader>pl", function() require("dap").run_last() end)
-      vim.keymap.set({ "n", "v" }, "<Leader>ph", function() require("dap.ui.widgets").hover() end)
-      vim.keymap.set({ "n", "v" }, "<Leader>pp", function() require("dap.ui.widgets").preview() end)
-      vim.keymap.set("n", "<Leader>pf", function()
-        local widgets = require("dap.ui.widgets")
-        widgets.centered_float(widgets.frames)
-      end)
-      vim.keymap.set("n", "<Leader>ps", function()
-        local widgets = require("dap.ui.widgets")
-        widgets.centered_float(widgets.scopes)
-      end)
-    end,
   },
 
   {

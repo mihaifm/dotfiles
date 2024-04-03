@@ -1,0 +1,33 @@
+{
+  "adapters": {
+    "cppgdb" : {
+      "name": "cppgdb",
+      "command": [ "gdb", "--quiet", "--interpreter=dap" ]
+    }
+  },
+  "configurations": {
+    "Launch": {
+      "adapter": "cppgdb",
+      "configuration": {
+        "type":    "cppdbg",
+        "request": "launch",
+        "program": "INSERT_PROGRAM_NAME",
+        "args": [ "-INSERT_ARG1", "-INSERT_ARG2" ],
+        "stopAtEntry": true,
+        "MIMode": "gdb",
+        "logging": {
+          "engineLogging": true
+        }
+      },
+      "breakpoints": {
+        "exception": {
+          "assert": "N",
+          "exception": "N",
+          "throw": "N",
+          "rethrow": "N",
+          "catch": "N"
+        }
+      }
+    }
+  }
+}
