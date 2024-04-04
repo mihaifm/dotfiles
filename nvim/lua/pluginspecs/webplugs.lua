@@ -114,7 +114,11 @@ return {
           section_separators = { left = '', right = '' },
           component_separators = { left = '', right = '' },
           disabled_filetypes = {
-            statusline = { 'vimpanel' }
+            statusline = {
+              'vimpanel',
+              'dap-repl',
+              'dapui_console', 'dapui_watches', 'dapui_stacks', 'dapui_breakpoints', 'dapui_scopes'
+            }
           }
         },
         sections = {
@@ -459,4 +463,35 @@ return {
       })
     end,
   },
+  {
+    "akinsho/toggleterm.nvim",
+    version = "*",
+    cmd = { "ToggleTerm", "TermExec" },
+    config = function()
+      function _G.set_terminal_keymaps()
+        local opts = {buffer = 0}
+        vim.keymap.set('t', '<esc>', [[<C-\><C-n>]], opts)
+        vim.keymap.set('t', 'jk', [[<C-\><C-n>]], opts)
+        vim.keymap.set('t', '<C-w>', [[<C-\><C-n><C-w>]], opts)
+      end
+
+      vim.cmd('autocmd! TermOpen term://*toggleterm#* lua set_terminal_keymaps()')
+
+      vim.keymap.set('n', '<leader>tf', "<Cmd>ToggleTerm direction=float<CR>",
+        { desc = "ToggleTerm float" })
+      vim.keymap.set('n', '<leader>th', "<Cmd>ToggleTerm size=10 direction=horizontal<CR>",
+        { desc = "ToggleTerm horizontal split" })
+      vim.keymap.set('n', '<leader>tv', "<Cmd>ToggleTerm size=80 direction=vertical<CR>",
+        { desc = "ToggleTerm vertical split" })
+
+      require("toggleterm").setup({
+        open_mapping = [[<c-\>]],
+        shading_factor = 2,
+        on_open = function()
+          vim.opt_local.foldcolumn = "0"
+          vim.opt_local.signcolumn = "no"
+        end
+      })
+    end
+  }
 }
