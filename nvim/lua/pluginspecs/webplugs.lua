@@ -22,6 +22,7 @@ return {
 
   {
     'folke/which-key.nvim',
+    enabled = true,
     event = 'VimEnter',
     config = function()
       local wk = require('which-key')
@@ -150,7 +151,10 @@ return {
 
       require("nvim-treesitter.configs").setup({
         ensure_installed = { "c", "lua", "vim", "vimdoc", "javascript", "python", "html", "bash" },
+        auto_install = false,
         sync_install = false,
+        ignore_install = {},
+        modules = {},
         highlight = { enable = true },
         indent = { enable = true },
         incremental_selection = {
@@ -466,22 +470,28 @@ return {
   {
     "akinsho/toggleterm.nvim",
     version = "*",
-    cmd = { "ToggleTerm", "TermExec" },
+    -- cmd = { "ToggleTerm", "TermExec" }, -- doesn't seem to work
     config = function()
-      function _G.set_terminal_keymaps()
-        local opts = {buffer = 0}
-        vim.keymap.set('t', '<esc>', [[<C-\><C-n>]], opts)
-        vim.keymap.set('t', 'jk', [[<C-\><C-n>]], opts)
-        vim.keymap.set('t', '<C-w>', [[<C-\><C-n><C-w>]], opts)
-      end
+      vim.api.nvim_create_autocmd("TermOpen", {
+        group = vim.api.nvim_create_augroup("UserTermOpen", { clear = true }),
+        pattern = { "term://*toggleterm*" },
+        callback = function(event)
+          local map = function(mode, keys, func, desc)
+            vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = desc })
+          end
+              map('t', '<esc>', [[<C-\><C-n>]], 'Exit terminal mode')
+              map('t', 'jk', [[<C-\><C-n>]], 'Exit terminal mode')
+              map('t', '<C-w>', [[<C-\><C-n><C-w>]], 'Change window')
+        end
+      })
 
-      vim.cmd('autocmd! TermOpen term://*toggleterm#* lua set_terminal_keymaps()')
+      local togkey = '<leader>t'
 
-      vim.keymap.set('n', '<leader>tf', "<Cmd>ToggleTerm direction=float<CR>",
+      vim.keymap.set('n', togkey .. 'f', "<Cmd>ToggleTerm direction=float<CR>",
         { desc = "ToggleTerm float" })
-      vim.keymap.set('n', '<leader>th', "<Cmd>ToggleTerm size=10 direction=horizontal<CR>",
+      vim.keymap.set('n', togkey .. 'h', "<Cmd>ToggleTerm size=10 direction=horizontal<CR>",
         { desc = "ToggleTerm horizontal split" })
-      vim.keymap.set('n', '<leader>tv', "<Cmd>ToggleTerm size=80 direction=vertical<CR>",
+      vim.keymap.set('n', togkey .. 'v', "<Cmd>ToggleTerm size=80 direction=vertical<CR>",
         { desc = "ToggleTerm vertical split" })
 
       require("toggleterm").setup({
