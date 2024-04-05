@@ -25,6 +25,7 @@ if [[ $1 == "snap" ]]; then
 
   # Tmux
   cp ~/.tmux.conf snap
+  cp -r ~/.tmux snap
 
   tar -czf ../dotfiles.tar.gz -C .. dotfiles
 
@@ -68,6 +69,10 @@ if [[ $1 == "restore" ]]; then
   mv ~/.tmux.conf ~/.oldtmux.conf
   cp snap/.tmux.conf ~/
 
+  rm -rf ~/.oldtmux
+  mv ~/.tmux ~/.oldtmux
+  cp -r snap/.tmux ~/
+
   exit
 fi
 
@@ -86,6 +91,10 @@ if [[ $1 == "clean" ]]; then
 
   rm -rf ~/.local/state/oldnvim
   mv ~/.local/state/nvim ~/.local/state/oldnvim
+
+  # Tmux
+  rm -rf ~/.oldtmux
+  mv ~/.tmux ~/.oldtmux
 
   exit
 fi
@@ -112,8 +121,12 @@ if [[ $1 == "repo" ]]; then
   cp nethack/.nethackrc ~/.nethackrc
 
   # Tmux
+  rm -rf ~/.tmux/plugins/tpm
+  mkdir -p ~/.tmux/plugins
+  cp -r tmux/plugins/tpm ~/.tmux/plugins/
+
   mv ~/.tmux.conf ~/.oldtmux.conf
-  cp tmux/.tmux.conf ~/.tmux.conf
+  cp tmux/tmux.conf ~/.tmux.conf
 
   exit
 fi

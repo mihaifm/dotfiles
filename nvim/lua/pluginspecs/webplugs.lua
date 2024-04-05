@@ -6,6 +6,8 @@ vim.g.neovide_hide_mouse_when_typing = true
 
 vim.g.termdebug_config = { wide = 1 }
 
+vim.g.tmux_navigator_no_mappings = 1
+
 return {
   { "tpope/vim-fugitive" },
   { "tpope/vim-sleuth" },
@@ -145,10 +147,6 @@ return {
     enabled = true,
     build = ":TSUpdate",
     config = function()
-      if not vim.fn.has('win32') then
-        require("nvim-treesitter.install").compilers = { "/opt/rh/devtoolset-12/root/usr/bin/gcc" }
-      end
-
       require("nvim-treesitter.configs").setup({
         ensure_installed = { "c", "cpp", "lua", "vim", "vimdoc", "javascript", "python", "html", "bash" },
         auto_install = false,
@@ -503,5 +501,20 @@ return {
         end
       })
     end
+  },
+  {
+    "christoomey/vim-tmux-navigator",
+    enabled = true,
+    cond = function () return vim.fn.has("win32") == 0 end,
+    keys = {
+      { "<C-w><C-h>", "<cmd>TmuxNavigateLeft<cr>" },
+      { "<C-w><C-j>", "<cmd>TmuxNavigateDown<cr>" },
+      { "<C-w><C-k>", "<cmd>TmuxNavigateUp<cr>" },
+      { "<C-w><C-l>", "<cmd>TmuxNavigateRight<cr>" },
+      { "<C-w>h", "<cmd>TmuxNavigateLeft<cr>" },
+      { "<C-w>j", "<cmd>TmuxNavigateDown<cr>" },
+      { "<C-w>k", "<cmd>TmuxNavigateUp<cr>" },
+      { "<C-w>l", "<cmd>TmuxNavigateRight<cr>" },
+    },
   }
 }
