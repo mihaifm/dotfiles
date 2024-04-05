@@ -1,6 +1,7 @@
 ---------------
 -- UI settings
 
+-- general settings
 vim.opt.mouse = 'a'
 vim.opt.showmode = false
 vim.opt.clipboard = 'unnamedplus'
@@ -8,8 +9,7 @@ vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.signcolumn = 'yes'
 
--- split below and to the right by default
--- also impacts help placement
+-- default split locations - impacts help placement
 vim.opt.splitright = true
 vim.opt.splitbelow = true
 

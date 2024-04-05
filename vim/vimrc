@@ -4,16 +4,17 @@
 " Incompatible with vi
 set nocompatible
 
-" ignore case when searching
-set ignorecase
-" case sensitive search only if uppercase characters are used
-set smartcase
-" highlight search term while typing
-set incsearch
-
 " encoding
 set encoding=utf8
 scriptencoding utf-8
+
+"""""""""""""""""
+" Editor settings
+
+" indentation
+set ignorecase
+set smartcase
+set incsearch
 
 " EOL settings
 set ffs=unix,dos,mac
@@ -22,15 +23,13 @@ set ffs=unix,dos,mac
 set nobackup
 set nowb
 set noswapfile
+set viminfo=
 
 " allow modified/unsaved buffers
 set hid
 
 " hide buffers instead of deleting them
 set bufhidden=hide
-
-" infect with plugins (for older versions of vim)
-execute pathogen#infect()
 
 " enable mouse support
 set mouse=a
@@ -47,8 +46,6 @@ set backspace=indent,eol,start whichwrap+=<,>,[,]
 " disable auto insertion of comments
 autocmd BufEnter * set formatoptions-=cro
 
-set viminfo=
-
 " disable annoying formatting for html (help html.vim)
 let html_no_rendering=1
 
@@ -58,20 +55,16 @@ set complete-=i
 " maintain the current column after various commands
 set nostartofline
 
-" splitting a window will put it below the current one.
+" default split locations - impacts help placement
 set splitbelow
-" splitting a window will put it to the right of the current one.
 set splitright
 
-" keep 5 chars visible at sides of screen
-set sidescrolloff=5
+" keep some rows/columns visible when moving cursor at the edges of the screen
+set scrolloff=3
+set sidescrolloff=3
 
-if has("win32")
-  set shell=cmd
-endif
-
-"""""""""""
-" GUI setup
+""""""""""""""
+" UI settings 
 
 if has("gui_running")
   " remove menu bar
@@ -94,28 +87,27 @@ if has("gui_running")
   set lines=40
   set columns=130
 
+  " foldcolumn is 3 characters wide
   set foldcolumn=3
 endif
 
-" highlight with gui colors when running in terminal
+" highlight with gui colors when running in the terminal
 if v:version > 800
   set termguicolors
 endif
 
-" load colorscheme
-set background=dark
-
 " fill vertical bar with dots
 set fillchars+=vert:.
 
-"""""""""""
-" Interface
-
-" Turn on Wild menu
+" enable completion menu
 set wildmenu
 
 " always show cursor position
 set ruler
+
+" monocolor in terminal
+let g:terminal_ansi_colors = ['white', 'white', 'white', 'white', 'white', 'white', 'white', 'white',
+                            \ 'white', 'white', 'white', 'white', 'white', 'white', 'white', 'white']
 
 """""""""""""""
 " Key mappings
@@ -192,9 +184,6 @@ endif
 " remap : in select mode, which normally inserts text
 smap : <Esc>:
 
-" close(wipe) the current buffer without closing the window
-map <leader>d :BufstopBack<CR>:bw! #<CR>
-
 if has("clipboard")
   noremap <leader>ff :let @+=expand("%:p")<CR>
   noremap <leader>fn :let @+=expand("%:t")<CR>
@@ -205,20 +194,16 @@ else
   noremap <leader>fd :let @c=expand("%:p:h") \| call TmuxCopyReg("c")<CR>
 endif
 
-function TmuxCopyReg(r)
+function! TmuxCopyReg(r)
   if $TMUX == ''
         return
     endif
   call system('tmux loadb -w -', getreg(a:r))
 endfunc
 
-noremap <leader>v :vs<CR>:Bufstop<CR>
-
-map <leader>e :silent r! explorer .<CR>
-
-map <leader>b :Bufstop<CR>
-map <leader>a :BufstopModeFast<CR>
-map <leader>w :BufstopPreview<CR>
+if has("win32")
+  map <leader>e :silent r! explorer .<CR>
+end
 
 nmap <leader>z :let &scrolloff=999-&scrolloff<CR>
 
@@ -228,18 +213,6 @@ nmap <C-k> 3k3<C-y>
 
 " change current dir
 nmap <leader>cd :cd\ %:p:h<CR>
-
-""""""""""""""""
-" Abbreviations
-
-cabbrev ss VimpanelSessionMake
-cabbrev sl VimpanelSessionLoad
-cabbrev vp Vimpanel
-cabbrev vl VimpanelLoad
-cabbrev vc VimpanelCreate
-cabbrev ve VimpanelEdit
-cabbrev vo VimpanelOpen
-cabbrev vr VimpanelRemove
 
 """"""""""""""
 " Indentation
@@ -288,129 +261,8 @@ set statusline+=\                     " [ ]
 set statusline+=%3*
 set statusline+=%<%P                  " percent
 
-""""""""""
-" Plugins
-
-
-" Easy motion
-nmap ss <Plug>(easymotion-s2)
-nmap st <Plug>(easymotion-t2)
-map sl <Plug>(easymotion-lineforward)
-map sj <Plug>(easymotion-j)
-map sk <Plug>(easymotion-k)
-map sh <Plug>(easymotion-linebackward)
-map s/ <Plug>(easymotion-sn)
-omap s/ <Plug>(easymotion-tn)
-map sn <Plug>(easymotion-next)
-map sN <Plug>(easymotion-prev)
-map sw <Plug>(easymotion-w)
-map sb <Plug>(easymotion-bd-w)
-map se <Plug>(easymotion-e)
-
-let g:EasyMotion_startofline = 0
-let g:EasyMotion_keys = 'asdghkqwertyuiopzxcvbnmfjl'
-
-" bufstop
-let g:BufstopAutoSpeedToggle = 1
-let g:BufstopSplit = "topleft"
-let g:BufstopKeys = "1234asfcvzx5qwertyuiopbnm67890ABCEFGHIJKLMNOPQRSTUVZ"
-let g:BufstopShowUnlisted = 1
-
-" lightline
-set noshowmode
-let g:lightline = {
-  \ 'inactive': { 'left': [['imode'], ['filename']] },
-  \ 'component' : { 'imode': 'INACT' },
-  \ 'component_function': { 
-    \ 'readonly': 'LightReadOnly', 'filename': 'LightFilename', 'modified': 'LightModified', 'mode': 'LightMode',
-    \ 'fileformat': 'LightFileformat', 'fileencoding': 'LightEncoding', 'filetype': 'LightFiletype',
-    \ 'percent': 'LightPercent'},
-  \ 'colorscheme': '4colors' }
-
-func! LightReadOnly()
-  if expand('%:t') =~# '^vimspector'
-    return ''
-  endif
-
-  return &readonly ? 'RO' : ''
-endfunc
-
-func! LightFilename()
-  if expand('%:t') ==# '--Bufstop--'
-    return ''
-  endif
-  if winwidth(0) > 70
-    return MyGetFileTypeSymbol(expand('%:t')) . expand('%:t')
-  else
-    return expand('%:t') !=# '' ? expand('%:t') : '[No Name]'
-  endif
-endfunc
-
-funct! LightMode()
-  return expand('%:t') ==# '--Bufstop--' ? 'BUFSTOP' : lightline#mode()
-endfunc
-
-func! LightModified()
-  if expand('%:t') ==# '--Bufstop--'
-    return ''
-  endif
-  if expand('%:t') =~# '^vimspector'
-    return ''
-  endif
-
-  return &modified ? '+' : &modifiable ? '' : '-' 
-endfunc
-
-func! LightFileformat()
-  if expand('%:t') =~# '^vimspector'
-    return ''
-  endif
-
-  return winwidth(0) > 70 ? &fileformat : ''
-endfunc
-
-func! LightEncoding()
-  if expand('%:t') =~# '^vimspector'
-    return ''
-  endif
-
-  return &encoding
-endfunc
-
-func! LightFiletype()
-  if expand('%:t') =~# '^vimspector'
-    return ''
-  endif
-
-  return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
-endfunc
-
-func! LightPercent()
-  if expand('%:t') =~# '^vimspector'
-    return ''
-  endif
-
-  return (line('.') * 100 / line('$') . '%')
-endfunc
-
-" devicons for Bufstop
-let g:BufstopFileSymbolFunc = 'MyGetFileTypeSymbol'
-" exe 'highlight! bufstopIcon1 ' . g:fourcolors#warmFg
-" exe 'highlight! bufstopIcon2 ' . g:fourcolors#chillFg
-
-function! g:VimpanelCallback()
-  if executable('rg')
-    let g:MyGlobalSearchPath = ''
-    for root in g:VimpanelRoots
-      let g:MyGlobalSearchPath = g:MyGlobalSearchPath . ' ' . root
-    endfor
-
-    let g:ctrlp_user_command = 'echo %s && rg --files' . g:MyGlobalSearchPath
-  endif
-endfunction
-
-""""""""""
-" Commands
+""""""""""""""""""
+" Custom commands
 
 " show highlight group
 command! Hgroup :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . "> "
@@ -433,18 +285,22 @@ autocmd FileType vim setlocal iskeyword-=#
 autocmd FileType * setlocal iskeyword-=:
 autocmd FileType css,scss,html,eruby setlocal iskeyword +=-
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""""""""""
+" Plugins
 
-if &term == "dtterm"
-  set t_KD=^<Delete>
-  fixdel
-endif
+" Pathogen is still needed for older versions of vim
+execute pathogen#infect()
 
-let g:terminal_ansi_colors = ['white', 'white', 'white', 'white', 'white', 'white', 'white', 'white',
-                            \ 'white', 'white', 'white', 'white', 'white', 'white', 'white', 'white']
+let g:BufstopAutoSpeedToggle = 1
+
+let g:terminal_drawer_leader = '<C-\>'
+let g:terminal_drawer_shell = '++kill=hup'
 
 let g:vimspector_enable_mappings = 'HUMAN'
+
 let g:vim_tmux_clipboard#loadb_option = '-w'
+
+let g:tmux_navigator_no_mappings = 1
 
 call plug#begin('~/.vimdata')
 
@@ -455,6 +311,8 @@ Plug 'easymotion/vim-easymotion'
 Plug 'itchyny/lightline.vim'
 Plug 'puremourning/vimspector'
 Plug 'roxma/vim-tmux-clipboard'
+Plug 'christoomey/vim-tmux-navigator'
+Plug 'iaalm/terminal-drawer.vim'
 
 call plug#end()
 
@@ -462,5 +320,13 @@ colorscheme 4colors
 
 filetype plugin indent on
 syntax on
+
+"""""""""""""""
+" Legacy stuff
+
+if &term == "dtterm"
+  set t_KD=^<Delete>
+  fixdel
+endif
 
 set secure
