@@ -88,7 +88,7 @@ func! LightFileformat()
     return ''
   endif
 
-  return winwidth(0) > 70 ? &fileformat : ''
+  return winwidth(0) > 70 ? (&fileformat ==# 'unix' ? '' : &fileformat) : ''
 endfunc
 
 func! LightEncoding()
@@ -96,7 +96,7 @@ func! LightEncoding()
     return ''
   endif
 
-  return &encoding
+  return &encoding ==# 'utf-8' ? '' : &encoding
 endfunc
 
 func! LightFiletype()
@@ -114,3 +114,7 @@ func! LightPercent()
 
   return (line('.') * 100 / line('$') . '%')
 endfunc
+
+" fzf.vim
+
+command! -bang -nargs=* Rga call fzf#vim#grep("rg --column --line-number --no-heading --color=always --smart-case ".<q-args>, 1, <bang>0)
