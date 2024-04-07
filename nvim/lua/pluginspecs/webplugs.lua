@@ -18,8 +18,8 @@ return {
   { "lewis6991/gitsigns.nvim", opts = {} },
 
   {
+    -- NOTE undotree requires diff utility (it normally comes with the vim91 distribution)
     "mbbill/undotree",
-    desc = "requires diff utility (it comes with the vim91 distribution)",
   },
 
   {
@@ -143,6 +143,8 @@ return {
   },
 
   {
+    -- NOTE open nvim from the VS2022 Command Prompt to install parsers on Windows
+    -- NOTE for Redhat run `source scl_source enable devtoolset-12`
     "nvim-treesitter/nvim-treesitter",
     enabled = true,
     build = ":TSUpdate",
@@ -165,8 +167,7 @@ return {
           },
         }
       })
-    end,
-    desc = "open nvim from the VS2022 Command Prompt to install parsers on Windows",
+    end
   },
 
   {
@@ -179,6 +180,7 @@ return {
   },
 
   {
+    -- NOTE telescope equires ripgrep for Live Grep
     "nvim-telescope/telescope.nvim",
     branch = '0.1.x',
     event = 'VimEnter',
@@ -188,18 +190,36 @@ return {
       "nvim-telescope/telescope-live-grep-args.nvim",
     },
     config = function()
-      local telescope = require("telescope")
+      local telescope = require('telescope')
+      local actions = require('telescope.actions')
+      local actions_generate = require('telescope.actions.generate')
       local lga_actions = require("telescope-live-grep-args.actions")
 
       telescope.setup {
+        defaults = {
+          mappings = {
+            i = {
+              ["<C-_>"] = actions_generate.which_key { keybind_width = 12 },
+              ["<C-k><C-h>"] = { actions.select_horizontal, type = "action" },
+              ["<C-k><C-v>"] = { actions.select_vertical, type = "action" },
+              ["<C-v>"] = { "<cmd>i<C-R>+", type = "command" },
+              ["<C-x>"] = false,
+              ["<C-k><C-z>"] = { actions.to_fuzzy_refine, type = "action" },
+            },
+            n = {
+              ["?"] = actions_generate.which_key { keybind_width = 12 },
+              ["<C-k><C-z>"] = { actions.to_fuzzy_refine, type = "action" },
+              ["<C-k><C-h>"] = { actions.select_horizontal, type = "action" },
+              ["<C-k><C-v>"] = { actions.select_vertical, type = "action" },
+              ["<C-v>"] = { "<cmd><C-R>+", type = "command" },
+              ["<C-x>"] = false,
+            },
+          }
+        },
         pickers = {
           live_grep = {
-            mappings = {
-              i = {
-                ["<C-k><C-z>"] = require("telescope.actions").to_fuzzy_refine
-              }
-            }
-          }
+            layout_config = { width = 0.99 }
+          },
         },
         extensions = {
           ['ui-select'] = {
@@ -212,9 +232,9 @@ return {
                 ['<C-k><C-k>'] = lga_actions.quote_prompt(),
                 ['<C-k><C-c>'] = lga_actions.quote_prompt({ postfix = ' -t cpp'}),
                 ['<C-k><C-h>'] = lga_actions.quote_prompt({ postfix = ' -t h'}),
-                ["<C-k><C-z>"] = require("telescope.actions").to_fuzzy_refine
               }
-            }
+            },
+            layout_config = { width = 0.99 }
           }
         }
       }
@@ -258,8 +278,7 @@ return {
 
       vim.keymap.set("n", telekey .. "a", ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>",
         { desc = 'Grep with args' })
-    end,
-    desc = "requires ripgrep",
+    end
   },
 
   {
