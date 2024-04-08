@@ -10,7 +10,7 @@ vim.g.tmux_navigator_no_mappings = 1
 
 return {
   { "tpope/vim-fugitive" },
-  { "tpope/vim-sleuth" },
+  { "thepope/vim-sleuth" },
   { "tpope/vim-surround" },
 
   { "numToStr/Comment.nvim", opts = {} },
@@ -125,6 +125,9 @@ return {
           }
         },
         sections = {
+          lualine_b = {
+            { 'branch', icon = '󰘬' }
+          },
           lualine_x = {
             { 'filetype' },
             {
@@ -284,7 +287,10 @@ return {
   {
     'neovim/nvim-lspconfig',
     dependencies = {
-      { "williamboman/mason.nvim" },
+      {
+        "williamboman/mason.nvim",
+        branch = 'v2.x'
+      },
       { "williamboman/mason-lspconfig.nvim", },
       { 'folke/neodev.nvim', opts = {} },
       { 'j-hui/fidget.nvim', opts = {} },
@@ -392,6 +398,7 @@ return {
       { "hrsh7th/cmp-nvim-lsp-signature-help" },
       { "hrsh7th/cmp-buffer" },
       { "hrsh7th/cmp-cmdline" },
+      { "onsails/lspkind.nvim" },
     },
     config = function()
       local cmp = require("cmp")
@@ -428,11 +435,14 @@ return {
         }),
         sources = {
           -- sources in group 2 won't appear if the ones in group 1 are available
-          { name = "luasnip", group_index = 1 },
           { name = "nvim_lsp", group_index = 1 },
           { name = "nvim_lsp_signature_help", group_index = 1 },
           { name = "path", option = { trailing_slash = true }, group_index = 1 },
-          { name = "buffer", group_index = 1 }
+          { name = "buffer", max_item_count = 3, group_index = 1 },
+          { name = "luasnip", group_index = 1 },
+        },
+        formatting = {
+          format = require("lspkind").cmp_format()
         }
       })
 
@@ -535,5 +545,97 @@ return {
       { "<C-w>k", "<cmd>TmuxNavigateUp<cr>" },
       { "<C-w>l", "<cmd>TmuxNavigateRight<cr>" },
     },
+  },
+  {
+    'lukas-reineke/indent-blankline.nvim',
+    main = "ibl",
+    config = function()
+      require("ibl").setup({ enabled = false })
+      vim.keymap.set("n", '<leader>ib', '<cmd>IBLToggle', { desc = 'Toggle indent blankline' })
+    end
+  },
+
+  { 'stevearc/oil.nvim', opts = {} },
+  { 'stevearc/dressing.nvim', opts = {} },
+  { 'stevearc/aerial.nvim', opts = {} },
+
+  -- spectre requires rg, nvim-oxi and GNU sed
+  { 'nvim-pack/nvim-spectre', opts = {} },
+
+  {
+    'kevinhwang91/nvim-ufo',
+    dependencies = { 'kevinhwang91/promise-async' },
+    event = 'VeryLazy',
+    config = function()
+      vim.o.foldcolumn = '0'
+      vim.o.foldlevel = 99
+      vim.o.foldlevelstart = 99
+
+      vim.keymap.set('n', 'zR', require('ufo').openAllFolds, { desc = 'Open all folds' })
+      vim.keymap.set('n', 'zM', require('ufo').closeAllFolds, { desc = 'Close all folds' })
+      vim.keymap.set("n", "<leader>zk", function()
+        local winid = require("ufo").peekFoldedLinesUnderCursor()
+        if not winid then
+          vim.lsp.buf.hover()
+        end
+      end, { desc = 'Peek fold' })
+
+      require('ufo').setup({
+        preview = {
+          win_config = {
+            border = { "", "─", "", "", "", "─", "", "" },
+          }
+        },
+        -- display percentage of folded rows
+        -- https://github.com/kevinhwang91/nvim-ufo/issues/4
+        fold_virt_text_handler = function(virtText, lnum, endLnum, width, truncate)
+          local newVirtText = {}
+          local totalLines = vim.api.nvim_buf_line_count(0)
+          local foldedLines = endLnum - lnum
+          local suffix = (" 󰁂 %d %d%%"):format(foldedLines, foldedLines / totalLines * 100)
+          local sufWidth = vim.fn.strdisplaywidth(suffix)
+          local targetWidth = width - sufWidth
+          local curWidth = 0
+          for _, chunk in ipairs(virtText) do
+            local chunkText = chunk[1]
+            local chunkWidth = vim.fn.strdisplaywidth(chunkText)
+            if targetWidth > curWidth + chunkWidth then
+              table.insert(newVirtText, chunk)
+            else
+              chunkText = truncate(chunkText, targetWidth - curWidth)
+              local hlGroup = chunk[2]
+              table.insert(newVirtText, { chunkText, hlGroup })
+              chunkWidth = vim.fn.strdisplaywidth(chunkText)
+              if curWidth + chunkWidth < targetWidth then
+                suffix = suffix .. (" "):rep(targetWidth - curWidth - chunkWidth)
+              end
+              break
+            end
+            curWidth = curWidth + chunkWidth
+          end
+          local rAlignAppndx = math.max(math.min(vim.opt.textwidth["_value"], width - 1) - curWidth - sufWidth, 0)
+          suffix = (" "):rep(rAlignAppndx) .. suffix
+          table.insert(newVirtText, { suffix, "MoreMsg" })
+          return newVirtText
+        end,
+        provider_selector = function()
+          return {'treesitter', 'indent'}
+        end
+      })
+    end
+  },
+
+  {
+    'gelguy/wilder.nvim',
+    enabled = false,
+    config = function()
+      local wilder = require('wilder')
+      wilder.set_option('renderer', wilder.popupmenu_renderer({
+        pumblend = 20,
+        left = {' ', wilder.popupmenu_devicons()},
+        right = {' ', wilder.popupmenu_scrollbar()},
+      }))
+      wilder.setup({modes = {':', '/', '?'}})
+    end
   }
 }

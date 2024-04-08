@@ -48,6 +48,7 @@ vim.opt.updatetime = 350
 -- show whitespace characters
 vim.opt.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣', precedes = '<', extends = '>' }
+vim.opt.fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:]]
 
 -- keep some rows/columns visible when moving cursor at the edges of the screen
 vim.opt.scrolloff = 3
@@ -179,25 +180,24 @@ vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = 'Move text up' })
 -------------------
 -- Custom commands
 
-local hiBgData = {}
+local hiBgData = {
+  on = false,
+  groups = { 'Normal', 'NonText', 'FoldColumn', 'SignColumn' }
+}
 
 -- toggle transparency
 vim.api.nvim_create_user_command('Transparent', function()
+  hiBgData.vals = {}
   if not hiBgData.on then
-    hiBgData.Normal = vim.api.nvim_get_hl(0, {name = "Normal"})
-    hiBgData.NonText = vim.api.nvim_get_hl(0, {name = "NonText"})
-    hiBgData.FoldColumn = vim.api.nvim_get_hl(0, {name = "FoldColumn"})
-    hiBgData.SignColumn = vim.api.nvim_get_hl(0, {name = "FoldColumn"})
-    vim.api.nvim_set_hl(0, "Normal", {guibg=NONE, ctermbg=NONE})
-    vim.api.nvim_set_hl(0, "NonText", {guibg=NONE, ctermbg=NONE})
-    vim.api.nvim_set_hl(0, "FoldColumn", {guibg=NONE, ctermbg=NONE})
-    vim.api.nvim_set_hl(0, "SignColumn", {guibg=NONE, ctermbg=NONE})
+    for _, v in pairs(hiBgData.groups) do
+      hiBgData.vals[v] = vim.api.nvim_get_hl(0, { name = v })
+      vim.api.nvim_set_hl(0, v, { guibg=NONE, ctermbg=NONE })
+    end
     hiBgData.on = true
   else
-    vim.api.nvim_set_hl(0, "Normal", hiBgData.Normal)
-    vim.api.nvim_set_hl(0, "NonText", hiBgData.NonText)
-    vim.api.nvim_set_hl(0, "FoldColumn", hiBgData.FoldColumn)
-    vim.api.nvim_set_hl(0, "SignColumn", hiBgData.SignColumn)
+    for _, v in pairs(hiBgData.groups) do
+      vim.api.nvim_set_hl(0, v, hiBgData.vals[v])
+    end
     hiBgData.on = false
   end
 end, {})
