@@ -172,6 +172,36 @@ if vim.fn.has("win32") then
     { desc = 'Open Windows Explorer' })
 end
 
+-- move things in visual mode
+vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = 'Move text down' })
+vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = 'Move text up' })
+
+-------------------
+-- Custom commands
+
+local hiBgData = {}
+
+-- toggle transparency
+vim.api.nvim_create_user_command('Transparent', function()
+  if not hiBgData.on then
+    hiBgData.Normal = vim.api.nvim_get_hl(0, {name = "Normal"})
+    hiBgData.NonText = vim.api.nvim_get_hl(0, {name = "NonText"})
+    hiBgData.FoldColumn = vim.api.nvim_get_hl(0, {name = "FoldColumn"})
+    hiBgData.SignColumn = vim.api.nvim_get_hl(0, {name = "FoldColumn"})
+    vim.api.nvim_set_hl(0, "Normal", {guibg=NONE, ctermbg=NONE})
+    vim.api.nvim_set_hl(0, "NonText", {guibg=NONE, ctermbg=NONE})
+    vim.api.nvim_set_hl(0, "FoldColumn", {guibg=NONE, ctermbg=NONE})
+    vim.api.nvim_set_hl(0, "SignColumn", {guibg=NONE, ctermbg=NONE})
+    hiBgData.on = true
+  else
+    vim.api.nvim_set_hl(0, "Normal", hiBgData.Normal)
+    vim.api.nvim_set_hl(0, "NonText", hiBgData.NonText)
+    vim.api.nvim_set_hl(0, "FoldColumn", hiBgData.FoldColumn)
+    vim.api.nvim_set_hl(0, "SignColumn", hiBgData.SignColumn)
+    hiBgData.on = false
+  end
+end, {})
+
 -----------
 -- Plugins
 

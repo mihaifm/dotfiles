@@ -276,6 +276,37 @@ function! Findb(text)
 endfunction
 command! -nargs=1 Findo call Findo(<q-args>)
 
+function! ReturnHighlightTerm(group, term)
+  let output = execute('hi ' . a:group)
+  return matchstr(output, a:term.'=\zs\S*\>')
+endfunction
+
+" toggle transparency
+let s:hiBgData = { 'on': 0 }
+function! Transparent()
+  if !s:hiBgData.on
+    let s:hiBgData.Normal = ReturnHighlightTerm('Normal', 'guibg')
+    let s:hiBgData.NonText = ReturnHighlightTerm('NonText', 'guibg')
+    let s:hiBgData.SignColumn = ReturnHighlightTerm('SignColumn', 'guibg')
+    let s:hiBgData.FoldColumn = ReturnHighlightTerm('FoldColumn', 'guibg')
+    let s:hiBgData.LineNr = ReturnHighlightTerm('LineNr', 'guibg')
+    exe 'hi Normal guibg=NONE'
+    exe 'hi NonText guibg=NONE'
+    exe 'hi SignColumn guibg=NONE'
+    exe 'hi FoldColumn guibg=NONE'
+    exe 'hi LineNr guibg=NONE'
+    let s:hiBgData.on = 1
+  else
+    if len(s:hiBgData.Normal) > 0 | exe 'hi Normal guibg=' . s:hiBgData.Normal | endif
+    if (len(s:hiBgData.NonText) > 0) | exe 'hi NonText guibg=' . s:hiBgData.NonText | endif
+    if (len(s:hiBgData.SignColumn) > 0) | exe 'hi SignColumn guibg=' . s:hiBgData.SignColumn | endif
+    if (len(s:hiBgData.FoldColumn) > 0) | exe 'hi FoldColumn guibg=' . s:hiBgData.FoldColumn | endif
+    if (len(s:hiBgData.Number) > 0) | exe 'hi LineNr guibg=' . s:hiBgData.Number | endif
+    let s:hiBgData.on = 0
+  endif
+endfunc
+command! Transparent call Transparent()
+
 """""""""""""""""""""
 " File type settings
 
