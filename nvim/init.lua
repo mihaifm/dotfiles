@@ -34,7 +34,7 @@ vim.opt.swapfile = false
 vim.opt.undofile = false
 vim.opt.backup = false
 vim.opt.writebackup = false
-vim.opt.shadafile = 'NONE'
+-- vim.opt.shadafile = 'NONE'
 
 -- reduce Esc keycode delay
 vim.opt.ttimeoutlen = 50
@@ -86,7 +86,8 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 --------------
 -- Statusline
 
-vim.opt.laststatus = 2
+-- single statusline across all windows
+vim.opt.laststatus = 3
 
 local sl = ''
 sl = sl .. "%1*"                  -- switch to User1 highlight
@@ -182,16 +183,16 @@ vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = 'Move text up' })
 
 local hiBgData = {
   on = false,
+  vals = {},
   groups = { 'Normal', 'NonText', 'FoldColumn', 'SignColumn' }
 }
 
 -- toggle transparency
 vim.api.nvim_create_user_command('Transparent', function()
-  hiBgData.vals = {}
   if not hiBgData.on then
     for _, v in pairs(hiBgData.groups) do
       hiBgData.vals[v] = vim.api.nvim_get_hl(0, { name = v })
-      vim.api.nvim_set_hl(0, v, { guibg=NONE, ctermbg=NONE })
+      vim.api.nvim_set_hl(0, v, { bg='NONE', ctermbg='NONE' })
     end
     hiBgData.on = true
   else

@@ -10,8 +10,8 @@ vim.g.tmux_navigator_no_mappings = 1
 
 return {
   { "tpope/vim-fugitive" },
-  { "thepope/vim-sleuth" },
-  { "tpope/vim-surround" },
+  { "tpope/vim-sleuth", enabled = false },
+  { "tpope/vim-surround", enabled = false },
 
   { "numToStr/Comment.nvim", opts = {} },
 
@@ -88,13 +88,17 @@ return {
       { "<C-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
     },
   },
-
   {
     "folke/tokyonight.nvim",
     enabled = true,
     config = function()
       vim.cmd.colorscheme("tokyonight")
     end,
+  },
+  {
+    'folke/persistence.nvim',
+    event = "BufReadPre",
+    opts = {}
   },
 
   {
@@ -637,5 +641,46 @@ return {
       }))
       wilder.setup({modes = {':', '/', '?'}})
     end
-  }
+  },
+  {
+    'nvimdev/dashboard-nvim',
+    event = 'VimEnter',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      local logo = require('logo')
+
+      logo = string.rep("\n", 8) .. logo .. "\n\n"
+
+      local opts = {
+        theme = "doom",
+        hide = {
+          statusline = false,
+        },
+        config = {
+          header = vim.split(logo, "\n"),
+          center = {
+            { action = "Telescope find_files",desc = " Find File", icon = " ", key = "f" },
+            { action = "enew", desc = " New File", icon = " ", key = "n" },
+            { action = "Telescope oldfiles", desc = " Recent Files", icon = " ", key = "r" },
+            { action = "Telescope live_grep", desc = " Find Text", icon = " ", key = "g" },
+            { action = 'lua require("persistence").load()', desc = " Restore Session", icon = " ", key = "s" },
+            { action = "Lazy", desc = " Lazy", icon = "󰒲 ", key = "l" },
+            { action = "qa", desc = " Quit", icon = " ", key = "q" },
+          },
+          footer = function()
+            local stats = require("lazy").stats()
+            local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
+            return { "Neovim loaded " .. stats.loaded .. "/" .. stats.count .. " plugins in " .. ms .. "ms" }
+          end,
+        },
+      }
+
+      for _, button in ipairs(opts.config.center) do
+        button.desc = button.desc .. string.rep(" ", 43 - #button.desc)
+        button.key_format = "  %s"
+      end
+
+      require("dashboard").setup(opts)
+    end,
+  },
 }
