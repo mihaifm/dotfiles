@@ -76,10 +76,13 @@ vim.api.nvim_create_autocmd('BufEnter', {
 })
 
 -- hightlight for a split second when yanking
+vim.g.HighlightOnYank = true
 vim.api.nvim_create_autocmd('TextYankPost', {
   group = vim.api.nvim_create_augroup('highlight-yank', { clear = true }),
   callback = function()
-    vim.highlight.on_yank()
+    if vim.g.HighlightOnYank then
+      vim.highlight.on_yank()
+    end
   end,
 })
 
@@ -123,16 +126,9 @@ vim.opt.statusline = sl
 vim.g.mapleader = ','
 vim.g.maplocalleader = ','
 
--- delete without yanking
-vim.keymap.set({ 'n', 'v' }, '<leader>d', '"_d', { desc = 'Delete without yanking' })
-vim.keymap.set({ 'n', 'v' }, '<leader>c', '"_c', { desc = 'Change without yanking' })
-
--- start inserting at the correct indentation without copying previous indent
-vim.keymap.set('n', 'S', '"_S', { desc = 'Substitute without yanking' })
-
 -- copy-paste with CTRL-C CTRL-V
 vim.keymap.set({ 'n', 'v'}, '<C-c>', '"+y', { desc = 'Copy with CTRL-C' })
-vim.keymap.set({'n', 'v'}, '<C-v>', '"+gP', { desc = 'Paste with CTRL-V' })
+
 vim.keymap.set('c', '<C-v>', '<C-r>+', { desc = 'Paste in command mode' })
 vim.keymap.set('i', '<C-v>', '<C-r>+', { desc = 'Paste in insert mode' })
 
@@ -177,6 +173,87 @@ end
 -- move things in visual mode
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = 'Move text down' })
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = 'Move text up' })
+
+-- yankleader setup
+local yankleader = 'y'
+
+-- delete and paste keys do not yank unless prefixed by yankleader
+local function setupYankLeader()
+  -- inspired by tenxsoydev/karen-yank.nvim
+  local clipKeys = {
+    delete = {
+      d = "Delete text",
+      D = "Delete rest of line",
+      c = "Change text",
+      C = "Change rest of line",
+      x = "Delete next character",
+      X = "Delete previous character",
+      S = "Substitute Rest of Line",
+    },
+    paste = {
+      p = "Paste after",
+      P = "Paste before",
+    }
+  }
+
+  for key, desc in pairs(clipKeys.delete) do
+    vim.keymap.set({ "n", "v" }, key, function()
+      if vim.v.register:match('%w') then return key end
+      return '"_' .. key
+    end, { expr = true, desc = desc })
+
+    vim.keymap.set({ "n", "v" }, yankleader .. key, function()
+      return key
+    end, { expr = true, desc = desc .. " into register" })
+  end
+
+  for key, desc in pairs(clipKeys.paste) do
+    vim.keymap.set("v", key, function()
+      if vim.v.register:match('%w') then return key end
+      vim.g.HighlightOnYank = false
+      vim.defer_fn(function() vim.g.HighlightOnYank = true end, 10)
+      return key .. 'gvy'
+    end, { desc = desc .. " and delete selection", expr = true })
+
+    vim.keymap.set("v", yankleader .. key, function()
+      return key
+    end, { desc = desc .. " and yank selection into register", expr = true })
+  end
+end
+
+setupYankLeader()
+
+-- custom paste handler (called when pasting in the terminal with CTRL-V)
+vim.paste = (function(overridden)
+  local mode = ''
+  local stored_regs = {}
+  local affected_regs = { "*", "+", '"', "-" }
+
+  return function(lines, phase)
+    if phase == 1 then
+      mode = vim.api.nvim_get_mode()["mode"]
+
+      if mode == 'v' or mode == 'V' then
+        -- backup potentially affected regs
+        for _, reg in ipairs(affected_regs) do
+          stored_regs[reg] = vim.fn.getreg(reg)
+        end
+      end
+    end
+
+    overridden(lines, phase)
+
+    if phase == 3 and (mode == 'v' or mode == 'V') then
+      vim.defer_fn(function()
+        -- restore potentially affected regs
+        for _, reg in ipairs(affected_regs) do
+          vim.fn.setreg(reg, stored_regs[reg])
+        end
+        stored_regs = {}
+      end, 10)
+    end
+  end
+end)(vim.paste)
 
 -------------------
 -- Custom commands

@@ -555,7 +555,7 @@ return {
     main = "ibl",
     config = function()
       require("ibl").setup({ enabled = false })
-      vim.keymap.set("n", '<leader>ib', '<cmd>IBLToggle', { desc = 'Toggle indent blankline' })
+      vim.keymap.set("n", '<leader>ib', '<cmd>IBLToggle<CR>', { desc = 'Toggle indent blankline' })
     end
   },
 
