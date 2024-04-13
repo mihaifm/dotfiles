@@ -174,6 +174,9 @@ end
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = 'Move text down' })
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = 'Move text up' })
 
+-----------------
+-- Yank overhaul
+
 -- yankleader setup
 local yankleader = 'y'
 
@@ -209,14 +212,10 @@ local function setupYankLeader()
 
   for key, desc in pairs(clipKeys.paste) do
     vim.keymap.set("v", key, function()
-      if vim.v.register:match('%w') then return key end
-      vim.g.HighlightOnYank = false
-      vim.defer_fn(function() vim.g.HighlightOnYank = true end, 10)
-      return key .. 'gvy'
+      return 'P'
     end, { desc = desc .. " and delete selection", expr = true })
-
     vim.keymap.set("v", yankleader .. key, function()
-      return key
+      return 'p'
     end, { desc = desc .. " and yank selection into register", expr = true })
   end
 end
@@ -254,6 +253,96 @@ vim.paste = (function(overridden)
     end
   end
 end)(vim.paste)
+
+-- yank ring implementation
+local yankHistory = {}
+local yankIndex = 0
+local yankIndexReset = true
+
+vim.api.nvim_create_autocmd('TextYankPost', {
+  group = vim.api.nvim_create_augroup('yank-ring', { clear = true }),
+  callback = function()
+    if not (vim.v.register:match("%d+") or vim.v.register == "+" or vim.v.register == '"') then return end
+
+    local yankedText = vim.fn.getreg(vim.v.register, 1)
+    table.insert(yankHistory, 1, yankedText)
+
+    local yankHistoryMaxSize = 100
+    for i = #yankHistory, yankHistoryMaxSize + 1, -1 do
+      table.remove(yankHistory, i)
+    end
+  end,
+})
+
+local function putText(text)
+  if not text then return end
+
+  local currentLine = vim.fn.line(".")
+  local currentCol = vim.fn.col(".")
+
+  yankIndexReset = false
+
+  if string.sub(text, -1) == "\n" then
+    local lines = vim.fn.split(text, "\n")
+    vim.api.nvim_buf_set_lines(0, currentLine, currentLine, false, lines)
+  else
+    local lines = vim.fn.split(text, "\n")
+    vim.api.nvim_buf_set_text(0, currentLine - 1, currentCol - 1, currentLine - 1, currentCol - 1, lines)
+  end
+end
+
+vim.api.nvim_create_user_command("YankCycleHist", function()
+  vim.ui.select(yankHistory,
+    {
+      prompt = "Yank history",
+      format_item = function(item)
+        return item and item:gsub("\n", "\\n") or ""
+      end,
+    }, function(choice)
+      putText(choice)
+    end)
+end, {})
+
+vim.api.nvim_create_user_command("YankCycleClear", function()
+  yankHistory = {}
+  yankIndex = 0
+end, {})
+
+vim.api.nvim_create_user_command("YankCycleNext", function()
+  if #yankHistory == 0 then return end
+
+  if yankIndex >= 1 then
+    vim.cmd('silent normal! u')
+  end
+
+  yankIndex = (yankIndex % #yankHistory) + 1
+  local nextPut = yankHistory[yankIndex]
+  putText(nextPut)
+end, {})
+
+vim.api.nvim_create_user_command("YankCyclePrev", function()
+  if #yankHistory == 0 then return end
+
+  if yankIndex >= 1 then
+    vim.cmd('silent normal! u')
+  end
+
+  yankIndex = #yankHistory - (#yankHistory - (yankIndex - 1)) % #yankHistory
+  local prevPut = yankHistory[yankIndex]
+  putText(prevPut)
+end, {})
+
+vim.api.nvim_create_autocmd('CursorMoved', {
+  group = vim.api.nvim_create_augroup('yank-ring-cursor', { clear = true }),
+  callback = function()
+    if yankIndexReset then yankIndex = 0 else yankIndexReset = true end
+  end
+})
+
+vim.keymap.set('n', '<C-p>', '<cmd>YankCycleNext<CR>', { desc = 'Paste next yank' })
+vim.keymap.set('n', '<C-n>', '<cmd>YankCyclePrev<CR>', { desc = 'Paste previous yank' })
+
+vim.keymap.set('n', 'yH', '<cmd>YankCycleHist<CR>', { desc = 'Paste from yank history' })
 
 -------------------
 -- Custom commands
