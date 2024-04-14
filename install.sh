@@ -130,3 +130,26 @@ if [[ $1 == "repo" ]]; then
 
   exit
 fi
+
+#######################
+# Bootstrap everything
+
+if [[ $1 == "bootstrap" ]]; then
+
+  # Vim
+  vim +PlugInstall! +qa
+
+  # Neovim
+  (source scl_source enable devtoolset-12 && \
+   nvim --headless \
+     +"Lazy! install" \
+     +"TSInstallSync! c cpp lua vim vimdoc javascript python html bash"  \
+     +"qa")
+
+  (nvim --headless +"MasonInstall lua-language-server" +"qa")
+
+  # Tmux
+  ~/.tmux/plugins/tpm/scripts/install_plugins.sh
+
+  exit
+fi

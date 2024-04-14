@@ -333,7 +333,7 @@ call plug#begin('~/.vimdata')
 
 Plug 'mihaifm/bufstop'
 Plug 'mihaifm/vimpanel'
-Plug 'mihaifm/4colors', { 'do': ':colorscheme 4colors' }
+Plug 'mihaifm/4colors'
 Plug 'easymotion/vim-easymotion'
 Plug 'itchyny/lightline.vim'
 Plug 'puremourning/vimspector'
@@ -347,7 +347,9 @@ Plug 'junegunn/fzf.vim'
 
 call plug#end()
 
-colorscheme 4colors
+if !empty(globpath(&rtp, 'colors/4colors.vim'))
+  colorscheme 4colors
+endif
 
 filetype plugin indent on
 syntax on

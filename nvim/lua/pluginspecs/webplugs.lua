@@ -66,6 +66,8 @@ return {
         ['<leader>'] = {
           name = "+Leader",
           ['f'] = { name = "+Copy file info" },
+          ['i'] = { name = "+Indent" },
+          ['s'] = { name = "+Session" },
         }
       })
     end
@@ -97,8 +99,23 @@ return {
   },
   {
     'folke/persistence.nvim',
-    event = "BufReadPre",
-    opts = {}
+    enabled = true,
+    config = function()
+      local persistence = require('persistence')
+      persistence.setup({})
+
+      vim.keymap.set("n", "<leader>sd", function() persistence.load() end, { desc = 'Restore session from current directory' })
+      vim.keymap.set("n", "<leader>sl", function() persistence.load({ last = true }) end, { desc = 'Restore last session' })
+      vim.keymap.set("n", "<leader>sx", function() persistence.stop() end, { desc = 'Disable session on exit' })
+      vim.keymap.set("n", "<leader>ss", function() persistence.start() end, { desc = 'Enable session in current directory' })
+
+      vim.api.nvim_create_autocmd('DirChanged', {
+        group = vim.api.nvim_create_augroup('persistence-dirchanged', { clear = true }),
+        pattern = 'global',
+        callback = function() persistence.start() end
+      })
+
+    end
   },
 
   {
@@ -312,7 +329,7 @@ return {
       local capabilities = vim.lsp.protocol.make_client_capabilities()
 
       -- unclear if this is needed
-      capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+      -- capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
       require('mason').setup()
       local ensure_installed = vim.tbl_keys(servers or {})
@@ -329,7 +346,7 @@ return {
       }
 
       vim.api.nvim_create_autocmd("LspAttach", {
-        group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
+        group = vim.api.nvim_create_augroup("lsp-lspattach", { clear = true }),
         callback = function(event)
           local map = function(mode, keys, func, desc)
             vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = desc })
@@ -368,11 +385,13 @@ return {
           local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client.server_capabilities.documentHighlightProvider then
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+              group = vim.api.nvim_create_augroup('lsp-cursorhold', { clear = true }),
               buffer = event.buf,
               callback = vim.lsp.buf.document_highlight,
             })
 
             vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+              group = vim.api.nvim_create_augroup('lsp-cursormoved', { clear = true }),
               buffer = event.buf,
               callback = vim.lsp.buf.clear_references,
             })
@@ -384,6 +403,7 @@ return {
 
   {
     "hrsh7th/nvim-cmp",
+    enabled = true,
     dependencies = {
       {
         "L3MON4D3/LuaSnip",
@@ -503,8 +523,8 @@ return {
     version = "*",
     -- cmd = { "ToggleTerm", "TermExec" }, -- doesn't seem to work
     config = function()
-      vim.api.nvim_create_autocmd("TermOpen", {
-        group = vim.api.nvim_create_augroup("UserTermOpen", { clear = true }),
+      vim.api.nvim_create_autocmd('TermOpen', {
+        group = vim.api.nvim_create_augroup('toggleterm-termopen', { clear = true }),
         pattern = { "term://*toggleterm*" },
         callback = function(event)
           local map = function(mode, keys, func, desc)
@@ -560,7 +580,7 @@ return {
   },
 
   { 'stevearc/oil.nvim', opts = {} },
-  { 'stevearc/dressing.nvim', opts = {} },
+  { 'stevearc/dressing.nvim', enabled = false, opts = {} },
   { 'stevearc/aerial.nvim', opts = {} },
 
   -- spectre requires rg, nvim-oxi and GNU sed
@@ -644,6 +664,7 @@ return {
   },
   {
     'nvimdev/dashboard-nvim',
+    enabled = true,
     event = 'VimEnter',
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
@@ -663,7 +684,7 @@ return {
             { action = "enew", desc = " New File", icon = " ", key = "n" },
             { action = "Telescope oldfiles", desc = " Recent Files", icon = " ", key = "r" },
             { action = "Telescope live_grep", desc = " Find Text", icon = " ", key = "g" },
-            { action = 'lua require("persistence").load()', desc = " Restore Session", icon = " ", key = "s" },
+            { action = 'lua require("persistence").load({ last = true })', desc = " Restore Last Session", icon = " ", key = "s" },
             { action = "Lazy", desc = " Lazy", icon = "󰒲 ", key = "l" },
             { action = "qa", desc = " Quit", icon = " ", key = "q" },
           },
@@ -683,4 +704,34 @@ return {
       require("dashboard").setup(opts)
     end,
   },
+  { 'rktjmp/lush.nvim' },
+  {
+    'echasnovski/mini.completion',
+    enabled = false,
+    version = false,
+    config = function()
+      require('mini.completion').setup({
+        mappings = {
+          force_twostep = '<space>m',
+          force_fallback = '<space>a',
+        }
+      })
+    end
+  },
+  { 'echasnovski/mini.files', version = false, opts = {} },
+  {
+    'echasnovski/mini.indentscope', version = false,
+    config = function()
+      vim.g.miniindentscope_disable = true
+
+      vim.keymap.set('n', '<leader>is', function()
+        vim.g.miniindentscope_disable = not vim.g.miniindentscope_disable
+      end, { desc = 'Toggle indent scope' })
+
+      require('mini.indentscope').setup({
+        symbol = '▎'
+      })
+    end,
+  },
+  { 'echasnovski/mini.move', version = false, opts = {} },
 }

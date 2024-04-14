@@ -67,7 +67,7 @@ vim.opt.fileformats = { 'unix', 'dos', 'mac' }
 
 -- disable auto insertion of comments
 vim.api.nvim_create_autocmd('BufEnter', {
-  group = vim.api.nvim_create_augroup('no-auto-comments', { clear = true }),
+  group = vim.api.nvim_create_augroup('noautocomment-bufenter', { clear = true }),
   callback = function()
     vim.opt.formatoptions:remove({ 'c' })
     vim.opt.formatoptions:remove({ 'r' })
@@ -78,7 +78,7 @@ vim.api.nvim_create_autocmd('BufEnter', {
 -- hightlight for a split second when yanking
 vim.g.HighlightOnYank = true
 vim.api.nvim_create_autocmd('TextYankPost', {
-  group = vim.api.nvim_create_augroup('highlight-yank', { clear = true }),
+  group = vim.api.nvim_create_augroup('highlight-textyankpost', { clear = true }),
   callback = function()
     if vim.g.HighlightOnYank then
       vim.highlight.on_yank()
@@ -260,7 +260,7 @@ local yankIndex = 0
 local yankIndexReset = true
 
 vim.api.nvim_create_autocmd('TextYankPost', {
-  group = vim.api.nvim_create_augroup('yank-ring', { clear = true }),
+  group = vim.api.nvim_create_augroup('yankcycle-textyankpost', { clear = true }),
   callback = function()
     if not (vim.v.register:match("%d+") or vim.v.register == "+" or vim.v.register == '"') then return end
 
@@ -333,7 +333,7 @@ vim.api.nvim_create_user_command("YankCyclePrev", function()
 end, {})
 
 vim.api.nvim_create_autocmd('CursorMoved', {
-  group = vim.api.nvim_create_augroup('yank-ring-cursor', { clear = true }),
+  group = vim.api.nvim_create_augroup('yankcycle-cursormoved', { clear = true }),
   callback = function()
     if yankIndexReset then yankIndex = 0 else yankIndexReset = true end
   end
