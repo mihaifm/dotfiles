@@ -597,7 +597,7 @@ return {
 
       vim.keymap.set('n', 'zR', require('ufo').openAllFolds, { desc = 'Open all folds' })
       vim.keymap.set('n', 'zM', require('ufo').closeAllFolds, { desc = 'Close all folds' })
-      vim.keymap.set("n", "<leader>zk", function()
+      vim.keymap.set("n", "zK", function()
         local winid = require("ufo").peekFoldedLinesUnderCursor()
         if not winid then
           vim.lsp.buf.hover()
@@ -734,4 +734,42 @@ return {
     end,
   },
   { 'echasnovski/mini.move', version = false, opts = {} },
+  { 'echasnovski/mini.splitjoin', version = false, opts = {} },
+  {
+    'echasnovski/mini.visits',
+    version = false,
+    config = function()
+      require('mini.visits').setup({})
+
+      local map_vis = function(keys, call, desc)
+        local rhs = '<Cmd>lua MiniVisits.' .. call .. '<CR>'
+        vim.keymap.set('n', '<Leader>' .. keys, rhs, { desc = desc })
+      end
+
+      map_vis('vp', 'select_path()', 'Select path')
+      map_vis('va', 'add_label()', 'Add label')
+      map_vis('vr', 'remove_label()', 'Remove label')
+      map_vis('vl', 'select_label("", "")', 'Select label (all)')
+      map_vis('vw', 'select_label()', 'Select label (cwd)')
+    end
+  },
+  {
+    'romgrk/barbar.nvim',
+    config = function()
+      require('barbar').setup({})
+      vim.cmd('BarbarDisable')
+      vim.cmd('set showtabline=0')
+
+      vim.api.nvim_create_user_command('TablineToggle', function()
+        if vim.opt.showtabline:get() == 0 then
+          vim.cmd('BarbarEnable')
+          vim.cmd('set showtabline=2')
+        else
+          vim.cmd('BarbarDisable')
+          vim.cmd('set showtabline=0')
+        end
+        vim.cmd('normal jk')
+      end, {})
+    end
+  },
 }
