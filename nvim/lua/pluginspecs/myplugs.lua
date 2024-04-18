@@ -1,12 +1,6 @@
 vim.g.BufstopAutoSpeedToggle = 1
 
 function BufstopConfig()
-  vim.keymap.set('n', '<leader>D',
-    function()
-      vim.cmd('BufstopBack'); vim.cmd('bw! #')
-    end,
-    { desc = 'Bufstop wipe buffer without closing window' })
-
   vim.keymap.set('n', '<leader>b', function() vim.cmd('Bufstop') end,
     { desc = 'Bufstop' })
   vim.keymap.set('n', '<leader>w', function() vim.cmd('BufstopPreview') end,

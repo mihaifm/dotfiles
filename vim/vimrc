@@ -329,6 +329,8 @@ let g:vim_tmux_clipboard#loadb_option = '-w'
 
 let g:tmux_navigator_no_mappings = 1
 
+let g:tpipeline_restore = 1
+
 call plug#begin('~/.vimdata')
 
 Plug 'mihaifm/bufstop'
@@ -344,6 +346,7 @@ Plug 'mbbill/undotree'
 Plug 'tpope/vim-commentary'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
+"Plug 'vimpostor/vim-tpipeline'
 
 call plug#end()
 

@@ -8,6 +8,8 @@ vim.g.termdebug_config = { wide = 1 }
 
 vim.g.tmux_navigator_no_mappings = 1
 
+vim.g.tpipeline_restore = 1
+
 return {
   { "tpope/vim-fugitive" },
   { "tpope/vim-sleuth", enabled = false },
@@ -84,9 +86,6 @@ return {
     },
     keys = {
       { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
-      -- { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
-      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
-      { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
       { "<C-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
     },
   },
@@ -204,14 +203,19 @@ return {
   },
 
   {
-    -- NOTE telescope equires ripgrep for Live Grep
+    -- NOTE telescope requires ripgrep for Live Grep
     "nvim-telescope/telescope.nvim",
     branch = '0.1.x',
     event = 'VimEnter',
     dependencies = {
-      "nvim-lua/plenary.nvim",
-      'nvim-telescope/telescope-ui-select.nvim',
-      "nvim-telescope/telescope-live-grep-args.nvim",
+      { 'nvim-lua/plenary.nvim' },
+      { 'nvim-telescope/telescope-ui-select.nvim' },
+      { 'nvim-telescope/telescope-live-grep-args.nvim' },
+      {
+        'nvim-telescope/telescope-fzf-native.nvim',
+        build = vim.fn.executable("make") == 1 and "make"
+          or 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build'
+      }
     },
     config = function()
       local telescope = require('telescope')
@@ -219,7 +223,26 @@ return {
       local actions_generate = require('telescope.actions.generate')
       local lga_actions = require("telescope-live-grep-args.actions")
 
-      telescope.setup {
+      local function flash(prompt_bufnr)
+        require("flash").jump({
+          pattern = "^",
+          label = { after = { 0, 0 } },
+          search = {
+            mode = "search",
+            exclude = {
+              function(win)
+                return vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= "TelescopeResults"
+              end,
+            },
+          },
+          action = function(match)
+            local picker = require("telescope.actions.state").get_current_picker(prompt_bufnr)
+            picker:set_selection(match.pos[1] - 1)
+          end,
+        })
+      end
+
+      telescope.setup({
         defaults = {
           mappings = {
             i = {
@@ -229,6 +252,7 @@ return {
               ["<C-v>"] = { "<cmd>i<C-R>+", type = "command" },
               ["<C-x>"] = false,
               ["<C-k><C-z>"] = { actions.to_fuzzy_refine, type = "action" },
+              ["<C-s>"] = flash,
             },
             n = {
               ["?"] = actions_generate.which_key { keybind_width = 12 },
@@ -237,6 +261,7 @@ return {
               ["<C-k><C-v>"] = { actions.select_vertical, type = "action" },
               ["<C-v>"] = { "<cmd><C-R>+", type = "command" },
               ["<C-x>"] = false,
+              ["s"] = flash,
             },
           }
         },
@@ -246,6 +271,7 @@ return {
           },
         },
         extensions = {
+          ['fzf'] = { },
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
           },
@@ -261,46 +287,47 @@ return {
             layout_config = { width = 0.99 }
           }
         }
-      }
+      })
 
+      pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
       pcall(require('telescope').load_extension, 'live_grep_args')
 
       local builtin = require("telescope.builtin")
 
-      local telekey = "t"
+      local teleleader = "t"
 
-      vim.keymap.set("n", telekey .. 'f', function()
+      vim.keymap.set("n", teleleader .. 'f', function()
           builtin.find_files({ hidden = true, no_ignore = true })
         end, { desc = 'Find files' })
 
-      vim.keymap.set("n", telekey .. 'g', builtin.live_grep, { desc = 'Grep files' })
-      vim.keymap.set("n", telekey .. 't', builtin.git_files, { desc = 'Find git files' })
-      vim.keymap.set("n", telekey .. 'h', builtin.help_tags, { desc = 'Search help' })
-      vim.keymap.set("n", telekey .. 'k', builtin.keymaps, { desc = 'Search keymaps' })
-      vim.keymap.set("n", telekey .. 'u', builtin.builtin, { desc = 'Select Telescope builtin' })
-      vim.keymap.set('n', telekey .. 'w', builtin.grep_string, { desc = 'Search current word' })
-      vim.keymap.set("n", telekey .. 'd', builtin.diagnostics, { desc = 'Search diagnostics' })
-      vim.keymap.set("n", telekey .. 'r', builtin.resume, { desc = 'Resume previous search' })
-      vim.keymap.set("n", telekey .. 'p', builtin.oldfiles, { desc = 'Find recent files' })
-      vim.keymap.set("n", telekey .. 'b', builtin.buffers, { desc = 'Find buffers' })
+      vim.keymap.set("n", teleleader .. 'g', builtin.live_grep, { desc = 'Grep files' })
+      vim.keymap.set("n", teleleader .. 't', builtin.git_files, { desc = 'Find git files' })
+      vim.keymap.set("n", teleleader .. 'h', builtin.help_tags, { desc = 'Search help' })
+      vim.keymap.set("n", teleleader .. 'k', builtin.keymaps, { desc = 'Search keymaps' })
+      vim.keymap.set("n", teleleader .. 'u', builtin.builtin, { desc = 'Select Telescope builtin' })
+      vim.keymap.set('n', teleleader .. 'w', builtin.grep_string, { desc = 'Search current word' })
+      vim.keymap.set("n", teleleader .. 'd', builtin.diagnostics, { desc = 'Search diagnostics' })
+      vim.keymap.set("n", teleleader .. 's', builtin.resume, { desc = 'Resume previous search' })
+      vim.keymap.set("n", teleleader .. 'r', builtin.oldfiles, { desc = 'Find recent files' })
+      vim.keymap.set("n", teleleader .. 'b', builtin.buffers, { desc = 'Find buffers' })
 
-      vim.keymap.set('n', telekey .. 'c', function()
+      vim.keymap.set('n', teleleader .. 'c', function()
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
           winblend = 10,
           previewer = false,
         })
       end, { desc = 'Search current buffer' })
 
-      vim.keymap.set('n', telekey .. 'o', function()
+      vim.keymap.set('n', teleleader .. 'o', function()
         builtin.live_grep { grep_open_files = true, prompt_title = 'Grep open files' }
       end, { desc = 'Search in open files' })
 
-      vim.keymap.set('n', telekey .. 'n', function()
+      vim.keymap.set('n', teleleader .. 'n', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = 'Search Neovim files' })
 
-      vim.keymap.set("n", telekey .. "a", ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>",
+      vim.keymap.set("n", teleleader .. 'a', ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>",
         { desc = 'Grep with args' })
     end
   },
@@ -312,7 +339,7 @@ return {
         "williamboman/mason.nvim",
         branch = 'v2.x'
       },
-      { "williamboman/mason-lspconfig.nvim", },
+      { 'williamboman/mason-lspconfig.nvim', },
       { 'folke/neodev.nvim', opts = {} },
       { 'j-hui/fidget.nvim', opts = {} },
     },
@@ -326,10 +353,11 @@ return {
         lua_ls = {},
       }
 
+
       local capabilities = vim.lsp.protocol.make_client_capabilities()
 
       -- unclear if this is needed
-      -- capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+      capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
       require('mason').setup()
       local ensure_installed = vim.tbl_keys(servers or {})
@@ -404,6 +432,7 @@ return {
   {
     "hrsh7th/nvim-cmp",
     enabled = true,
+    version = false,
     dependencies = {
       {
         "L3MON4D3/LuaSnip",
@@ -754,6 +783,29 @@ return {
     end
   },
   {
+    "echasnovski/mini.bufremove",
+    keys = {
+      {
+        "<leader>d",
+        function()
+          local bd = require("mini.bufremove").delete
+          if vim.bo.modified then
+            local choice = vim.fn.confirm(("Save changes to %q?"):format(vim.fn.bufname()), "&yes\n&no\n&cancel")
+            if choice == 1 then
+              vim.cmd.write()
+              bd(0)
+            elseif choice == 2 then
+              bd(0, true)
+            end
+          else
+            bd(0)
+          end
+        end,
+        desc = "Delete Buffer",
+      },
+    },
+  },
+  {
     'romgrk/barbar.nvim',
     config = function()
       require('barbar').setup({})
@@ -772,4 +824,5 @@ return {
       end, {})
     end
   },
+  { 'vimpostor/vim-tpipeline', enabled = false }
 }
