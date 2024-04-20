@@ -68,8 +68,10 @@ return {
         ['<leader>'] = {
           name = "+Leader",
           ['f'] = { name = "+Copy file info" },
-          ['i'] = { name = "+Indent" },
+          ['i'] = { name = "+Indent/context guides" },
+          ['m'] = { name = "+MiniFiles" },
           ['s'] = { name = "+Session" },
+          ['x'] = { name = "+Trouble" },
         }
       })
     end
@@ -77,8 +79,13 @@ return {
 
   {
     "folke/flash.nvim",
+    enabled = true,
     event = "VeryLazy",
     opts = {
+      label = {
+        -- regenerate labels after typing more characters
+        reuse = 'none'
+      },
       modes = {
         search = { enabled = false },
         char = { enabled = false },
@@ -86,7 +93,9 @@ return {
     },
     keys = {
       { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
-      { "<C-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+      { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+      { "<C-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash search" },
+      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
     },
   },
   {
@@ -94,6 +103,12 @@ return {
     enabled = true,
     config = function()
       vim.cmd.colorscheme("tokyonight")
+
+      -- override some highlight groups for barbar
+      vim.cmd('hi! link BufferCurrentSign Function')
+      vim.cmd('hi! link BufferInactiveSign Function')
+      vim.cmd('hi BufferCurrent gui=italic')
+      vim.cmd('hi BufferInactive gui=italic')
     end,
   },
   {
@@ -170,10 +185,11 @@ return {
     -- NOTE for Redhat run `source scl_source enable devtoolset-12`
     "nvim-treesitter/nvim-treesitter",
     enabled = true,
+    version = false,
     build = ":TSUpdate",
     config = function()
       require("nvim-treesitter.configs").setup({
-        ensure_installed = { "c", "cpp", "lua", "vim", "vimdoc", "javascript", "python", "html", "bash" },
+        ensure_installed = { "c", "cpp", "lua", "vim", "vimdoc", "javascript", "python", "html", "bash", "markdown_inline" },
         auto_install = false,
         sync_install = false,
         ignore_install = {},
@@ -196,9 +212,18 @@ return {
   {
     'nvim-treesitter/nvim-treesitter-context',
     config = function()
-      require'treesitter-context'.setup({
-        max_lines = 2
+      local tsc = require('treesitter-context')
+      tsc.setup({
+        enable = false,
+        mode = 'topline',
+        -- max_lines = 2
       })
+
+      vim.api.nvim_create_user_command('ContextToggle', function()
+        tsc.toggle()
+      end, {})
+
+      vim.keymap.set('n', '<leader>ic', '<cmd>ContextToggle<CR>', { desc = 'Toggle context' })
     end
   },
 
@@ -342,6 +367,7 @@ return {
       { 'williamboman/mason-lspconfig.nvim', },
       { 'folke/neodev.nvim', opts = {} },
       { 'j-hui/fidget.nvim', opts = {} },
+      -- { 'folke/neoconf.nvim', cmd = 'Neoconf' },
     },
     config = function()
       local servers = {
@@ -353,6 +379,7 @@ return {
         lua_ls = {},
       }
 
+      -- require('neoconf').setup({})
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
 
@@ -747,9 +774,24 @@ return {
       })
     end
   },
-  { 'echasnovski/mini.files', version = false, opts = {} },
   {
-    'echasnovski/mini.indentscope', version = false,
+    'echasnovski/mini.files',
+    version = false,
+    config = function ()
+      local mf = require('mini.files')
+      mf.setup({})
+      vim.keymap.set( 'n', '<leader>fc', function()
+        mf.open(vim.api.nvim_buf_get_name(0), true)
+      end, { desc = 'MiniFiles open directory of current files' })
+
+      vim.keymap.set('n', '<leader>fo', function()
+        mf.open(vim.uv.cwd(), true)
+      end, { desc = 'MiniFiles open current directory' })
+    end
+  },
+  {
+    'echasnovski/mini.indentscope',
+    version = false,
     config = function()
       vim.g.miniindentscope_disable = true
 
@@ -824,5 +866,49 @@ return {
       end, {})
     end
   },
-  { 'vimpostor/vim-tpipeline', enabled = false }
+  { 'vimpostor/vim-tpipeline', enabled = false },
+  {
+    'rcarriga/nvim-notify',
+    opts = {
+      stages = 'fade_in_slide_out'
+    },
+    keys = {
+      {
+        '<leader>n',
+        function()
+          require('notify').dismiss({ silent = true, pending = true })
+          vim.cmd.nohlsearch()
+        end,
+        desc = 'Clear notifications and search highlight'
+      }
+    }
+  },
+  {
+    "ggandor/leap.nvim",
+    enabled = true,
+    config = function()
+      vim.keymap.set('n', '<M-s>', '<Plug>(leap)')
+    end
+  },
+  {
+    "folke/trouble.nvim",
+    branch = "dev",
+    keys = {
+      { "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", desc = "Diagnostics (Trouble)" },
+      {
+        "<leader>xX",
+        "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
+        desc = "Buffer Diagnostics (Trouble)"
+      },
+      { "<leader>xs", "<cmd>Trouble symbols toggle focus=false<cr>", desc = "Symbols (Trouble)" },
+      {
+        "<leader>xS",
+        "<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
+        desc = "LSP references/definitions (Trouble)",
+      },
+      { "<leader>xL", "<cmd>Trouble loclist toggle<cr>", desc = "Location List (Trouble)" },
+      { "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List (Trouble)" },
+    },
+    opts = {}
+  }
 }

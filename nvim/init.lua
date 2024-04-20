@@ -8,6 +8,7 @@ vim.opt.clipboard = 'unnamedplus'
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.signcolumn = 'yes'
+vim.opt.termguicolors = true
 
 -- default split locations - impacts help placement
 vim.opt.splitright = true
@@ -166,14 +167,14 @@ vim.keymap.set('n', '<leader>fd', function() vim.cmd('let @+=expand("%:p:h")') e
   { desc = 'Copy directory path for current file' })
 
 -- open Windows Explorer
-if vim.fn.has("win32") then
-  vim.keymap.set('n', '<leader>x', function() vim.cmd('silent r! explorer .') end,
+if vim.fn.has("win32") == 1 then
+  vim.keymap.set('n', '<leader>fx', function() vim.cmd('silent r! explorer .') end,
     { desc = 'Open Windows Explorer' })
 end
 
 -- move things in visual mode
-vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = 'Move text down' })
-vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = 'Move text up' })
+-- vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = 'Move text down' })
+-- vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = 'Move text up' })
 
 -----------------
 -- Yank overhaul
@@ -351,7 +352,7 @@ vim.keymap.set('n', 'yH', '<cmd>YankCycleHist<CR>', { desc = 'Paste from yank hi
 local hiBgData = {
   on = false,
   vals = {},
-  groups = { 'Normal', 'NonText', 'FoldColumn', 'SignColumn' }
+  groups = { 'Normal', 'NormalNC', 'NonText', 'FoldColumn', 'SignColumn' }
 }
 
 -- toggle transparency
