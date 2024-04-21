@@ -1,4 +1,25 @@
 @echo off
+setlocal enabledelayedexpansion
+
+set apps[0]=vim
+set apps[1]=neovim
+set apps[2]=neovide
+
+set vim_conf_live_folders[0]=%USERPROFILE%\vimfiles
+set vim_conf_snap_folders[0]=vimfiles
+set vim_conf_repo_folders[0]=vim
+set vim_data_live_folders[0]=%USERPROFILE%\.vimdata
+set vim_data_snap_folders[0]=.vimdata
+
+set neovim_conf_live_folders[0]=%USERPROFILE%\AppData\Local\nvim
+set neovim_conf_snap_folders[0]=AppData\Local\nvim
+set neovim_conf_repo_folders[0]=nvim
+set neovim_data_live_folders[0]=%USERPROFILE%\AppData\Local\nvim-data
+set neovim_data_snap_folders[0]=AppData\Local\nvim-data
+
+set neovide_conf_live_folders[0]=%USERPROFILE%\AppData\Roaming\neovide
+set neovide_conf_snap_folders[0]=AppData\Roaming\neovide
+set neovide_conf_repo_folders[0]=neovide
 
 REM -----------------
 REM Build a snapshot
@@ -6,97 +27,418 @@ REM Build a snapshot
 if [%1]==[snap] (
   mkdir snap
 
-  REM Vim
-  mkdir snap\vimfiles
-  xcopy /I /Y /S /E /H /Q "%USERPROFILE%\vimfiles\*" snap\vimfiles
-  mkdir snap\.vimdata
-  xcopy /I /Y /S /E /H /Q "%USERPROFILE%\.vimdata\*" snap\.vimdata
+  set types[0]=conf
+  set types[1]=data
 
-  REM Neovim
-  mkdir snap\AppData\Local\nvim
-  xcopy /I /Y /S /E /H /Q "%USERPROFILE%\AppData\Local\nvim\*" snap\AppData\Local\nvim
-  mkdir snap\AppData\Local\nvim-data
-  xcopy /I /Y /S /E /H /Q "%USERPROFILE%\AppData\Local\nvim-data\*" snap\AppData\Local\nvim-data
+  set type_index=0
 
-  REM Neovide
-  mkdir snap\AppData\Roaming\neovide
-  xcopy /I /Y /S /E /H /Q "%USERPROFILE%\AppData\Roaming\neovide\*" snap\AppData\Roaming\neovide
+  :snap_type_loop
+  call set typ=%%types[!type_index!]%%
+
+  if not "!typ!"=="" (
+    set app_index=0
+    :snap_app_folders_loop
+    call set app=%%apps[!app_index!]%%
+
+    if not "!app!"=="" (
+      set live_folders=!app!_!typ!_live_folders
+      set snap_folders=!app!_!typ!_snap_folders
+
+      call set check_live_folders=%%!live_folders![0]%%
+
+      if not "!check_live_folders!"=="" (
+        echo snapping !app! !typ! folders
+
+        set live_folders_index=0
+
+        :snap_live_folders_loop
+        call set live_folder=%%!live_folders![!live_folders_index!]%%
+
+        if not "!live_folder!"=="" (
+          call set snap_folder=%%!snap_folders![!live_folders_index!]%%
+
+          echo snapping !live_folder! to snap\!snap_folder!
+
+          mkdir "snap\!snap_folder!" 
+          xcopy /I /Y /S /E /H /Q "!live_folder!" "snap\!snap_folder!"
+
+          set /a live_folders_index+=1
+          goto snap_live_folders_loop
+        )
+
+        echo:
+      )
+
+      set /a app_index+=1
+      goto snap_app_folders_loop
+    )
+
+    set app_index=0
+    :snap_app_files_loop
+    call set app=%%apps[!app_index!]%%
+
+    if not "!app!"=="" (
+      set live_files=!app!_!typ!_live_files
+      set snap_files=!app!_!typ!_snap_files
+
+      call set check_live_files=%%!live_files![0]%%
+
+      if not "!check_live_files!"=="" (
+        echo snapping !app! !typ! files
+
+        set live_files_index=0
+
+        :snap_live_files_loop
+        call set live_file=%%!live_files![!live_files_index!]%%
+
+        if not "!live_file!"=="" (
+          call set snap_file=%%!snap_files![!live_files_index!]%%
+
+          echo snapping !live_file! to snap\!snap_file!
+
+          xcopy /I /Y /S /E /H /Q "!live_file!" "snap\!snap_file!*"
+
+          set /a live_files_index+=1
+          goto snap_live_files_loop
+        )
+
+        echo:
+      )
+
+      set /a app_index+=1
+      goto snap_app_files_loop
+    )
+
+    set /a type_index+=1
+    goto snap_type_loop
+  )
 
   tar -czf ..\dotfiles.tar.gz -C .. dotfiles
 
   rmdir /S /Q snap
+
+  goto end
 )
 
 REM ----------------------
 REM Restore from snapshot
 
 if [%1]==[restore] (
-  REM Vim
-  rmdir /S /Q "%USERPROFILE%\oldvimfiles"
-  move "%USERPROFILE%\vimfiles" "%USERPROFILE%\oldvimfiles"
-  mkdir "%USERPROFILE%\vimfiles"
-  xcopy /I /Y /S /E /H /Q "snap\vimfiles\*" "%USERPROFILE%\vimfiles"
+  set types[0]=conf
+  set types[1]=data
 
-  rmdir /S /Q "%USERPROFILE%\.oldvimdata"
-  move "%USERPROFILE%\.vimdata" "%USERPROFILE%\.oldvimdata"
-  mkdir "%USERPROFILE%\.vimdata"
-  xcopy /I /Y /S /E /H /Q "snap\.vimdata\*" "%USERPROFILE%\.vimdata"
+  set type_index=0
 
-  REM Neovim
-  rmdir /S /Q "%USERPROFILE%\AppData\Local\oldnvim" 
-  move "%USERPROFILE%\AppData\Local\nvim" "%USERPROFILE%\AppData\Local\oldnvim" 
-  mkdir "%USERPROFILE%\AppData\Local\nvim"
-  xcopy /I /Y /S /E /H /Q "snap\AppData\Local\nvim\*" "%USERPROFILE%\AppData\Local\nvim"
+  :restore_type_loop
+  call set typ=%%types[!type_index!]%%
 
-  rmdir /S /Q "%USERPROFILE%\AppData\Local\oldnvim-data" 
-  move "%USERPROFILE%\AppData\Local\nvim-data" "%USERPROFILE%\AppData\Local\oldnvim-data" 
-  mkdir "%USERPROFILE%\AppData\Local\nvim-data"
-  xcopy /I /Y /S /E /H /Q "snap\AppData\Local\nvim-data\*" "%USERPROFILE%\AppData\Local\nvim-data"
+  if not "!typ!"=="" (
+    set app_index=0
+    :restore_app_folders_loop
+    call set app=%%apps[!app_index!]%%
 
-  REM Neovide
-  rmdir /S /Q "%USERPROFILE%\AppData\Roaming\oldneovide" 
-  move "%USERPROFILE%\AppData\Roaming\neovide" "%USERPROFILE%\AppData\Roaming\oldneovide"
-  mkdir "%USERPROFILE%\AppData\Roaming\neovide"
-  xcopy /I /Y /S /E /H /Q "snap\AppData\Roaming\neovide\*" "%USERPROFILE%\AppData\Roaming\neovide"
+    if not "!app!"=="" (
+      set live_folders=!app!_!typ!_live_folders
+      set snap_folders=!app!_!typ!_snap_folders
+
+      call set check_live_folders=%%!live_folders![0]%%
+
+      if not "!check_live_folders!"=="" (
+        echo restoring !app! !typ! folders
+
+        set live_folders_index=0
+
+        :restore_live_folders_loop
+        call set live_folder=%%!live_folders![!live_folders_index!]%%
+
+        if not "!live_folder!"=="" (
+          call set snap_folder=%%!snap_folders![!live_folders_index!]%%
+
+          echo restoring snap\!snap_folder! to !live_folder!
+
+          echo removing !live_folder!.old
+          rmdir /S /Q !live_folder!.old
+
+          echo moving !live_folder! to !live_folder!.old
+          move !live_folder! !live_folder!.old
+
+          echo copying snap\!snap_folder! to !live_folder!
+          xcopy /I /Y /S /E /H /Q "snap\!snap_folder!" "!live_folder!" 
+
+          set /a live_folders_index+=1
+          goto restore_live_folders_loop
+        )
+
+        echo:
+      )
+
+      set /a app_index+=1
+      goto restore_app_folders_loop
+    )
+
+    set app_index=0
+    :restore_app_files_loop
+    call set app=%%apps[!app_index!]%%
+
+    if not "!app!"=="" (
+      set live_files=!app!_!typ!_live_files
+      set snap_files=!app!_!typ!_snap_files
+
+      call set check_live_files=%%!live_files![0]%%
+
+      if not "!check_live_files!"=="" (
+        echo restoring !app! !typ! files
+
+        set live_files_index=0
+
+        :restore_live_files_loop
+        call set live_file=%%!live_files![!live_files_index!]%%
+
+        if not "!live_file!"=="" (
+          call set snap_file=%%!snap_files![!live_files_index!]%%
+
+          echo restoring snap\!snap_file! to !live_file!
+
+          echo removing !live_file!.old
+          del !live_file!.old
+
+          echo moving !live_file! to !live_file!.old
+          move "!live_file!" "!live_file!.old"
+
+          echo copying snap\!snap_file! to !live_file!
+          xcopy /I /Y /S /E /H /Q "snap\!snap_file!" "!live_file!*"
+
+          set /a live_files_index+=1
+          goto restore_live_files_loop
+        )
+
+        echo: 
+      )
+
+      set /a app_index+=1
+      goto restore_app_files_loop
+    )
+
+    set /a type_index+=1
+    goto restore_type_loop
+  )
+
+  goto end
 )
 
 REM ------------------
 REM Clean plugin data
 
 if [%1]==[clean] (
-  REM Vim
-  rmdir /S /Q "%USERPROFILE%\.oldvimdata"
-  move "%USERPROFILE%\.vimdata" "%USERPROFILE%\.oldvimdata"
+  set types[0]=data
 
-  REM Neovim
-  rmdir /S /Q "%USERPROFILE%\AppData\Local\oldnvim-data" 
-  move "%USERPROFILE%\AppData\Local\nvim-data" "%USERPROFILE%\AppData\Local\oldnvim-data" 
+  set type_index=0
 
-  REM Neovide
-  rmdir /S /Q "%USERPROFILE%\AppData\Roaming\oldneovide" 
-  move "%USERPROFILE%\AppData\Local\neovide" "%USERPROFILE%\AppData\Roaming\oldneovide" 
+  :clean_type_loop
+  call set typ=%%types[!type_index!]%%
+
+  if not "!typ!"=="" (
+    set app_index=0
+    :clean_app_folders_loop
+    call set app=%%apps[!app_index!]%%
+
+    if not "!app!"=="" (
+      set live_folders=!app!_!typ!_live_folders
+
+      call set check_live_folders=%%!live_folders![0]%%
+
+      if not "!check_live_folders!"=="" (
+        echo cleaning !app! !typ! folders
+
+        set live_folders_index=0
+
+        :clean_live_folders_loop
+        call set live_folder=%%!live_folders![!live_folders_index!]%%
+
+        if not "!live_folder!"=="" (
+          echo cleaning !live_folder!
+
+          echo removing !live_folder!.old
+          rmdir /S /Q !live_folder!.old
+
+          echo moving !live_folder! to !live_folder!.old
+          move !live_folder! !live_folder!.old
+
+          set /a live_folders_index+=1
+          goto clean_live_folders_loop
+        )
+
+        echo:
+      )
+
+      set /a app_index+=1
+      goto clean_app_folders_loop
+    )
+
+    set app_index=0
+    :clean_app_files_loop
+    call set app=%%apps[!app_index!]%%
+
+    if not "!app!"=="" (
+      set live_files=!app!_!typ!_live_files
+
+      call set check_live_files=%%!live_files![0]%%
+
+      if not "!check_live_files!"=="" (
+        echo cleaning !app! !typ! files
+
+        set live_files_index=0
+
+        :clean_live_files_loop
+        call set live_file=%%!live_files![!live_files_index!]%%
+
+        if not "!live_file!"=="" (
+          echo cleaning !live_file!
+
+          echo removing !live_file!.old
+          del !live_file!.old
+
+          echo moving !live_file! to !live_file!.old
+          move "!live_file!" "!live_file!.old"
+
+          set /a live_files_index+=1
+          goto clean_live_files_loop
+        )
+
+        echo: 
+      )
+
+      set /a app_index+=1
+      goto clean_app_files_loop
+    )
+
+    set /a type_index+=1
+    goto clean_type_loop
+  )
+
+  goto end
 )
 
 REM -----------------------
 REM Install from this repo
 
 if [%1]==[repo] (
-  REM Vim
-  rmdir /S /Q %USERPROFILE%\oldvimfiles
-  move "%USERPROFILE%\vimfiles" "%USERPROFILE%\oldvimfiles"
-  mkdir "%USERPROFILE%\vimfiles"
-  xcopy /I /Y /S /E /H /Q vim\* "%USERPROFILE%\vimfiles"
+  set types[0]=conf
 
-  REM Neovim
-  rmdir /S /Q "%USERPROFILE%\AppData\Local\oldnvim" 
-  move "%USERPROFILE%\AppData\Local\nvim" "%USERPROFILE%\AppData\Local\oldnvim" 
-  mkdir "%USERPROFILE%\AppData\Local\nvim"
-  xcopy /I /Y /S /E /H /Q nvim\* "%USERPROFILE%\AppData\Local\nvim"
+  set type_index=0
 
-  REM Neovide
-  rmdir /S /Q "%USERPROFILE%\AppData\Roaming\oldneovide" 
-  move "%USERPROFILE%\AppData\Roaming\neovide" "%USERPROFILE%\AppData\Roaming\oldneovide" 
-  mkdir "%USERPROFILE%\AppData\Roaming\neovide"
-  xcopy /I /Y /S /E /H /Q neovide\* "%USERPROFILE%\AppData\Roaming\neovide"
+  :repo_type_loop
+  call set typ=%%types[!type_index!]%%
+
+  if not "!typ!"=="" (
+    set app_index=0
+    :repo_app_folders_loop
+    call set app=%%apps[!app_index!]%%
+
+    if not "!app!"=="" (
+      set live_folders=!app!_!typ!_live_folders
+      set repo_folders=!app!_!typ!_repo_folders
+
+      call set check_live_folders=%%!live_folders![0]%%
+
+      if not "!check_live_folders!"=="" (
+        echo installing !app! !typ! folders
+
+        set live_folders_index=0
+
+        :repo_live_folders_loop
+        call set live_folder=%%!live_folders![!live_folders_index!]%%
+
+        if not "!live_folder!"=="" (
+          call set repo_folder=%%!repo_folders![!live_folders_index!]%%
+
+          echo installing !repo_folder! to !live_folder!
+
+          echo removing !live_folder!.old
+          rmdir /S /Q !live_folder!.old
+
+          echo moving !live_folder! to !live_folder!.old
+          move !live_folder! !live_folder!.old
+
+          echo copying !repo_folder! to !live_folder!
+          xcopy /I /Y /S /E /H /Q "!repo_folder!" "!live_folder!" 
+
+          set /a live_folders_index+=1
+          goto repo_live_folders_loop
+        )
+
+        echo:
+      )
+
+      set /a app_index+=1
+      goto repo_app_folders_loop
+    )
+
+    set app_index=0
+    :repo_app_files_loop
+    call set app=%%apps[!app_index!]%%
+
+    if not "!app!"=="" (
+      set live_files=!app!_!typ!_live_files
+      set repo_files=!app!_!typ!_repo_files
+
+      call set check_live_files=%%!live_files![0]%%
+
+      if not "!check_live_files!"=="" (
+        echo installing !app! !typ! files
+
+        set live_files_index=0
+
+        :repo_live_files_loop
+        call set live_file=%%!live_files![!live_files_index!]%%
+
+        if not "!live_file!"=="" (
+          call set repo_file=%%!repo_files![!live_files_index!]%%
+
+          echo installing !repo_file! to !live_file!
+
+          echo removing !live_file!.old
+          del !live_file!.old
+
+          echo moving !live_file! to !live_file!.old
+          move "!live_file!" "!live_file!.old"
+
+          echo copying !repo_file! to !live_file!
+          xcopy /I /Y /S /E /H /Q "!repo_file!" "!live_file!*"
+
+          set /a live_files_index+=1
+          goto repo_live_files_loop
+        )
+
+        echo: 
+      )
+
+      set /a app_index+=1
+      goto repo_app_files_loop
+    )
+
+    set /a type_index+=1
+    goto repo_type_loop
+  )
+
+  goto end
 )
 
+REM ---------------------
+REM Bootstrap everything
+
+if [%1]==[bootstrap] (
+
+  if "%VisualStudioVersion%"=="" (
+    echo run this from a Visual Studio Developer Command Prompt
+    goto end
+  )
+
+  vim +PlugInstall! +qa
+  nvim --headless +"Lazy! install" +"TSInstallSync! c cpp lua vim vimdoc javascript python html bash" +"qa"
+  nvim --headless +"MasonInstall lua-language-server" +"qa"
+
+  goto end
+)
+
+:end
