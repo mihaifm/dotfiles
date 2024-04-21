@@ -113,7 +113,7 @@ if [%1]==[snap] (
     goto snap_type_loop
   )
 
-  tar -czf ..\dotfiles.tar.gz -C .. dotfiles
+  tar -acf ..\dotfiles.zip -C .. dotfiles
 
   rmdir /S /Q snap
 
@@ -435,7 +435,7 @@ if [%1]==[bootstrap] (
   )
 
   vim +PlugInstall! +qa
-  nvim --headless +"Lazy! install" +"TSInstallSync! c cpp lua vim vimdoc javascript python html bash" +"qa"
+  nvim --headless +"Lazy^! install" +"TSInstallSync^! c cpp lua vim vimdoc javascript python html bash" +"qa"
   nvim --headless +"MasonInstall lua-language-server" +"qa"
 
   goto end
