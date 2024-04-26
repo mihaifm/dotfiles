@@ -67,11 +67,13 @@ return {
         },
         ['<leader>'] = {
           name = "+Leader",
-          ['f'] = { name = "+Copy file info" },
-          ['i'] = { name = "+Indent/context guides" },
-          ['m'] = { name = "+MiniFiles" },
+          ['f'] = { name = "+File" },
+          ['i'] = { name = "+Indent/Context" },
           ['s'] = { name = "+Session" },
           ['x'] = { name = "+Trouble" },
+          ['t'] = { name = "+ToggleTerm" },
+          ['v'] = { name = "+MiniVisits" },
+          ['p'] = { name = "+Dap" },
         }
       })
     end
@@ -104,11 +106,19 @@ return {
     config = function()
       vim.cmd.colorscheme("tokyonight")
 
-      -- override some highlight groups for barbar
+      -- override some highlight groups
       vim.cmd('hi! link BufferCurrentSign Function')
       vim.cmd('hi! link BufferInactiveSign Function')
       vim.cmd('hi BufferCurrent gui=italic')
       vim.cmd('hi BufferInactive gui=italic')
+
+      vim.cmd('hi! FloatBorder guibg=NONE')
+      vim.cmd('hi! TelescopeBorder guibg=NONE')
+      vim.cmd('hi! TelescopePreviewBorder guibg=NONE')
+      vim.cmd('hi! TelescopePreviewBorder guibg=NONE')
+      vim.cmd('hi! TelescopePromptBorder guibg=NONE')
+      vim.cmd('hi! TelescopeResultsBorder guibg=NONE')
+      vim.cmd('hi! TelescopeNormal guibg=NONE')
     end,
   },
   {
@@ -131,6 +141,27 @@ return {
 
     end
   },
+  {
+    'folke/noice.nvim',
+    event = "VeryLazy",
+    opts = {
+      -- popupmenu = {
+      --   enabled = false
+      -- }
+      views = {
+        cmdline_popup = {
+          position = {
+            row = "95%",
+            col = "50%",
+          },
+        }
+      },
+    },
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "rcarriga/nvim-notify"
+    }
+  },
 
   {
     "shaunsingh/nord.nvim",
@@ -147,10 +178,11 @@ return {
     enabled = true,
     config = function()
       vim.opt.statusline = ' '
+
       require('lualine').setup({
         options = {
           section_separators = { left = '', right = '' },
-          component_separators = { left = '', right = '' },
+          component_separators = { left = '·', right = '·' },
           disabled_filetypes = {
             statusline = {
               'vimpanel',
@@ -162,6 +194,11 @@ return {
         sections = {
           lualine_b = {
             { 'branch', icon = '󰘬' }
+          },
+          lualine_c = {
+            {
+              'filename'
+            },
           },
           lualine_x = {
             { 'filetype' },
@@ -175,8 +212,47 @@ return {
               symbols = { unix = 'lf', dos = 'crlf', mac = 'cr' }
             }
           }
-        }
+        },
       })
+
+      local aerialLualine = false
+      local lua_statusbar_c = {}
+      vim.api.nvim_create_user_command("AerialLualineToggle", function()
+        aerialLualine = not aerialLualine
+        if aerialLualine then
+          lua_statusbar_c = { { 'filename' }, { 'aerial' } }
+        else
+          lua_statusbar_c = { { 'filename' } }
+        end
+        require('lualine').setup({ sections = { lualine_c = lua_statusbar_c } })
+      end, {})
+
+      vim.keymap.set("n", '<leader>ia', '<cmd>AerialLualineToggle<CR>', { desc = 'Toggle aerial lualine context' })
+
+      local navicLualine = false
+      local lua_winbar_c = {}
+      local navic_config = {
+        "navic",
+        color_correction = nil,
+        navic_opts = {
+          separator = " ⇢ ",
+          highlight = true,
+          depth_limit = 9,
+        }
+      }
+
+      vim.api.nvim_create_user_command("NavicLualineToggle", function()
+        navicLualine = not navicLualine
+        if navicLualine then
+          lua_winbar_c = { navic_config }
+        else
+          lua_winbar_c = {}
+        end
+        require('lualine').setup({ winbar = { lualine_c = lua_winbar_c } })
+      end, {})
+
+      vim.keymap.set("n", '<leader>in', '<cmd>NavicLualineToggle<CR>', { desc = 'Toggle navic winbar context' })
+
     end,
   },
 
@@ -194,10 +270,10 @@ return {
         sync_install = false,
         ignore_install = {},
         modules = {},
-        highlight = { enable = true },
-        indent = { enable = true },
+        highlight = { enable = false },
+        indent = { enable = false },
         incremental_selection = {
-          enable = true,
+          enable = false,
           keymaps = {
             init_selection = "gnn",
             node_incremental = "grn",
@@ -230,7 +306,8 @@ return {
   {
     -- NOTE telescope requires ripgrep for Live Grep
     "nvim-telescope/telescope.nvim",
-    branch = '0.1.x',
+    -- branch = '0.1.x',
+    version = false,
     event = 'VimEnter',
     dependencies = {
       { 'nvim-lua/plenary.nvim' },
@@ -240,6 +317,14 @@ return {
         'nvim-telescope/telescope-fzf-native.nvim',
         build = vim.fn.executable("make") == 1 and "make"
           or 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build'
+      },
+      {
+        "ahmedkhalf/project.nvim",
+        event = "VeryLazy",
+        opts = { manual_mode = true },
+        config = function(_, opts)
+          require("project_nvim").setup(opts)
+        end
       }
     },
     config = function()
@@ -317,6 +402,8 @@ return {
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
       pcall(require('telescope').load_extension, 'live_grep_args')
+      pcall(require('telescope').load_extension, 'projects')
+      pcall(require('telescope').load_extension, 'aerial')
 
       local builtin = require("telescope.builtin")
 
@@ -367,7 +454,7 @@ return {
       { 'williamboman/mason-lspconfig.nvim', },
       { 'folke/neodev.nvim', opts = {} },
       { 'j-hui/fidget.nvim', opts = {} },
-      -- { 'folke/neoconf.nvim', cmd = 'Neoconf' },
+      { 'folke/neoconf.nvim', cmd = 'Neoconf' },
     },
     config = function()
       local servers = {
@@ -379,7 +466,7 @@ return {
         lua_ls = {},
       }
 
-      -- require('neoconf').setup({})
+      require('neoconf').setup({})
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
 
@@ -481,6 +568,8 @@ return {
       { "onsails/lspkind.nvim" },
     },
     config = function()
+      vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
+
       local cmp = require("cmp")
       local luasnip = require('luasnip')
       luasnip.config.setup({})
@@ -523,7 +612,12 @@ return {
         },
         formatting = {
           format = require("lspkind").cmp_format()
-        }
+        },
+        experimental = {
+          ghost_text = {
+            hl_group = "CmpGhostText",
+          },
+        },
       })
 
       ---@diagnostic disable-next-line
@@ -577,7 +671,6 @@ return {
   {
     "akinsho/toggleterm.nvim",
     version = "*",
-    -- cmd = { "ToggleTerm", "TermExec" }, -- doesn't seem to work
     config = function()
       vim.api.nvim_create_autocmd('TermOpen', {
         group = vim.api.nvim_create_augroup('toggleterm-termopen', { clear = true }),
@@ -849,6 +942,7 @@ return {
   },
   {
     'romgrk/barbar.nvim',
+    enabled = true,
     config = function()
       require('barbar').setup({})
       vim.cmd('BarbarDisable')
@@ -865,6 +959,14 @@ return {
         vim.cmd('normal jk')
       end, {})
     end
+  },
+  {
+    'akinsho/bufferline.nvim',
+    enabled = false,
+    event = 'VeryLazy',
+    version = "*",
+    dependencies = 'nvim-tree/nvim-web-devicons',
+    opts = {}
   },
   { 'vimpostor/vim-tpipeline', enabled = false },
   {
@@ -909,6 +1011,93 @@ return {
       { "<leader>xL", "<cmd>Trouble loclist toggle<cr>", desc = "Location List (Trouble)" },
       { "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List (Trouble)" },
     },
+    opts = {}
+  },
+  {
+    "catppuccin/nvim",
+    lazy = true,
+    name = "catppuccin",
+    opts = {
+      integrations = {
+        aerial = true,
+        cmp = true,
+        dashboard = true,
+        flash = true,
+        gitsigns = true,
+        headlines = true,
+        indent_blankline = { enabled = true },
+        leap = true,
+        lsp_trouble = true,
+        mason = true,
+        markdown = true,
+        mini = true,
+        native_lsp = {
+          enabled = true,
+          underlines = {
+            errors = { "undercurl" },
+            hints = { "undercurl" },
+            warnings = { "undercurl" },
+            information = { "undercurl" },
+          },
+        },
+        notify = true,
+        telescope = true,
+        treesitter = true,
+        treesitter_context = true,
+        which_key = true,
+      },
+    },
+  },
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    cmd = "Neotree",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons",
+      "MunifTanjim/nui.nvim",
+    }
+  },
+  {
+    "NStefan002/screenkey.nvim",
+    enabled = false, -- doesn't work so well
+    cmd = "Screenkey",
+    version = "*",
+    config = true,
+  },
+  {
+    "dstein64/vim-startuptime",
+    cmd = "StartupTime",
+    config = function()
+      vim.g.startuptime_tries = 1
+    end
+  },
+  {
+    "SmiteshP/nvim-navic",
+    lazy = true,
+    init = function()
+      -- vim.g.navic_silence = true
+      vim.api.nvim_create_autocmd("LspAttach", {
+        group = vim.api.nvim_create_augroup("navic-lspattach", { clear = true }),
+        callback = function(args)
+          local buffer = args.buf
+          local client = vim.lsp.get_client_by_id(args.data.client_id)
+
+          if client.supports_method("textDocument/documentSymbol") then
+            require("nvim-navic").attach(client, buffer)
+          end
+        end,
+      })
+    end,
+    opts = function()
+      return {
+        lazy_update_context = true
+      }
+    end,
+  },
+  {
+    "hedyhli/outline.nvim",
+    cmd = "Outline",
     opts = {}
   }
 }

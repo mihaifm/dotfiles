@@ -54,13 +54,12 @@ return {
 
   {
     "mihaifm/4colors",
-    enabled = false,
-    config = function() vim.cmd.colorscheme("4colors") end
+    enabled = true,
+    lazy = true
   },
   {
     name = "4colors-dev",
     enabled = false,
-    dir = "D:/Syncbox/Projects/4colors",
-    config = function() vim.cmd.colorscheme("4colors") end
+    dir = "D:/Syncbox/Projects/4colors"
   }
 }
