@@ -346,8 +346,161 @@ vim.keymap.set('n', '<C-n>', '<cmd>YankCyclePrev<CR>', { desc = 'Paste previous 
 
 vim.keymap.set('n', 'yH', '<cmd>YankCycleHist<CR>', { desc = 'Paste from yank history' })
 
--------------------
--- Custom commands
+------------------------
+-- Fancy command propmt
+
+function FancyCmd(type)
+  if not type then type = 'cmd' end
+
+  vim.cmd('exe "normal ms"')
+
+  -- buffer settings
+  local prompt_buf = vim.api.nvim_create_buf(false, true)
+  vim.bo[prompt_buf].swapfile = false
+  vim.bo[prompt_buf].bufhidden = "wipe"
+  vim.bo[prompt_buf].filetype = "fancycmd"
+
+  local title = ' Command '
+  if type == 'search' then title = ' Search ' end
+
+  -- ui settings
+  local prompt_win = vim.api.nvim_open_win(prompt_buf, true, {
+    relative = "editor",
+    width = 60,
+    height = 1,
+    row = vim.o.lines * 0.9,
+    col = vim.o.columns * 0.5 - 30,
+    focusable = false,
+    zindex = 50,
+    style = "minimal",
+    border = "rounded",
+    noautocmd = true,
+    title = title,
+    title_pos = "center"
+  })
+  local guicursor = vim.o.guicursor
+  vim.cmd("setlocal guicursor=i:block")
+  vim.cmd('file --fancycmd--')
+  vim.cmd('set winhl=Normal:Constant,FloatTitle:FloatBorder,Search:Normal,CurSearch:Normal')
+  vim.cmd("setlocal scl=yes:2")
+  vim.cmd('sign define prompt text=\\  ')
+  vim.cmd('sign place 1 line=1 name=prompt file=--fancycmd--')
+  vim.cmd('startinsert!')
+
+  local timer = vim.loop.new_timer()
+
+  -- dismiss and confirm keys
+  local command = nil
+  local function do_confirm()
+    command = vim.api.nvim_buf_get_lines(0, 0, 1, true)[1]
+  end
+
+  local function do_close()
+    vim.api.nvim_win_close(prompt_win, true)
+    vim.o.guicursor = guicursor
+    timer:stop()
+    timer:close()
+    vim.cmd("stopinsert")
+  end
+
+  vim.keymap.set("i", "<Esc>", function() do_close() end, { buffer = prompt_buf })
+
+  vim.keymap.set("i", "<CR>", function()
+    do_confirm()
+    do_close()
+    if command then
+      vim.defer_fn(function()
+        vim.fn.histadd('cmd', command)
+        -- vim.cmd(command)
+        if type == 'cmd' then
+          vim.fn.feedkeys(':' .. command .. '\n')
+        elseif type == 'search' then
+          vim.fn.feedkeys('/' .. command .. '\n')
+        end
+        command = nil
+      end, 10)
+    end
+  end, { buffer = prompt_buf })
+
+  -- completion
+  vim.keymap.set("i", "<Tab>", function()
+    if vim.fn.pumvisible() == 1 then
+      return "<C-n>"
+    else
+      return "<C-x><C-u>"
+    end
+  end, { buffer = prompt_buf, expr = true })
+
+  vim.bo[prompt_buf].completefunc = "v:lua.MyCmdComplete"
+  vim.bo[prompt_buf].omnifunc = "v:lua.MyCmdComplete"
+
+  local origTxt = ''
+  function MyCmdComplete(findstart, _)
+    if findstart == 1 then
+      origTxt = vim.api.nvim_buf_get_lines(0, 0, 1, true)[1]
+      local index = origTxt:reverse():find(" ")
+      if index then return #origTxt - index + 1 end
+      return 0
+    end
+    local _, result = pcall(vim.fn.getcompletion, origTxt, 'cmdline')
+    return result
+  end
+
+  local function set_input(text)
+    vim.api.nvim_buf_set_lines(0, 0, 1, true, { text })
+    vim.api.nvim_win_set_cursor(0, { 1, vim.api.nvim_strwidth(text) })
+  end
+
+  -- history
+  local history_idx = 0
+  local history_prev = function()
+    history_idx = history_idx - 1
+    set_input(vim.fn.histget('cmd', history_idx))
+    vim.cmd('sign place 1 line=1 name=prompt file=--fancycmd--')
+  end
+  local history_next = function()
+    history_idx = history_idx + 1
+    set_input(vim.fn.histget('cmd', history_idx))
+    vim.cmd('sign place 1 line=1 name=prompt file=--fancycmd--')
+  end
+
+  vim.keymap.set('i', '<C-p>', history_prev, { buffer = prompt_buf, remap = false })
+  vim.keymap.set('i', '<C-n>', history_next, { buffer = prompt_buf, remap = false })
+
+  -- search highlight
+
+  local textChanged = false
+  timer:start(0, 5, vim.schedule_wrap(function()
+    if not textChanged then return end
+
+    local search_term = vim.api.nvim_buf_get_lines(0, 0, 1, true)[1]
+    if string.len(search_term) > 0 then
+        vim.cmd('stopinsert')
+        vim.cmd('wincmd p')
+        vim.cmd('try | exe "normal `s" | exe "silent normal /' .. search_term .. '\\n" | catch | endtry' )
+        vim.cmd('wincmd p')
+      vim.defer_fn(function()
+        vim.cmd('startinsert!')
+      end, 5)
+    end
+
+    textChanged = false
+  end))
+
+  vim.api.nvim_create_autocmd({ "TextChangedI" }, {
+    buffer = prompt_buf,
+    callback = function()
+      if type ~= 'search' then return end
+      textChanged = true
+    end,
+  })
+end
+
+vim.keymap.set('n', '<leader>:', function() FancyCmd('cmd') end, { desc = 'Fancy command prompt' })
+vim.keymap.set('n', '<leader>/', function() FancyCmd('search') end, { desc = 'Fancy search' })
+
+----------------
+-- Transparency
 
 local hiBgData = {
   on = false,

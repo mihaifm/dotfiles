@@ -119,6 +119,7 @@ return {
       vim.cmd('hi! TelescopePromptBorder guibg=NONE')
       vim.cmd('hi! TelescopeResultsBorder guibg=NONE')
       vim.cmd('hi! TelescopeNormal guibg=NONE')
+      vim.cmd('hi! link NormalSB Normal')
     end,
   },
   {
@@ -143,11 +144,9 @@ return {
   },
   {
     'folke/noice.nvim',
+    enabled = false,
     event = "VeryLazy",
     opts = {
-      -- popupmenu = {
-      --   enabled = false
-      -- }
       views = {
         cmdline_popup = {
           position = {
@@ -565,6 +564,8 @@ return {
       { "hrsh7th/cmp-nvim-lsp-signature-help" },
       { "hrsh7th/cmp-buffer" },
       { "hrsh7th/cmp-cmdline" },
+      { "andersevenrud/cmp-tmux" },
+      { "lukas-reineke/cmp-rg" },
       { "onsails/lspkind.nvim" },
     },
     config = function()
@@ -606,18 +607,33 @@ return {
           -- sources in group 2 won't appear if the ones in group 1 are available
           { name = "nvim_lsp", group_index = 1 },
           { name = "nvim_lsp_signature_help", group_index = 1 },
-          { name = "path", option = { trailing_slash = true }, group_index = 1 },
+          { name = "path", group_index = 1, option = { trailing_slash = true } },
           { name = "buffer", max_item_count = 3, group_index = 1 },
           { name = "luasnip", group_index = 1 },
+          { name = "tmux", max_item_count = 2, keyword_length = 3, group_index = 1, option = { all_panes = true, label = '' } },
+          { name = "rg", max_item_count = 3, keyword_length = 5, group_index = 1 }
         },
         formatting = {
-          format = require("lspkind").cmp_format()
+          format = require('lspkind').cmp_format({
+            mode = 'symbol_text',
+            show_labelDetails = true,
+            menu = {
+              buffer = 'buf',
+              nvim_lsp = 'LSP',
+              tmux = 'tmux',
+              rg = 'rg'
+            }
+          })
         },
         experimental = {
           ghost_text = {
             hl_group = "CmpGhostText",
           },
         },
+      })
+
+      cmp.setup.filetype("fancycmd", {
+        enabled = false,
       })
 
       ---@diagnostic disable-next-line
@@ -1099,5 +1115,6 @@ return {
     "hedyhli/outline.nvim",
     cmd = "Outline",
     opts = {}
-  }
+  },
+  { 'Mofiqul/dracula.nvim' }
 }
