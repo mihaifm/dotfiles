@@ -97,7 +97,7 @@ fi
 # Restore from snapshot
 
 if [[ $1 == 'restore' ]]; then
-  mkdir -p "~/.config"
+  mkdir -p ~/.config
 
   for type in conf data; do
     for app in "${apps[@]}"; do
@@ -223,7 +223,7 @@ fi
 # Install from this repo
 
 if [[ $1 == 'repo' ]]; then
-  mkdir -p "~/.config"
+  mkdir -p ~/.config
 
   for type in "conf"; do
     for app in "${apps[@]}"; do
