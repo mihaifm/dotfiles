@@ -352,9 +352,17 @@ vim.keymap.set('n', 'yH', '<cmd>YankCycleHist<CR>', { desc = 'Paste from yank hi
 function FancyCmd(type)
   if not type then type = 'cmd' end
 
+  local buffers = vim.api.nvim_list_bufs()
+  for _, buf in ipairs(buffers) do
+    if vim.api.nvim_buf_get_option(buf, 'filetype') == 'fancycmd' then
+      return
+    end
+  end
+
   -- save window handler and cursor position
   local winid = vim.api.nvim_get_current_win()
   local cursorPos = vim.api.nvim_win_get_cursor(0)
+  local guicursor = vim.o.guicursor
 
   -- buffer settings
   local prompt_buf = vim.api.nvim_create_buf(false, true)
@@ -379,7 +387,7 @@ function FancyCmd(type)
     height = 1,
     row = vim.o.lines * 0.9,
     col = vim.o.columns * 0.5 - 30,
-    focusable = false,
+    focusable = true,
     zindex = 50,
     style = "minimal",
     border = "rounded",
@@ -388,7 +396,6 @@ function FancyCmd(type)
     title_pos = "center"
   })
 
-  local guicursor = vim.o.guicursor
   vim.cmd("setlocal guicursor=i:block")
   vim.cmd('file --fancycmd--')
   vim.cmd('set winhl=' .. colorSetup)
@@ -413,7 +420,7 @@ function FancyCmd(type)
     vim.cmd("stopinsert")
   end
 
-  vim.keymap.set("i", "<Esc>", function()
+  vim.keymap.set({"n", "i"}, "<Esc>", function()
     do_close()
     if type == 'search' then vim.cmd('noh') end
   end, { buffer = prompt_buf })
