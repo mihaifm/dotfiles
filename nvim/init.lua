@@ -352,8 +352,9 @@ vim.keymap.set('n', 'yH', '<cmd>YankCycleHist<CR>', { desc = 'Paste from yank hi
 function FancyCmd(type)
   if not type then type = 'cmd' end
 
+  -- save window handler and cursor position
   local winid = vim.api.nvim_get_current_win()
-  vim.cmd('exe "normal ms"')
+  local cursorPos = vim.api.nvim_win_get_cursor(0)
 
   -- buffer settings
   local prompt_buf = vim.api.nvim_create_buf(false, true)
@@ -361,6 +362,7 @@ function FancyCmd(type)
   vim.bo[prompt_buf].bufhidden = "wipe"
   vim.bo[prompt_buf].filetype = "fancycmd"
 
+  -- options
   local title = ' Command '
   local icon = ' '
   local colorSetup = 'Normal:Constant,FloatTitle:Constant,Search:Constant,CurSearch:Constant'
@@ -422,11 +424,14 @@ function FancyCmd(type)
     if command then
       vim.defer_fn(function()
         vim.fn.histadd('cmd', command)
-        -- vim.cmd(command)
         if type == 'cmd' then
-          vim.fn.feedkeys(':' .. command .. '\n')
-        elseif type == 'search' then
-          vim.fn.feedkeys('/' .. command .. '\n')
+          -- directly calling vim.cmd(command) is not working properly, 
+          -- see https://github.com/neovim/neovim/issues/28562
+          -- use a hack instead
+          local escaped_command = string.gsub(command, '"', '\\"')
+          escaped_command = string.gsub(escaped_command, "'", "''")
+          local hack = 'exe "' .. "call feedkeys('\\<cmd>" .. escaped_command .. "\\n')" .. '"'
+          vim.cmd(hack)
         end
         command = nil
       end, 10)
@@ -442,11 +447,11 @@ function FancyCmd(type)
     end
   end, { buffer = prompt_buf, expr = true })
 
-  vim.bo[prompt_buf].completefunc = "v:lua.MyCmdComplete"
-  vim.bo[prompt_buf].omnifunc = "v:lua.MyCmdComplete"
+  vim.bo[prompt_buf].completefunc = "v:lua.FancyCmdComplete"
+  vim.bo[prompt_buf].omnifunc = "v:lua.FancyCmdComplete"
 
   local origTxt = ''
-  function MyCmdComplete(findstart, _)
+  function FancyCmdComplete(findstart, _)
     if findstart == 1 then
       origTxt = vim.api.nvim_buf_get_lines(0, 0, 1, true)[1]
       local index = origTxt:reverse():find(" ")
@@ -481,13 +486,19 @@ function FancyCmd(type)
   -- search highlight
   local prevText = ''
   if type == 'search' then
-    timer:start(0, 100, vim.schedule_wrap(function()
+    timer:start(0, 20, vim.schedule_wrap(function()
+      if not vim.api.nvim_win_is_valid(winid) then return end
+
       local search_term = vim.api.nvim_buf_get_lines(0, 0, 1, true)[1]
       if search_term ~= prevText then
         if string.len(search_term) > 0 then
           vim.api.nvim_set_current_win(winid)
-          vim.cmd('try | exe "normal `s" | exe "silent normal /' .. search_term .. '\\n" | catch | endtry' )
-          vim.api.nvim_set_current_win(prompt_win)
+          vim.api.nvim_win_set_cursor(winid, cursorPos)
+          vim.fn.setreg('/', search_term)
+          vim.cmd('try | exe "silent normal! n" | catch | endtry')
+          if vim.api.nvim_win_is_valid(prompt_win) then
+            vim.api.nvim_set_current_win(prompt_win)
+          end
         end
         prevText = search_term
       end
@@ -495,8 +506,10 @@ function FancyCmd(type)
   end
 end
 
-vim.keymap.set('n', '<leader>:', function() FancyCmd('cmd') end, { desc = 'Fancy command prompt' })
-vim.keymap.set('n', '<leader>/', function() FancyCmd('search') end, { desc = 'Fancy search' })
+vim.keymap.set('n', ':', function() FancyCmd('cmd') end, { desc = 'Fancy command prompt' })
+vim.keymap.set('n', '/', function() FancyCmd('search') end, { desc = 'Fancy search' })
+vim.keymap.set('n', '<leader>:', ':', { desc = 'Command prompt' })
+vim.keymap.set('n', '<leader>/', '/', { desc = 'Search' })
 
 ----------------
 -- Transparency
