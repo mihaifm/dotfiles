@@ -372,11 +372,11 @@ function FancyCmd(type)
 
   -- options
   local title = ' Command '
-  local icon = ' '
+  local icon = ' '
   local colorSetup = 'Normal:Constant,FloatTitle:Constant,Search:Constant,CurSearch:Constant'
   if type == 'search' then
     title = ' Search '
-    icon = '󱢃'
+    icon = ' '
     colorSetup = 'Normal:Identifier,FloatTitle:Identifier,Search:Identifier,CurSearch:Identifier'
   end
 
@@ -495,6 +495,7 @@ function FancyCmd(type)
   if type == 'search' then
     timer:start(0, 20, vim.schedule_wrap(function()
       if not vim.api.nvim_win_is_valid(winid) then return end
+      if vim.api.nvim_get_current_win() ~= prompt_win then return end
 
       local search_term = vim.api.nvim_buf_get_lines(0, 0, 1, true)[1]
       if search_term ~= prevText then
