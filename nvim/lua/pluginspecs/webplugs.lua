@@ -11,17 +11,164 @@ vim.g.tmux_navigator_no_mappings = 1
 vim.g.tpipeline_restore = 1
 
 return {
+  ----------------------
+  -- colorscheme battle
+
+  {
+    "scottmckendry/cyberdream.nvim",
+    opts = {
+      transparent = true,
+      italic_comments = true,
+      -- hide_fillchars = true,
+      terminal_colors = true,
+    },
+  },
+  { "maxmx03/fluoromachine.nvim" },
+  {
+    "folke/tokyonight.nvim",
+    enabled = true,
+    config = function()
+      vim.api.nvim_create_autocmd('ColorScheme', {
+        group = vim.api.nvim_create_augroup('tokyonight-colorscheme', { clear = true }),
+        callback = function (args)
+          if args.match == 'tokyonight' then
+            vim.cmd('hi! link BufferCurrentSign Function')
+            vim.cmd('hi! link BufferInactiveSign Function')
+            vim.cmd('hi BufferCurrent gui=italic')
+            vim.cmd('hi BufferInactive gui=italic')
+
+            vim.cmd('hi! FloatBorder guibg=NONE')
+            vim.cmd('hi! TelescopeBorder guibg=NONE')
+            vim.cmd('hi! TelescopePreviewBorder guibg=NONE')
+            vim.cmd('hi! TelescopePreviewBorder guibg=NONE')
+            vim.cmd('hi! TelescopePromptBorder guibg=NONE')
+            vim.cmd('hi! TelescopeResultsBorder guibg=NONE')
+            vim.cmd('hi! TelescopeNormal guibg=NONE')
+            vim.cmd('hi! link NormalSB Normal')
+            vim.cmd('hi! link FoldColumn SignColumn')
+          end
+        end
+      })
+
+      vim.cmd.colorscheme("tokyonight")
+    end,
+  },
+  {
+    "shaunsingh/nord.nvim",
+    enabled = false,
+    config = function()
+      vim.g.nord_italic = false
+      require("nord").set()
+    end,
+  },
+  { 'Mofiqul/dracula.nvim' },
+  {
+    'AstroNvim/astrotheme',
+    opts = { palette = "astrojupiter" }
+  },
+  {
+    "catppuccin/nvim",
+    lazy = true,
+    name = "catppuccin",
+    opts = {
+      integrations = {
+        aerial = true,
+        cmp = true,
+        dap = true,
+        dap_ui = true,
+        dashboard = true,
+        flash = true,
+        gitsigns = true,
+        headlines = true,
+        indent_blankline = { enabled = true },
+        leap = true,
+        lsp_trouble = true,
+        mason = true,
+        markdown = true,
+        mini = true,
+        native_lsp = {
+          enabled = true,
+          underlines = {
+            errors = { "undercurl" },
+            hints = { "undercurl" },
+            warnings = { "undercurl" },
+            information = { "undercurl" },
+          },
+        },
+        neotree = true,
+        notify = true,
+        semantic_tokens = true,
+        symbols_outline = true,
+        telescope = true,
+        treesitter = true,
+        treesitter_context = true,
+        ufo = true,
+        which_key = true,
+      },
+    },
+  },
+  { 'projekt0n/github-nvim-theme' },
+  {
+    "ellisonleao/gruvbox.nvim",
+    config = function()
+      vim.api.nvim_create_autocmd('ColorScheme', {
+        group = vim.api.nvim_create_augroup('gruvbox-colorscheme', { clear = true }),
+        callback = function (args)
+          if args.match == 'gruvbox' then
+            vim.cmd('hi! link SignColumn Normal')
+          end
+        end
+      })
+    end
+  },
+  {
+    "rebelot/kanagawa.nvim",
+    enabled = false
+  },
+  { "savq/melange-nvim" },
+  { 'ramojus/mellifluous.nvim' },
+  { 'mellow-theme/mellow.nvim' },
+  { "rose-pine/neovim", name = "rose-pine", opts = {} },
+  { "EdenEast/nightfox.nvim" },
+  { "olivercederborg/poimandres.nvim", opts = {} },
+
+  -----------------------
+  -- vimscript survivors
+
   { "tpope/vim-fugitive" },
   { "tpope/vim-sleuth", enabled = false },
   { "tpope/vim-surround", enabled = false },
 
-  { "numToStr/Comment.nvim", opts = {} },
-
-  { "lewis6991/gitsigns.nvim", opts = {} },
-
   {
     -- NOTE undotree requires diff utility (it normally comes with the vim91 distribution)
     "mbbill/undotree",
+  },
+  { 'vimpostor/vim-tpipeline', enabled = false },
+  {
+    "dstein64/vim-startuptime",
+    cmd = "StartupTime",
+    config = function()
+      vim.g.startuptime_tries = 1
+    end
+  },
+  { "azabiong/vim-highlighter", lazy = false },
+
+  --------------------
+  -- unsorted plugins
+
+  { "numToStr/Comment.nvim", opts = {} },
+  {
+    "lewis6991/gitsigns.nvim",
+    opts = {
+      signs = {
+        add = { text = '▎' },
+        change = { text = '▎' },
+        -- delete = { text = '▎' },
+        -- topdelete = { text = '▎' },
+        -- changedelete = { text = '▎' },
+        -- untracked = { text = '▎' },
+      },
+    }
   },
 
   {
@@ -101,28 +248,6 @@ return {
     },
   },
   {
-    "folke/tokyonight.nvim",
-    enabled = true,
-    config = function()
-      vim.cmd.colorscheme("tokyonight")
-
-      -- override some highlight groups
-      vim.cmd('hi! link BufferCurrentSign Function')
-      vim.cmd('hi! link BufferInactiveSign Function')
-      vim.cmd('hi BufferCurrent gui=italic')
-      vim.cmd('hi BufferInactive gui=italic')
-
-      vim.cmd('hi! FloatBorder guibg=NONE')
-      vim.cmd('hi! TelescopeBorder guibg=NONE')
-      vim.cmd('hi! TelescopePreviewBorder guibg=NONE')
-      vim.cmd('hi! TelescopePreviewBorder guibg=NONE')
-      vim.cmd('hi! TelescopePromptBorder guibg=NONE')
-      vim.cmd('hi! TelescopeResultsBorder guibg=NONE')
-      vim.cmd('hi! TelescopeNormal guibg=NONE')
-      vim.cmd('hi! link NormalSB Normal')
-    end,
-  },
-  {
     'folke/persistence.nvim',
     enabled = true,
     config = function()
@@ -161,16 +286,46 @@ return {
       "rcarriga/nvim-notify"
     }
   },
-
   {
-    "shaunsingh/nord.nvim",
-    enabled = false,
-    config = function()
-      vim.g.nord_italic = false
-      require("nord").set()
-    end,
+    "folke/zen-mode.nvim",
+    opts = {
+      window = {
+        options = {
+          number = false,
+          relativenumber = false,
+          signcolumn = 'no'
+        }
+      },
+      plugins = {
+        options = {
+          laststatus = 0
+        }
+      },
+      gitsigns = { enabled = false },
+      tmux = { enabled = false } -- doesn't seem to work with catppuccin
+    }
   },
-
+  {
+    "folke/trouble.nvim",
+    branch = "dev",
+    keys = {
+      { "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", desc = "Diagnostics (Trouble)" },
+      {
+        "<leader>xX",
+        "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
+        desc = "Buffer Diagnostics (Trouble)"
+      },
+      { "<leader>xs", "<cmd>Trouble symbols toggle focus=false<cr>", desc = "Symbols (Trouble)" },
+      {
+        "<leader>xS",
+        "<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
+        desc = "LSP references/definitions (Trouble)",
+      },
+      { "<leader>xL", "<cmd>Trouble loclist toggle<cr>", desc = "Location List (Trouble)" },
+      { "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List (Trouble)" },
+    },
+    opts = {}
+  },
   {
     "nvim-lualine/lualine.nvim",
     dependencies = { 'nvim-tree/nvim-web-devicons' },
@@ -454,6 +609,12 @@ return {
       { 'folke/neodev.nvim', opts = {} },
       { 'j-hui/fidget.nvim', opts = {} },
       { 'folke/neoconf.nvim', cmd = 'Neoconf' },
+      {
+        "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
+        enabled = false,
+        event = "LspAttach",
+        opts = {}
+      }
     },
     config = function()
       local servers = {
@@ -493,30 +654,30 @@ return {
             vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = desc })
           end
 
-          local lspkey = '<space>'
+          local lspleader = '<space>'
 
-          map("n", lspkey .. 'gD', vim.lsp.buf.declaration, 'Goto declaration')
+          map("n", lspleader .. 'gD', vim.lsp.buf.declaration, 'Goto declaration')
 
-          map("n", lspkey .. 'gd', require('telescope.builtin').lsp_definitions, 'Goto definition')
-          map("n", lspkey .. 'gi', require('telescope.builtin').lsp_implementations, 'Goto implementation')
-          map("n", lspkey .. 'gt', require('telescope.builtin').lsp_type_definitions, 'Goto type definition')
-          map("n", lspkey .. 'gr', require('telescope.builtin').lsp_references, 'Goto references')
+          map("n", lspleader .. 'gd', require('telescope.builtin').lsp_definitions, 'Goto definition')
+          map("n", lspleader .. 'gi', require('telescope.builtin').lsp_implementations, 'Goto implementation')
+          map("n", lspleader .. 'gt', require('telescope.builtin').lsp_type_definitions, 'Goto type definition')
+          map("n", lspleader .. 'gr', require('telescope.builtin').lsp_references, 'Goto references')
 
-          map('n', lspkey .. 'sd', require('telescope.builtin').lsp_document_symbols, 'Document symbols')
-          map('n', lspkey .. 'sw', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Workspace symbols')
+          map('n', lspleader .. 'sd', require('telescope.builtin').lsp_document_symbols, 'Document symbols')
+          map('n', lspleader .. 'sw', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Workspace symbols')
 
-          map("n", lspkey .. 'K', vim.lsp.buf.hover, 'Hover documentation')
-          map("n", lspkey .. 'S', vim.lsp.buf.signature_help, 'Signature help')
-          map("n", lspkey .. 'r', vim.lsp.buf.rename, 'Rename variable')
-          map({ "n", "v" }, lspkey .. 'c', vim.lsp.buf.code_action, 'Code action')
+          map("n", lspleader .. 'K', vim.lsp.buf.hover, 'Hover documentation')
+          map("n", lspleader .. 'S', vim.lsp.buf.signature_help, 'Signature help')
+          map("n", lspleader .. 'r', vim.lsp.buf.rename, 'Rename variable')
+          map({ "n", "v" }, lspleader .. 'c', vim.lsp.buf.code_action, 'Code action')
 
-          map("n", lspkey .. 'wa', vim.lsp.buf.add_workspace_folder, 'Add workspace folder')
-          map("n", lspkey .. 'wr', vim.lsp.buf.remove_workspace_folder, 'Remove workspace folder')
-          map("n", lspkey .. 'wl', function()
+          map("n", lspleader .. 'wa', vim.lsp.buf.add_workspace_folder, 'Add workspace folder')
+          map("n", lspleader .. 'wr', vim.lsp.buf.remove_workspace_folder, 'Remove workspace folder')
+          map("n", lspleader .. 'wl', function()
             print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
           end, 'List workspace folders')
 
-          map({ 'n', 'v'}, lspkey .. 'f', function()
+          map({ 'n', 'v'}, lspleader .. 'f', function()
             require("conform").format({ bufnr = event.buf })
             -- uncomment if using null-ls instead of conform.nvim
             -- vim.lsp.buf.format({ async = true })
@@ -537,6 +698,8 @@ return {
               callback = vim.lsp.buf.clear_references,
             })
           end
+
+          map ('n', lspleader .. 'dl', function() require("lsp_lines").toggle() end, { desc = "Toggle virtual diagnostic lines" })
         end,
       })
     end
@@ -555,6 +718,8 @@ return {
             "rafamadriz/friendly-snippets",
             config = function()
               require("luasnip.loaders.from_vscode").lazy_load()
+              require("luasnip.loaders.from_snipmate").lazy_load()
+              require("luasnip.loaders.from_lua").lazy_load()
             end,
           }
         },
@@ -753,6 +918,7 @@ return {
 
   {
     'kevinhwang91/nvim-ufo',
+    enabled = true,
     dependencies = { 'kevinhwang91/promise-async' },
     event = 'VeryLazy',
     config = function()
@@ -984,7 +1150,6 @@ return {
     dependencies = 'nvim-tree/nvim-web-devicons',
     opts = {}
   },
-  { 'vimpostor/vim-tpipeline', enabled = false },
   {
     'rcarriga/nvim-notify',
     opts = {
@@ -1009,62 +1174,6 @@ return {
     end
   },
   {
-    "folke/trouble.nvim",
-    branch = "dev",
-    keys = {
-      { "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", desc = "Diagnostics (Trouble)" },
-      {
-        "<leader>xX",
-        "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
-        desc = "Buffer Diagnostics (Trouble)"
-      },
-      { "<leader>xs", "<cmd>Trouble symbols toggle focus=false<cr>", desc = "Symbols (Trouble)" },
-      {
-        "<leader>xS",
-        "<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
-        desc = "LSP references/definitions (Trouble)",
-      },
-      { "<leader>xL", "<cmd>Trouble loclist toggle<cr>", desc = "Location List (Trouble)" },
-      { "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List (Trouble)" },
-    },
-    opts = {}
-  },
-  {
-    "catppuccin/nvim",
-    lazy = true,
-    name = "catppuccin",
-    opts = {
-      integrations = {
-        aerial = true,
-        cmp = true,
-        dashboard = true,
-        flash = true,
-        gitsigns = true,
-        headlines = true,
-        indent_blankline = { enabled = true },
-        leap = true,
-        lsp_trouble = true,
-        mason = true,
-        markdown = true,
-        mini = true,
-        native_lsp = {
-          enabled = true,
-          underlines = {
-            errors = { "undercurl" },
-            hints = { "undercurl" },
-            warnings = { "undercurl" },
-            information = { "undercurl" },
-          },
-        },
-        notify = true,
-        telescope = true,
-        treesitter = true,
-        treesitter_context = true,
-        which_key = true,
-      },
-    },
-  },
-  {
     "nvim-neo-tree/neo-tree.nvim",
     branch = "v3.x",
     cmd = "Neotree",
@@ -1080,13 +1189,6 @@ return {
     cmd = "Screenkey",
     version = "*",
     config = true,
-  },
-  {
-    "dstein64/vim-startuptime",
-    cmd = "StartupTime",
-    config = function()
-      vim.g.startuptime_tries = 1
-    end
   },
   {
     "SmiteshP/nvim-navic",
@@ -1116,5 +1218,59 @@ return {
     cmd = "Outline",
     opts = {}
   },
-  { 'Mofiqul/dracula.nvim' }
+  {
+    'norcalli/nvim-colorizer.lua',
+    config = function()
+      require('colorizer').setup({
+        '*'
+      })
+    end
+  },
+  {
+    'nmac427/guess-indent.nvim',
+    config = function()
+      require('guess-indent').setup({ auto_cmd = false })
+    end
+  },
+  {
+    'max397574/better-escape.nvim',
+    event = "InsertCharPre",
+    config = function()
+      require('better_escape').setup({
+        mapping = { 'jj', 'jk' }
+      })
+    end
+  },
+  {
+    "luukvbaal/statuscol.nvim",
+    config = function()
+      local builtin = require("statuscol.builtin")
+      require("statuscol").setup({
+        -- foldfunc = "builtin",
+        relculright = true,
+        segments = {
+          { text = { builtin.foldfunc }, click = "v:lua.ScFa" },
+          { text = { builtin.lnumfunc, " " }, click = "v:lua.ScLa" },
+          { text = { "%s" }, click = "v:lua.ScSa" },
+        },
+      })
+    end,
+  },
+  { "luukvbaal/nnn.nvim", opts = {} },
+  {
+    "uga-rosa/ccc.nvim",
+    event = { "InsertEnter" },
+    cmd = { "CccPick", "CccConvert", "CccHighlighterEnable", "CccHighlighterDisable", "CccHighlighterToggle" },
+    opts = {
+      highlighter = {
+        auto_enable = true,
+        lsp = true,
+      },
+    },
+    config = function(_, opts)
+      require("ccc").setup(opts)
+      if opts.highlighter and opts.highlighter.auto_enable then vim.cmd.CccHighlighterEnable() end
+    end,
+  },
+  { "kevinhwang91/nvim-bqf", ft = "qf", opts = {} }
 }
