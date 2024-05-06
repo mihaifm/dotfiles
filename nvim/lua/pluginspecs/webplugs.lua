@@ -475,7 +475,12 @@ return {
       {
         "ahmedkhalf/project.nvim",
         event = "VeryLazy",
-        opts = { manual_mode = true },
+        cmd = 'ProjectRoot',
+        opts = {
+          manual_mode = true,
+          detection_methods = { 'pattern' },
+          patterns = { '.git' }
+        },
         config = function(_, opts)
           require("project_nvim").setup(opts)
         end
@@ -595,6 +600,8 @@ return {
 
       vim.keymap.set("n", teleleader .. 'a', ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>",
         { desc = 'Grep with args' })
+
+      vim.keymap.set('n', teleleader .. 'p', function() vim.cmd('Telescope projects') end, { desc = 'Projects' })
     end
   },
 
@@ -699,7 +706,7 @@ return {
             })
           end
 
-          map ('n', lspleader .. 'dl', function() require("lsp_lines").toggle() end, { desc = "Toggle virtual diagnostic lines" })
+          map('n', lspleader .. 'dl', function() require("lsp_lines").toggle() end, 'Toggle virtual diagnostic lines')
         end,
       })
     end
@@ -709,6 +716,7 @@ return {
     "hrsh7th/nvim-cmp",
     enabled = true,
     version = false,
+    event = 'InsertEnter',
     dependencies = {
       {
         "L3MON4D3/LuaSnip",
@@ -799,6 +807,18 @@ return {
 
       cmp.setup.filetype("fancycmd", {
         enabled = false,
+      })
+
+      vim.api.nvim_create_autocmd('FileType', {
+        group = vim.api.nvim_create_augroup('dadbod-completion-filetype', { clear = true }),
+        pattern = { 'sql', 'mysql', 'plsql' },
+        callback = function()
+          cmp.setup.buffer({
+            sources = {
+              { name = 'vim-dadbod-completion' },
+            },
+          })
+        end
       })
 
       ---@diagnostic disable-next-line
@@ -1256,7 +1276,11 @@ return {
       })
     end,
   },
-  { "luukvbaal/nnn.nvim", opts = {} },
+  {
+    "luukvbaal/nnn.nvim",
+    cond = function () return vim.fn.has("win32") == 0 end,
+    opts = {}
+  },
   {
     "uga-rosa/ccc.nvim",
     event = { "InsertEnter" },
@@ -1329,5 +1353,29 @@ return {
     opts = {
       enabled = false
     }
-  }
+  },
+  {
+    "kristijanhusak/vim-dadbod-ui",
+    cond = function() return os.getenv("DADBOD_CONFIG_FOLDER") end,
+    cmd = { 'DBUI', 'DBUIToggle', 'DBUIAddConnection', 'DBUIFindBuffer' },
+    dependencies = {
+      {
+        { "tpope/vim-dadbod" },
+        { "kristijanhusak/vim-dadbod-completion", ft = { 'sql', 'mysql', 'plsql' } },
+      }
+    },
+    init = function()
+      vim.g.db_ui_save_location = os.getenv("DADBOD_CONFIG_FOLDER")
+
+      vim.g.db_ui_show_help = 0
+      vim.g.db_ui_win_position = 'right'
+      vim.g.db_ui_use_nerd_fonts = 1
+      vim.g.db_ui_use_nvim_notify = 1
+      vim.g.db_ui_hide_schemas = { 'pg_toast_temp.*' }
+
+      vim.g.db_ui_tmp_query_location = vim.g.db_ui_save_location
+
+      -- vim.cmd('autocmd FileType sql setlocal omnifunc=vim_dadbod_completion#omni')
+    end
+  },
 }

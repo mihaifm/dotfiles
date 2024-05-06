@@ -428,6 +428,7 @@ function FancyCmd(type)
   vim.keymap.set("i", "<CR>", function()
     do_confirm()
     do_close()
+    vim.api.nvim_set_current_win(winid)
     if command then
       vim.defer_fn(function()
         vim.fn.histadd('cmd', command)
@@ -435,7 +436,8 @@ function FancyCmd(type)
           -- directly calling vim.cmd(command) is not working properly, 
           -- see https://github.com/neovim/neovim/issues/28562
           -- use a hack instead
-          local escaped_command = string.gsub(command, '"', '\\"')
+          local escaped_command = string.gsub(command, '\\', '\\\\')
+          escaped_command = string.gsub(escaped_command, '"', '\\"')
           escaped_command = string.gsub(escaped_command, "'", "''")
           local hack = 'exe "' .. "call feedkeys('\\<cmd>" .. escaped_command .. "\\n')" .. '"'
           vim.cmd(hack)
