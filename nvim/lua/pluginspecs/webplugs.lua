@@ -1272,5 +1272,62 @@ return {
       if opts.highlighter and opts.highlighter.auto_enable then vim.cmd.CccHighlighterEnable() end
     end,
   },
-  { "kevinhwang91/nvim-bqf", ft = "qf", opts = {} }
+  { "kevinhwang91/nvim-bqf", ft = "qf", opts = {} },
+  {
+    "monaqa/dial.nvim",
+    config = function()
+      vim.keymap.set("n", "<C-a>", function()
+        require("dial.map").manipulate("increment", "normal")
+      end, { desc = 'Increment' })
+      vim.keymap.set("n", "<C-x>", function()
+        require("dial.map").manipulate("decrement", "normal")
+      end, { desc = 'Decrement' })
+      vim.keymap.set("n", "g<C-a>", function()
+        require("dial.map").manipulate("increment", "gnormal")
+      end, { desc = 'Increment each line' })
+      vim.keymap.set("n", "g<C-x>", function()
+        require("dial.map").manipulate("decrement", "gnormal")
+      end, { desc = 'Decrement each line' })
+      vim.keymap.set("v", "<C-a>", function()
+        require("dial.map").manipulate("increment", "visual")
+      end, { desc = 'Increment' })
+      vim.keymap.set("v", "<C-x>", function()
+        require("dial.map").manipulate("decrement", "visual")
+      end, { desc = 'Decrement' })
+      vim.keymap.set("v", "g<C-a>", function()
+        require("dial.map").manipulate("increment", "gvisual")
+      end, { desc = 'Increment each line' })
+      vim.keymap.set("v", "g<C-x>", function()
+        require("dial.map").manipulate("decrement", "gvisual")
+      end, { desc = 'Decrement each line' })
+
+      local augend = require "dial.augend"
+      require('dial.config').augends:register_group({
+        default = {
+          augend.integer.alias.decimal,
+          augend.integer.alias.hex,
+          augend.date.alias["%Y/%m/%d"],
+          augend.constant.alias.bool,
+          augend.semver.alias.semver,
+          augend.date.new {
+            pattern = "%B", -- titlecased month names
+            default_kind = "day",
+          },
+          augend.constant.new { elements = { "'", '"' }, word = false, cyclic = true },
+          augend.constant.new { elements = { '(', '[', '{' }, word = false, cyclic = true },
+          augend.constant.new { elements = { ')', ']', '}' }, word = false, cyclic = true }
+        }
+      })
+    end
+  },
+  {
+    "andersevenrud/nvim_context_vt",
+    cmd = { "NvimContextVtToggle" },
+    keys = {
+      { '<leader>iv', mode = { 'n' }, function() vim.cmd('NvimContextVtToggle') end, desc = 'Toggle virtual text context' }
+    },
+    opts = {
+      enabled = false
+    }
+  }
 }
