@@ -19,7 +19,6 @@ tmux_conf_snap_files=('.tmux.conf')
 tmux_conf_repo_files=('tmux/tmux.conf')
 tmux_data_live_folders=('~/.tmux')
 tmux_data_snap_folders=('.tmux')
-tmux_conf_repo_folders=('tmux')
 
 nethack_conf_live_files=('~/.nethackrc')
 nethack_conf_snap_files=('.nethackrc')
@@ -308,6 +307,7 @@ if [[ $1 == "bootstrap" ]]; then
   (nvim --headless +"MasonInstall lua-language-server" +"qa")
 
   # Tmux
+  git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
   ~/.tmux/plugins/tpm/scripts/install_plugins.sh
 
   exit

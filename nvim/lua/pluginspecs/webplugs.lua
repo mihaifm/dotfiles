@@ -1356,7 +1356,6 @@ return {
   },
   {
     "kristijanhusak/vim-dadbod-ui",
-    cond = function() return os.getenv("DADBOD_CONFIG_FOLDER") end,
     cmd = { 'DBUI', 'DBUIToggle', 'DBUIAddConnection', 'DBUIFindBuffer' },
     dependencies = {
       {
@@ -1365,7 +1364,7 @@ return {
       }
     },
     init = function()
-      vim.g.db_ui_save_location = os.getenv("DADBOD_CONFIG_FOLDER")
+      vim.g.db_ui_save_location = os.getenv("DADBOD_CONFIG_FOLDER") or "~/.dbui"
 
       vim.g.db_ui_show_help = 0
       vim.g.db_ui_win_position = 'right'
