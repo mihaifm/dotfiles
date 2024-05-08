@@ -516,10 +516,15 @@ function FancyCmd(type)
   end
 end
 
-vim.keymap.set('n', ':', function() FancyCmd('cmd') end, { desc = 'Fancy command prompt' })
-vim.keymap.set('n', '/', function() FancyCmd('search') end, { desc = 'Fancy search' })
-vim.keymap.set('n', '<leader>:', ':', { desc = 'Command prompt' })
-vim.keymap.set('n', '<leader>/', '/', { desc = 'Search' })
+if vim.g.FancyCmdTakeover then
+  vim.keymap.set('n', ':', function() FancyCmd('cmd') end, { desc = 'Fancy command prompt' })
+  vim.keymap.set('n', '/', function() FancyCmd('search') end, { desc = 'Fancy search' })
+  vim.keymap.set('n', '<leader>:', ':', { desc = 'Command prompt' })
+  vim.keymap.set('n', '<leader>/', '/', { desc = 'Search' })
+else
+  vim.keymap.set('n', '<leader>:', function() FancyCmd('cmd') end, { desc = 'Fancy command prompt' })
+  vim.keymap.set('n', '<leader>/', function() FancyCmd('search') end, { desc = 'Fancy search' })
+end
 
 ----------------
 -- Transparency
@@ -545,6 +550,132 @@ vim.api.nvim_create_user_command('Transparent', function()
     hiBgData.on = false
   end
 end, {})
+
+-------------
+-- FormatCsv
+
+function FormatCsv()
+  local function parseCsv(line)
+    local out = {}
+    local state = "begin"
+
+    local ele = ""
+
+    for i = 1, #line do
+      local c = line:sub(i, i)
+      if state == 'begin' then
+        ele = ""
+        if c == '"' then
+          state = 'quotedel'
+        else
+          state = 'element'
+          ele = ele .. c
+        end
+      elseif state == 'element' then
+        if c == ',' then
+          state = 'begin'
+          table.insert(out, ele)
+        else
+          ele = ele .. c
+        end
+      elseif state == 'quotedel' then
+        if c == '"' then
+          state = 'quote'
+        else
+          ele = ele .. c
+        end
+      elseif state == 'quote' then
+        if c == '"' then
+          ele = ele .. c
+          state = 'quotedel'
+        elseif c == ',' then
+          state = 'begin'
+          table.insert(out, ele)
+        else
+          state = 'ignore'
+          table.insert(out.ele)
+        end
+      elseif state == 'ignore' then
+        if c == ',' then
+          state = 'begin'
+        end
+      end
+    end
+
+    if string.len(ele) > 0 then
+      table.insert(out, ele)
+    end
+    return out
+  end
+
+  if vim.opt_local.modifiable:get() == false then
+    vim.opt_local.modifiable = true
+  end
+
+  local output = {}
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+  local sizes = {}
+  local beautyData = {}
+  for index, line in pairs(lines) do
+    if #string.gsub(line, "^%s*(.-)%s*$", "%1") ~= 0 then
+      local lineData = parseCsv(line)
+      table.insert(beautyData, lineData)
+      for k, v in pairs(lineData) do
+        local utf8len = tonumber(string.match(vim.str_utfindex(v), "(%w+)"))
+        if not sizes[k] then sizes[k] = utf8len
+        else sizes[k] = math.max(sizes[k], utf8len)
+        end
+      end
+    end
+  end
+
+  local top = "╭"
+  for k, v in pairs(sizes) do
+    top = top .. string.rep("─", v + 2)
+    if k == #sizes then top = top .. "╮"
+    else top = top .. "┬"
+    end
+  end
+  table.insert(output, top)
+
+  for i, lineData in pairs(beautyData) do
+    local beauty = ""
+    for k, _ in pairs(sizes) do
+      if not lineData[k] then lineData[k] = "" end
+
+      if k == 1 then beauty = "│ " end
+
+      local utf8len = tonumber(string.match(vim.str_utfindex(lineData[k]), "(%w+)"))
+      lineData[k] = lineData[k] .. string.rep(" ", sizes[k] - utf8len)
+      beauty = beauty .. lineData[k] .. " │ " 
+    end
+    table.insert(output, beauty)
+
+    if i == 1 then
+      local middle = "├"
+      for k, v in pairs(sizes) do
+        middle = middle .. string.rep("─", v + 2)
+        if k == #sizes then middle = middle .. "┤"
+        else middle = middle .. "┼"
+        end
+      end
+      table.insert(output, middle)
+    end
+  end
+
+  local bottom = "╰"
+  for k, v in pairs(sizes) do
+    bottom = bottom .. string.rep("─", v + 2)
+    if k == #sizes then bottom = bottom .. "╯"
+    else bottom = bottom .. "┴"
+    end
+  end
+  table.insert(output, bottom)
+
+  vim.api.nvim_buf_set_lines(0, 0, -1, true, output)
+end
+
+vim.api.nvim_create_user_command('FormatCsv', FormatCsv, {})
 
 -----------
 -- Plugins
