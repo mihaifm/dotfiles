@@ -11,6 +11,7 @@ vim.g.tmux_navigator_no_mappings = 1
 vim.g.tpipeline_restore = 1
 
 return {
+
   ----------------------
   -- colorscheme battle
 
@@ -104,6 +105,7 @@ return {
         treesitter_context = true,
         ufo = true,
         which_key = true,
+        neogit = true,
       },
     },
   },
@@ -152,6 +154,161 @@ return {
     end
   },
   { "azabiong/vim-highlighter", lazy = false },
+
+  -------------
+  -- telescope
+
+  {
+    -- NOTE telescope requires ripgrep for Live Grep
+    "nvim-telescope/telescope.nvim",
+    -- branch = '0.1.x',
+    version = false,
+    event = 'VimEnter',
+    dependencies = {
+      { 'nvim-lua/plenary.nvim' },
+      { 'nvim-telescope/telescope-ui-select.nvim' },
+      { 'nvim-telescope/telescope-live-grep-args.nvim' },
+      {
+        'nvim-telescope/telescope-fzf-native.nvim',
+        build = vim.fn.executable("make") == 1 and "make"
+          or 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build'
+      },
+      {
+        "ahmedkhalf/project.nvim",
+        event = "VeryLazy",
+        cmd = 'ProjectRoot',
+        opts = {
+          manual_mode = true,
+          detection_methods = { 'pattern' },
+          patterns = { '.git' }
+        },
+        config = function(_, opts)
+          require("project_nvim").setup(opts)
+        end
+      },
+      { 'nvim-telescope/telescope-file-browser.nvim' },
+      { 'debugloop/telescope-undo.nvim' },
+    },
+    config = function()
+      local telescope = require('telescope')
+      local actions = require('telescope.actions')
+      local actions_generate = require('telescope.actions.generate')
+      local lga_actions = require("telescope-live-grep-args.actions")
+
+      local function flash(prompt_bufnr)
+        require("flash").jump({
+          pattern = "^",
+          label = { after = { 0, 0 } },
+          search = {
+            mode = "search",
+            exclude = {
+              function(win)
+                return vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= "TelescopeResults"
+              end,
+            },
+          },
+          action = function(match)
+            local picker = require("telescope.actions.state").get_current_picker(prompt_bufnr)
+            picker:set_selection(match.pos[1] - 1)
+          end,
+        })
+      end
+
+      telescope.setup({
+        defaults = {
+          mappings = {
+            i = {
+              ["<C-_>"] = actions_generate.which_key { keybind_width = 12 },
+              ["<C-k><C-h>"] = { actions.select_horizontal, type = "action" },
+              ["<C-k><C-v>"] = { actions.select_vertical, type = "action" },
+              ["<C-v>"] = { "<cmd>i<C-R>+", type = "command" },
+              ["<C-x>"] = false,
+              ["<C-k><C-z>"] = { actions.to_fuzzy_refine, type = "action" },
+              ["<C-s>"] = flash,
+            },
+            n = {
+              ["?"] = actions_generate.which_key { keybind_width = 12 },
+              ["<C-k><C-z>"] = { actions.to_fuzzy_refine, type = "action" },
+              ["<C-k><C-h>"] = { actions.select_horizontal, type = "action" },
+              ["<C-k><C-v>"] = { actions.select_vertical, type = "action" },
+              ["<C-v>"] = { "<cmd><C-R>+", type = "command" },
+              ["<C-x>"] = false,
+              ["s"] = flash,
+            },
+          }
+        },
+        pickers = {
+          live_grep = {
+            layout_config = { width = 0.99 }
+          },
+        },
+        extensions = {
+          ['fzf'] = { },
+          ['ui-select'] = {
+            require('telescope.themes').get_dropdown(),
+          },
+          ['live_grep_args'] = {
+            auto_quoting = false,
+            mappings = {
+              i = {
+                ['<C-k><C-k>'] = lga_actions.quote_prompt(),
+                ['<C-k><C-c>'] = lga_actions.quote_prompt({ postfix = ' -t cpp'}),
+                ['<C-k><C-h>'] = lga_actions.quote_prompt({ postfix = ' -t h'}),
+              }
+            },
+            layout_config = { width = 0.99 }
+          }
+        }
+      })
+
+      pcall(require('telescope').load_extension, 'fzf')
+      pcall(require('telescope').load_extension, 'ui-select')
+      pcall(require('telescope').load_extension, 'live_grep_args')
+      pcall(require('telescope').load_extension, 'projects')
+      pcall(require('telescope').load_extension, 'aerial')
+      pcall(require('telescope').load_extension, 'file_browser')
+      pcall(require('telescope').load_extension, 'undo')
+
+      local builtin = require("telescope.builtin")
+
+      local teleleader = "t"
+
+      vim.keymap.set("n", teleleader .. 'f', function()
+          builtin.find_files({ hidden = true, no_ignore = true })
+        end, { desc = 'Find files' })
+
+      vim.keymap.set("n", teleleader .. 'g', builtin.live_grep, { desc = 'Grep files' })
+      vim.keymap.set("n", teleleader .. 't', builtin.git_files, { desc = 'Find git files' })
+      vim.keymap.set("n", teleleader .. 'h', builtin.help_tags, { desc = 'Search help' })
+      vim.keymap.set("n", teleleader .. 'k', builtin.keymaps, { desc = 'Search keymaps' })
+      vim.keymap.set("n", teleleader .. 'u', builtin.builtin, { desc = 'Select Telescope builtin' })
+      vim.keymap.set('n', teleleader .. 'w', builtin.grep_string, { desc = 'Search current word' })
+      vim.keymap.set("n", teleleader .. 'd', builtin.diagnostics, { desc = 'Search diagnostics' })
+      vim.keymap.set("n", teleleader .. 's', builtin.resume, { desc = 'Resume previous search' })
+      vim.keymap.set("n", teleleader .. 'r', builtin.oldfiles, { desc = 'Find recent files' })
+      vim.keymap.set("n", teleleader .. 'b', builtin.buffers, { desc = 'Find buffers' })
+
+      vim.keymap.set('n', teleleader .. 'c', function()
+        builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+          winblend = 10,
+          previewer = false,
+        })
+      end, { desc = 'Search current buffer' })
+
+      vim.keymap.set('n', teleleader .. 'o', function()
+        builtin.live_grep { grep_open_files = true, prompt_title = 'Grep open files' }
+      end, { desc = 'Search in open files' })
+
+      vim.keymap.set('n', teleleader .. 'n', function()
+        builtin.find_files { cwd = vim.fn.stdpath 'config' }
+      end, { desc = 'Search Neovim files' })
+
+      vim.keymap.set("n", teleleader .. 'a', ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>",
+        { desc = 'Grep with args' })
+
+      vim.keymap.set('n', teleleader .. 'p', function() vim.cmd('Telescope projects') end, { desc = 'Projects' })
+    end
+  },
 
   --------------------
   -- unsorted plugins
@@ -456,155 +613,6 @@ return {
       vim.keymap.set('n', '<leader>ic', '<cmd>ContextToggle<CR>', { desc = 'Toggle context' })
     end
   },
-
-  {
-    -- NOTE telescope requires ripgrep for Live Grep
-    "nvim-telescope/telescope.nvim",
-    -- branch = '0.1.x',
-    version = false,
-    event = 'VimEnter',
-    dependencies = {
-      { 'nvim-lua/plenary.nvim' },
-      { 'nvim-telescope/telescope-ui-select.nvim' },
-      { 'nvim-telescope/telescope-live-grep-args.nvim' },
-      {
-        'nvim-telescope/telescope-fzf-native.nvim',
-        build = vim.fn.executable("make") == 1 and "make"
-          or 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build'
-      },
-      {
-        "ahmedkhalf/project.nvim",
-        event = "VeryLazy",
-        cmd = 'ProjectRoot',
-        opts = {
-          manual_mode = true,
-          detection_methods = { 'pattern' },
-          patterns = { '.git' }
-        },
-        config = function(_, opts)
-          require("project_nvim").setup(opts)
-        end
-      }
-    },
-    config = function()
-      local telescope = require('telescope')
-      local actions = require('telescope.actions')
-      local actions_generate = require('telescope.actions.generate')
-      local lga_actions = require("telescope-live-grep-args.actions")
-
-      local function flash(prompt_bufnr)
-        require("flash").jump({
-          pattern = "^",
-          label = { after = { 0, 0 } },
-          search = {
-            mode = "search",
-            exclude = {
-              function(win)
-                return vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= "TelescopeResults"
-              end,
-            },
-          },
-          action = function(match)
-            local picker = require("telescope.actions.state").get_current_picker(prompt_bufnr)
-            picker:set_selection(match.pos[1] - 1)
-          end,
-        })
-      end
-
-      telescope.setup({
-        defaults = {
-          mappings = {
-            i = {
-              ["<C-_>"] = actions_generate.which_key { keybind_width = 12 },
-              ["<C-k><C-h>"] = { actions.select_horizontal, type = "action" },
-              ["<C-k><C-v>"] = { actions.select_vertical, type = "action" },
-              ["<C-v>"] = { "<cmd>i<C-R>+", type = "command" },
-              ["<C-x>"] = false,
-              ["<C-k><C-z>"] = { actions.to_fuzzy_refine, type = "action" },
-              ["<C-s>"] = flash,
-            },
-            n = {
-              ["?"] = actions_generate.which_key { keybind_width = 12 },
-              ["<C-k><C-z>"] = { actions.to_fuzzy_refine, type = "action" },
-              ["<C-k><C-h>"] = { actions.select_horizontal, type = "action" },
-              ["<C-k><C-v>"] = { actions.select_vertical, type = "action" },
-              ["<C-v>"] = { "<cmd><C-R>+", type = "command" },
-              ["<C-x>"] = false,
-              ["s"] = flash,
-            },
-          }
-        },
-        pickers = {
-          live_grep = {
-            layout_config = { width = 0.99 }
-          },
-        },
-        extensions = {
-          ['fzf'] = { },
-          ['ui-select'] = {
-            require('telescope.themes').get_dropdown(),
-          },
-          ['live_grep_args'] = {
-            auto_quoting = false,
-            mappings = {
-              i = {
-                ['<C-k><C-k>'] = lga_actions.quote_prompt(),
-                ['<C-k><C-c>'] = lga_actions.quote_prompt({ postfix = ' -t cpp'}),
-                ['<C-k><C-h>'] = lga_actions.quote_prompt({ postfix = ' -t h'}),
-              }
-            },
-            layout_config = { width = 0.99 }
-          }
-        }
-      })
-
-      pcall(require('telescope').load_extension, 'fzf')
-      pcall(require('telescope').load_extension, 'ui-select')
-      pcall(require('telescope').load_extension, 'live_grep_args')
-      pcall(require('telescope').load_extension, 'projects')
-      pcall(require('telescope').load_extension, 'aerial')
-
-      local builtin = require("telescope.builtin")
-
-      local teleleader = "t"
-
-      vim.keymap.set("n", teleleader .. 'f', function()
-          builtin.find_files({ hidden = true, no_ignore = true })
-        end, { desc = 'Find files' })
-
-      vim.keymap.set("n", teleleader .. 'g', builtin.live_grep, { desc = 'Grep files' })
-      vim.keymap.set("n", teleleader .. 't', builtin.git_files, { desc = 'Find git files' })
-      vim.keymap.set("n", teleleader .. 'h', builtin.help_tags, { desc = 'Search help' })
-      vim.keymap.set("n", teleleader .. 'k', builtin.keymaps, { desc = 'Search keymaps' })
-      vim.keymap.set("n", teleleader .. 'u', builtin.builtin, { desc = 'Select Telescope builtin' })
-      vim.keymap.set('n', teleleader .. 'w', builtin.grep_string, { desc = 'Search current word' })
-      vim.keymap.set("n", teleleader .. 'd', builtin.diagnostics, { desc = 'Search diagnostics' })
-      vim.keymap.set("n", teleleader .. 's', builtin.resume, { desc = 'Resume previous search' })
-      vim.keymap.set("n", teleleader .. 'r', builtin.oldfiles, { desc = 'Find recent files' })
-      vim.keymap.set("n", teleleader .. 'b', builtin.buffers, { desc = 'Find buffers' })
-
-      vim.keymap.set('n', teleleader .. 'c', function()
-        builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-          winblend = 10,
-          previewer = false,
-        })
-      end, { desc = 'Search current buffer' })
-
-      vim.keymap.set('n', teleleader .. 'o', function()
-        builtin.live_grep { grep_open_files = true, prompt_title = 'Grep open files' }
-      end, { desc = 'Search in open files' })
-
-      vim.keymap.set('n', teleleader .. 'n', function()
-        builtin.find_files { cwd = vim.fn.stdpath 'config' }
-      end, { desc = 'Search Neovim files' })
-
-      vim.keymap.set("n", teleleader .. 'a', ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>",
-        { desc = 'Grep with args' })
-
-      vim.keymap.set('n', teleleader .. 'p', function() vim.cmd('Telescope projects') end, { desc = 'Projects' })
-    end
-  },
-
   {
     'neovim/nvim-lspconfig',
     dependencies = {
@@ -922,9 +930,30 @@ return {
   },
   {
     'lukas-reineke/indent-blankline.nvim',
+    dependencies = {
+      "TheGLander/indent-rainbowline.nvim"
+    },
+    opts = { 
+      enabled = false
+    },
     main = "ibl",
-    config = function()
-      require("ibl").setup({ enabled = false })
+    config = function(_, opts)
+      require("ibl").setup(opts)
+
+      local rainbowToggled = false
+      local function toggleRainbowIndents()
+        rainbowToggled = not rainbowToggled
+
+        local moreOpts = vim.deepcopy(opts)
+        moreOpts.enabled = true
+
+        if rainbowToggled then
+          moreOpts = require("indent-rainbowline").make_opts(moreOpts)
+        end
+        require("ibl").setup(moreOpts)
+      end
+
+      vim.keymap.set("n", '<leader>ir', toggleRainbowIndents, { desc = 'Toggle rainbow indents' })
       vim.keymap.set("n", '<leader>ib', '<cmd>IBLToggle<CR>', { desc = 'Toggle indent blankline' })
     end
   },
@@ -967,7 +996,8 @@ return {
           local newVirtText = {}
           local totalLines = vim.api.nvim_buf_line_count(0)
           local foldedLines = endLnum - lnum
-          local suffix = (" 󰁂 %d %d%%"):format(foldedLines, foldedLines / totalLines * 100)
+          -- local suffix = (" 󰁂 %d %d%%"):format(foldedLines, foldedLines / totalLines * 100)
+          local suffix = (" … 󰁂 %d%%"):format(foldedLines / totalLines * 100)
           local sufWidth = vim.fn.strdisplaywidth(suffix)
           local targetWidth = width - sufWidth
           local curWidth = 0
@@ -1375,6 +1405,135 @@ return {
       vim.g.db_ui_tmp_query_location = vim.g.db_ui_save_location
 
       -- vim.cmd('autocmd FileType sql setlocal omnifunc=vim_dadbod_completion#omni')
+    end
+  },
+  {
+    'sindrets/diffview.nvim',
+    cmd = { "DiffviewOpen", "DiffviewFileHistory" },
+    opts = {
+      enhanced_diff_hl = true,
+      view = {
+        default = { winbar_info = true },
+        file_history = { winbar_info = true },
+      },
+    }
+  },
+  {
+    'NeogitOrg/neogit',
+    enalbed = false, -- alpha software
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "sindrets/diffview.nvim",
+      "nvim-telescope/telescope.nvim"
+    },
+    opts = {
+      signs = { 
+        section = { "", "" }, 
+        item = { "", "" } 
+      }
+    },
+    config = function(_, opts)
+      require('neogit').setup(opts)
+    end
+  },
+  {
+    "arsham/indent-tools.nvim",
+    dependencies = { "arsham/arshlib.nvim" },
+    config = function() 
+      require("indent-tools").config { 
+        normal = { repeatable = false } 
+      }
+    end
+  },
+  {
+    "anuvyklack/hydra.nvim",
+    config = function()
+      local Hydra = require("hydra")
+
+      local hint =
+        " ^ ^        Options \n" ..
+        " ^ \n" ..
+        " _i_ %{list} list characters   \n" ..
+        " _s_ %{spell} spell \n" ..
+        " _w_ %{wrap} wrap \n" ..
+        " _c_ %{cul} cursor line \n" ..
+        " _n_ %{nu} number \n" ..
+        " _r_ %{rnu} relative number \n" ..
+        " ^ \n" ..
+        " ^^^^                _<Esc>_"
+
+      Hydra({
+        name = 'Options',
+        hint = hint,
+        config = {
+          color = 'amaranth',
+          invoke_on_body = true,
+          hint = {
+            border = 'rounded',
+            position = 'middle'
+          }
+        },
+        mode = {'n','x'},
+        body = '<leader>o',
+        heads = {
+          {
+            'n', function()
+              if vim.o.number == true then
+                vim.o.number = false
+              else
+                vim.o.number = true
+              end
+            end, { desc = 'number' }
+          },
+          {
+            'r', function()
+              if vim.o.relativenumber == true then
+                vim.o.relativenumber = false
+              else
+                vim.o.number = true
+                vim.o.relativenumber = true
+              end
+            end, { desc = 'relativenumber' }
+          },
+          {
+            'i', function()
+              if vim.o.list == true then
+                vim.o.list = false
+              else
+                vim.o.list = true
+              end
+            end, { desc = 'list characters' }
+          },
+          {
+            's', function()
+              if vim.o.spell == true then
+                vim.o.spell = false
+              else
+                vim.o.spell = true
+              end
+            end, { exit = true, desc = 'spell' }
+          },
+          { 
+            'w', function()
+              if vim.o.wrap ~= true then
+                vim.o.wrap = true
+              else
+                vim.o.wrap = false
+              end 
+            end, { desc = 'wrap' }
+          },
+          {
+            'c', function()
+              if vim.o.cursorline == true then
+                vim.o.cursorline = false
+              else
+                vim.o.cursorline = true
+              end
+            end, { desc = 'cursor line' }
+          },
+          { '<Esc>', nil, { exit = true } }
+        }
+      })
     end
   },
 }

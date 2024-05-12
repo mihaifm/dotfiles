@@ -49,7 +49,7 @@ vim.opt.updatetime = 350
 -- show whitespace characters
 vim.opt.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣', precedes = '<', extends = '>' }
-vim.opt.fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:]]
+vim.opt.fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:,diff: ]]
 
 -- keep some rows/columns visible when moving cursor at the edges of the screen
 vim.opt.scrolloff = 3
@@ -148,9 +148,14 @@ end, { desc = 'Cut in normal mode' })
 -- use CTRL-Q instead of CTRL-V to start visual block
 vim.keymap.set('n', '<C-q>', '<C-v>', { desc = 'Start visual block mode' })
 
+-- reselect pasted text
+vim.keymap.set('n', 'gV',  '`[v`]', { desc = 'Reselect last paste in VISUAL mode' })
+
 -- awesome keyboard scrolling
 vim.keymap.set('n', '<C-j>', '3j3<C-e>', { desc = 'Scroll up' })
 vim.keymap.set('n', '<C-k>', '3k3<C-y>', { desc = 'Scroll down' })
+vim.keymap.set('n', '<C-l>', '3zl3l', { desc = 'Scroll right' })
+vim.keymap.set('n', '<C-h>', '3zh3h', { desc = 'Scroll left' })
 
 -- better movement in command line
 vim.keymap.set('c', '<C-h>', '<Left>', { desc = 'Move left in command line' })
@@ -171,6 +176,10 @@ if vim.fn.has("win32") == 1 then
   vim.keymap.set('n', '<leader>fx', function() vim.cmd('silent r! explorer .') end,
     { desc = 'Open Windows Explorer' })
 end
+
+-- disable some default mappings
+vim.keymap.set('n', 'Q', '<nop>')
+vim.keymap.set('n', 'ZZ', '<nop>')
 
 -- move things in visual mode
 -- vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = 'Move text down' })
