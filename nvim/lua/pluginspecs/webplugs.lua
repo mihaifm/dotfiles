@@ -6,8 +6,6 @@ vim.g.neovide_hide_mouse_when_typing = true
 
 vim.g.termdebug_config = { wide = 1 }
 
-vim.g.tmux_navigator_no_mappings = 1
-
 vim.g.tpipeline_restore = 1
 
 return {
@@ -188,6 +186,7 @@ return {
       },
       { 'nvim-telescope/telescope-file-browser.nvim' },
       { 'debugloop/telescope-undo.nvim' },
+      { "AckslD/nvim-neoclip.lua", opts = {} },
     },
     config = function()
       local telescope = require('telescope')
@@ -268,6 +267,7 @@ return {
       pcall(require('telescope').load_extension, 'aerial')
       pcall(require('telescope').load_extension, 'file_browser')
       pcall(require('telescope').load_extension, 'undo')
+      pcall(require('telescope').load_extension, 'neoclip')
 
       local builtin = require("telescope.builtin")
 
@@ -917,6 +917,9 @@ return {
     "christoomey/vim-tmux-navigator",
     enabled = true,
     cond = function () return vim.fn.has("win32") == 0 end,
+    init = function() 
+      vim.g.tmux_navigator_no_mappings = 1
+    end,
     keys = {
       { "<C-w><C-h>", "<cmd>TmuxNavigateLeft<cr>" },
       { "<C-w><C-j>", "<cmd>TmuxNavigateDown<cr>" },
@@ -933,7 +936,7 @@ return {
     dependencies = {
       "TheGLander/indent-rainbowline.nvim"
     },
-    opts = { 
+    opts = {
       enabled = false
     },
     main = "ibl",
@@ -1251,7 +1254,7 @@ return {
           local buffer = args.buf
           local client = vim.lsp.get_client_by_id(args.data.client_id)
 
-          if client.supports_method("textDocument/documentSymbol") then
+          if client and client.supports_method("textDocument/documentSymbol") then
             require("nvim-navic").attach(client, buffer)
           end
         end,
@@ -1427,9 +1430,9 @@ return {
       "nvim-telescope/telescope.nvim"
     },
     opts = {
-      signs = { 
-        section = { "", "" }, 
-        item = { "", "" } 
+      signs = {
+        section = { "", "" },
+        item = { "", "" }
       }
     },
     config = function(_, opts)
@@ -1439,9 +1442,9 @@ return {
   {
     "arsham/indent-tools.nvim",
     dependencies = { "arsham/arshlib.nvim" },
-    config = function() 
-      require("indent-tools").config { 
-        normal = { repeatable = false } 
+    config = function()
+      require("indent-tools").config {
+        normal = { repeatable = false }
       }
     end
   },
@@ -1513,13 +1516,13 @@ return {
               end
             end, { exit = true, desc = 'spell' }
           },
-          { 
+          {
             'w', function()
               if vim.o.wrap ~= true then
                 vim.o.wrap = true
               else
                 vim.o.wrap = false
-              end 
+              end
             end, { desc = 'wrap' }
           },
           {
@@ -1534,6 +1537,13 @@ return {
           { '<Esc>', nil, { exit = true } }
         }
       })
+    end
+  },
+  {
+    "chrisbra/csv.vim",
+    ft = { "csv" },
+    init = function()
+      vim.g.csv_no_conceal = 1
     end
   },
 }
