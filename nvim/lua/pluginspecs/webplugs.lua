@@ -8,6 +8,17 @@ vim.g.termdebug_config = { wide = 1 }
 
 vim.g.tpipeline_restore = 1
 
+-- single key for clearing things on the screen
+local clear_functions = {}
+table.insert(clear_functions, function() vim.cmd.nohlsearch() end)
+
+vim.keymap.set("n", "<leader>n", function()
+  for _,fun in ipairs(clear_functions) do
+    fun()
+  end
+end, { desc = "Clear things" })
+
+
 return {
 
   ----------------------
@@ -152,6 +163,7 @@ return {
     end
   },
   { "azabiong/vim-highlighter", lazy = false },
+  { "wsdjeg/vim-fetch" },
 
   -------------
   -- telescope
@@ -320,12 +332,46 @@ return {
       signs = {
         add = { text = '▎' },
         change = { text = '▎' },
-        -- delete = { text = '▎' },
-        -- topdelete = { text = '▎' },
-        -- changedelete = { text = '▎' },
-        -- untracked = { text = '▎' },
+        changedelete = { text = '▎' },
       },
-    }
+    },
+    config = function(_, opts)
+      local gitsigns = require("gitsigns")
+      gitsigns.setup(opts)
+
+      local function gs_toggle_diff(value)
+        gitsigns.toggle_linehl(value)
+        gitsigns.toggle_deleted(value)
+        gitsigns.toggle_word_diff(value)
+        gitsigns.toggle_numhl(value)
+      end
+
+      local function next_hunk()
+        gitsigns.nav_hunk('next')
+      end
+
+      local function prev_hunk()
+        gitsigns.nav_hunk('prev')
+      end
+
+      local gs_toggled = false
+
+      vim.keymap.set("n", "<leader>ge", function() 
+        gs_toggled = not gs_toggled
+        gs_toggle_diff(gs_toggled) 
+      end, { desc = "Git signs toggle diff" })
+
+      vim.keymap.set("n", "<leader>gn", next_hunk, { desc = "Git signs next hunk" })
+      vim.keymap.set("n", "[g", next_hunk, { desc = "Git signs next hunk" })
+
+      vim.keymap.set("n", "<leader>gp", prev_hunk, { desc = "Git signs previous hunk" })
+      vim.keymap.set("n", "]g", prev_hunk, { desc = "Git signs previous hunk" })
+
+      table.insert(clear_functions, function()
+        gs_toggled = false
+        gs_toggle_diff(gs_toggled)
+      end)
+    end
   },
 
   {
@@ -395,11 +441,13 @@ return {
       modes = {
         search = { enabled = false },
         char = { enabled = false },
+      },
+      prompt = {
+        enabled = false
       }
     },
     keys = {
       { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
-      { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
       { "<C-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash search" },
       { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
     },
@@ -1208,16 +1256,11 @@ return {
     opts = {
       stages = 'fade_in_slide_out'
     },
-    keys = {
-      {
-        '<leader>n',
-        function()
-          require('notify').dismiss({ silent = true, pending = true })
-          vim.cmd.nohlsearch()
-        end,
-        desc = 'Clear notifications and search highlight'
-      }
-    }
+    init = function()
+      table.insert(clear_functions, function() 
+        require('notify').dismiss({ silent = true, pending = true })
+      end)
+    end
   },
   {
     "ggandor/leap.nvim",
@@ -1546,4 +1589,41 @@ return {
       vim.g.csv_no_conceal = 1
     end
   },
+  { 'chentoast/marks.nvim', opts = {} },
+  {
+    "chrisgrieser/nvim-spider",
+    enabled = true,
+    config = function()
+      vim.keymap.set({"n", "o", "x"}, "_", "<cmd>lua require('spider').motion('w')<CR>", { desc = "Next word" })
+      vim.keymap.set({"n", "o", "x"}, "<C-_>", "<cmd>lua require('spider').motion('b')<CR>", { desc = "Previous word" })
+    end
+  },
+  {
+    'chrisgrieser/nvim-various-textobjs',
+    config = function()
+      require("various-textobjs").setup ({ useDefaultKeymaps = false })
+
+      vim.keymap.set({ "o", "x" }, "a_", '<cmd>lua require("various-textobjs").subword("outer")<CR>')
+      vim.keymap.set({ "o", "x" }, "i_", '<cmd>lua require("various-textobjs").subword("inner")<CR>')
+    end
+  },
+  {
+    'karb94/neoscroll.nvim',
+    config = function()
+      require('neoscroll').setup()
+
+      vim.keymap.set("n", "<C-j>", "<Cmd>lua require('neoscroll').scroll(3, true, 30)<CR>")
+      vim.keymap.set("n", "<C-k>", "<Cmd>lua require('neoscroll').scroll(-3, true, 30)<CR>")
+    end
+  },
+  { "lewis6991/satellite.nvim", opts = {} },
+  {
+    "ryanmsnyder/toggleterm-manager.nvim",
+    dependencies = {
+      "akinsho/nvim-toggleterm.lua",
+      "nvim-telescope/telescope.nvim",
+      "nvim-lua/plenary.nvim"
+    },
+    config = true
+  }
 }
