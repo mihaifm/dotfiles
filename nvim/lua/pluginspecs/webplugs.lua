@@ -164,6 +164,7 @@ return {
   },
   { "azabiong/vim-highlighter", lazy = false },
   { "wsdjeg/vim-fetch" },
+  { 'bfrg/vim-cpp-modern' },
 
   -------------
   -- telescope
@@ -356,9 +357,9 @@ return {
 
       local gs_toggled = false
 
-      vim.keymap.set("n", "<leader>ge", function() 
+      vim.keymap.set("n", "<leader>ge", function()
         gs_toggled = not gs_toggled
-        gs_toggle_diff(gs_toggled) 
+        gs_toggle_diff(gs_toggled)
       end, { desc = "Git signs toggle diff" })
 
       vim.keymap.set("n", "<leader>gn", next_hunk, { desc = "Git signs next hunk" })
@@ -424,6 +425,8 @@ return {
           ['t'] = { name = "+ToggleTerm" },
           ['v'] = { name = "+MiniVisits" },
           ['p'] = { name = "+Dap" },
+          ['u'] = { name = "+UI" },
+          ['g'] = { name = "+Git" },
         }
       })
     end
@@ -965,7 +968,7 @@ return {
     "christoomey/vim-tmux-navigator",
     enabled = true,
     cond = function () return vim.fn.has("win32") == 0 end,
-    init = function() 
+    init = function()
       vim.g.tmux_navigator_no_mappings = 1
     end,
     keys = {
@@ -1257,7 +1260,7 @@ return {
       stages = 'fade_in_slide_out'
     },
     init = function()
-      table.insert(clear_functions, function() 
+      table.insert(clear_functions, function()
         require('notify').dismiss({ silent = true, pending = true })
       end)
     end
@@ -1610,10 +1613,32 @@ return {
   {
     'karb94/neoscroll.nvim',
     config = function()
-      require('neoscroll').setup()
+      require('neoscroll').setup({ mappings = {} })
 
-      vim.keymap.set("n", "<C-j>", "<Cmd>lua require('neoscroll').scroll(3, true, 30)<CR>")
-      vim.keymap.set("n", "<C-k>", "<Cmd>lua require('neoscroll').scroll(-3, true, 30)<CR>")
+      local neoscrollToggled = false
+
+      local function toggleNeoscroll()
+        neoscrollToggled = not neoscrollToggled
+
+        if neoscrollToggled then
+          require("neoscroll").setup({
+            mappings = {
+              '<C-u>', '<C-d>',
+              '<C-b>', '<C-f>',
+              '<C-y>', '<C-e>',
+              'zt', 'zz', 'zb',
+            }
+          })
+          vim.keymap.set("n", "<C-j>", "<Cmd>lua require('neoscroll').scroll(3, true, 30)<CR>", { desc = 'Scroll up' })
+          vim.keymap.set("n", "<C-k>", "<Cmd>lua require('neoscroll').scroll(-3, true, 30)<CR>", { desc = 'Scroll down' })
+        else
+          require('neoscroll').setup({ mappings = {} })
+          vim.keymap.set('n', '<C-j>', '3j3<C-e>', { desc = 'Scroll up' })
+          vim.keymap.set('n', '<C-k>', '3k3<C-y>', { desc = 'Scroll down' })
+        end
+      end
+
+      vim.keymap.set("n", '<leader>us', toggleNeoscroll, { desc = 'Toggle smooth scrolling' })
     end
   },
   { "lewis6991/satellite.nvim", opts = {} },
@@ -1625,5 +1650,5 @@ return {
       "nvim-lua/plenary.nvim"
     },
     config = true
-  }
+  },
 }
