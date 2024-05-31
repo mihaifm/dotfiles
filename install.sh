@@ -306,6 +306,8 @@ if [[ $1 == "bootstrap" ]]; then
 
   (nvim --headless +"MasonInstall lua-language-server" +"qa")
 
+  (sed -i "s:$HOME:~:g" ~/.local/share/nvim/mason/packages/lua-language-server/lua-language-server)
+
   # Tmux
   git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
   ~/.tmux/plugins/tpm/scripts/install_plugins.sh
