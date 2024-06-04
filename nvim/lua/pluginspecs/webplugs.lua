@@ -689,7 +689,15 @@ return {
         -- pyright = {},
         -- rust_analyzer = {},
         -- tsserver = {},
-        lua_ls = {},
+        lua_ls = {
+          settings = {
+            Lua = {
+              hint = {
+                enable = true
+              }
+            }
+          }
+        },
       }
 
       require('neoconf').setup({})
@@ -1629,10 +1637,21 @@ return {
               'zt', 'zz', 'zb',
             }
           })
+
           vim.keymap.set("n", "<C-j>", "<Cmd>lua require('neoscroll').scroll(3, true, 30)<CR>", { desc = 'Scroll up' })
           vim.keymap.set("n", "<C-k>", "<Cmd>lua require('neoscroll').scroll(-3, true, 30)<CR>", { desc = 'Scroll down' })
         else
+          for _,v in pairs({
+            '<C-u>', '<C-d>',
+            '<C-b>', '<C-f>',
+            '<C-y>', '<C-e>',
+            'zt', 'zz', 'zb',
+          }) do
+            vim.cmd.unmap(v)
+          end
+
           require('neoscroll').setup({ mappings = {} })
+
           vim.keymap.set('n', '<C-j>', '3j3<C-e>', { desc = 'Scroll up' })
           vim.keymap.set('n', '<C-k>', '3k3<C-y>', { desc = 'Scroll down' })
         end
