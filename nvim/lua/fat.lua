@@ -283,13 +283,13 @@ local plugins = {
   },
   {
     'romgrk/barbar.nvim',
-    enabled = true,
+    enabled = false,
     config = function()
       require('barbar').setup({})
       vim.cmd('BarbarDisable')
       vim.cmd('set showtabline=0')
 
-      vim.api.nvim_create_user_command('TablineToggle', function()
+      vim.api.nvim_create_user_command('ToggleTabline', function()
         if vim.opt.showtabline:get() == 0 then
           vim.cmd('BarbarEnable')
           vim.cmd('set showtabline=2')
@@ -303,11 +303,25 @@ local plugins = {
   },
   {
     'akinsho/bufferline.nvim',
-    enabled = false,
+    enabled = true,
     event = 'VeryLazy',
     version = "*",
     dependencies = 'nvim-tree/nvim-web-devicons',
-    opts = {}
+    config = function()
+      require('bufferline').setup({})
+      vim.cmd('set showtabline=0')
+
+      vim.api.nvim_create_user_command('ToggleTabline', function()
+        if vim.opt.showtabline:get() ~= 2 then
+          vim.cmd('set showtabline=2')
+        else
+          vim.cmd('set showtabline=0')
+        end
+      end, {})
+
+      vim.keymap.set("n", '<leader>ub', '<cmd>ToggleTabline<CR>', { desc = 'Toggle tabline/bufferline' })
+      vim.keymap.set("n", '<leader>up', '<cmd>BufferLinePick<CR>', { desc = 'BufferLine Pick' })
+    end
   },
   {
     'rcarriga/nvim-notify',
@@ -571,6 +585,53 @@ local plugins = {
       "nvim-lua/plenary.nvim"
     },
     config = true
+  },
+  {
+    "monaqa/dial.nvim",
+    config = function()
+      vim.keymap.set("n", "<C-a>", function()
+        require("dial.map").manipulate("increment", "normal")
+      end, { desc = 'Increment' })
+      vim.keymap.set("n", "<C-x>", function()
+        require("dial.map").manipulate("decrement", "normal")
+      end, { desc = 'Decrement' })
+      vim.keymap.set("n", "g<C-a>", function()
+        require("dial.map").manipulate("increment", "gnormal")
+      end, { desc = 'Increment each line' })
+      vim.keymap.set("n", "g<C-x>", function()
+        require("dial.map").manipulate("decrement", "gnormal")
+      end, { desc = 'Decrement each line' })
+      vim.keymap.set("v", "<C-a>", function()
+        require("dial.map").manipulate("increment", "visual")
+      end, { desc = 'Increment' })
+      vim.keymap.set("v", "<C-x>", function()
+        require("dial.map").manipulate("decrement", "visual")
+      end, { desc = 'Decrement' })
+      vim.keymap.set("v", "g<C-a>", function()
+        require("dial.map").manipulate("increment", "gvisual")
+      end, { desc = 'Increment each line' })
+      vim.keymap.set("v", "g<C-x>", function()
+        require("dial.map").manipulate("decrement", "gvisual")
+      end, { desc = 'Decrement each line' })
+
+      local augend = require "dial.augend"
+      require('dial.config').augends:register_group({
+        default = {
+          augend.integer.alias.decimal,
+          augend.integer.alias.hex,
+          augend.date.alias["%Y/%m/%d"],
+          augend.constant.alias.bool,
+          augend.semver.alias.semver,
+          augend.date.new {
+            pattern = "%B", -- titlecased month names
+            default_kind = "day",
+          },
+          augend.constant.new { elements = { "'", '"' }, word = false, cyclic = true },
+          augend.constant.new { elements = { '(', '[', '{' }, word = false, cyclic = true },
+          augend.constant.new { elements = { ')', ']', '}' }, word = false, cyclic = true }
+        }
+      })
+    end
   },
 }
 
