@@ -633,6 +633,19 @@ local plugins = {
       })
     end
   },
+  {
+    "ibhagwan/fzf-lua",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      require("fzf-lua").setup({})
+
+      local fzfleader = "<leader>z"
+
+      vim.keymap.set("n", fzfleader .. 'z', "<cmd>FzfLua<CR>", { desc = 'Builtins' })
+      vim.keymap.set("n", fzfleader .. 'f', "<cmd>FzfLua files<CR>", { desc = 'Find files' })
+      vim.keymap.set("n", fzfleader .. 'g', "<cmd>FzfLua live_grep_glob<CR>", { desc = 'Live grep with glob pattern' })
+    end,
+  }
 }
 
 return plugins

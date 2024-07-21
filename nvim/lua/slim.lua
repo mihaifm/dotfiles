@@ -326,7 +326,7 @@ function FancyCmd(type)
 
   local buffers = vim.api.nvim_list_bufs()
   for _, buf in ipairs(buffers) do
-    if vim.api.nvim_get_option_value('filetype', { scope = 'local', buf = buf }) == 'fancycmd' then
+    if vim.api.nvim_get_option_value('filetype', { buf = buf }) == 'fancycmd' then
       return
     end
   end

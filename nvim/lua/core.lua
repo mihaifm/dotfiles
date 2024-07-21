@@ -50,53 +50,45 @@ local plugins = {
     event = 'VimEnter',
     config = function()
       local wk = require('which-key')
-      wk.setup()
+      wk.setup({
+        delay = 500,
+        icons = { mappings = false }
+      })
 
-      vim.opt.timeoutlen = 500
+      wk.add({
+        { "<C-w>", group = "Window" },
+        { "t", group = "Telescope" },
+        { "s", group = "Flash search" },
 
-      wk.register({
-        ['<C-w>'] = { name = "+Window" },
-        ['g'] = { name = "+Go" },
-        ['z'] = { name = "+Fold" },
-        ['t'] = { name = "+Telescope"},
-        ['s'] = { name = "+Flash search"},
-        ['<space>'] = {
-          name = "+LSP",
-          ['g'] = {
-            name = "+Goto",
-            ['d'] = 'Goto definition',
-            ['D'] = 'Goto declaration',
-            ['i'] = 'Goto implementation',
-            ['t'] = 'Goto type definition',
-            ['r'] = 'Goto references'
-          },
-          ['w'] = {
-            name = "+Workspace folders",
-            ['a'] = 'Add document folder',
-            ['r'] = 'Remove document folder',
-            ['l'] = 'List document folders'
-          },
-          ['s'] = {
-            name = "+View symbols",
-            ['d'] = 'Document symbols',
-            ['w'] = 'Workspace symbols'
-          },
-          ['K'] = { 'Hover documentation' },
-          ['r'] = { 'Rename variable' },
-          ['f'] = { 'Format code' }
-        },
-        ['<leader>'] = {
-          name = "+Leader",
-          ['f'] = { name = "+File" },
-          ['i'] = { name = "+Indent/Context" },
-          ['s'] = { name = "+Session" },
-          ['x'] = { name = "+Trouble" },
-          ['t'] = { name = "+ToggleTerm" },
-          ['v'] = { name = "+MiniVisits" },
-          ['p'] = { name = "+Dap" },
-          ['u'] = { name = "+UI" },
-          ['g'] = { name = "+Git" },
-        }
+        { "<space>", group = "LSP" },
+        { "<space>g", group = "Goto" },
+        { "<space>gD", desc = "Goto declaration" },
+        { "<space>gd", desc = "Goto definition" },
+        { "<space>gi", desc = "Goto implementation" },
+        { "<space>gr", desc = "Goto references" },
+        { "<space>gt", desc = "Goto type definition" },
+        { "<space>w", group = "Workspace folders" },
+        { "<space>wa", desc = "Add document folder" },
+        { "<space>wl", desc = "List document folders" },
+        { "<space>wr", desc = "Remove document folder" },
+        { "<space>s", group = "View symbols" },
+        { "<space>sd", desc = "Document symbols" },
+        { "<space>sw", desc = "Workspace symbols" },
+        { "<space>K", desc = "Hover documentation" },
+        { "<space>f", desc = "Format code" },
+        { "<space>r", desc = "Rename variable" },
+
+        { "<leader>", group = "Leader" },
+        { "<leader>f", group = "File" },
+        { "<leader>g", group = "Git" },
+        { "<leader>i", group = "Indent/Context" },
+        { "<leader>p", group = "Dap" },
+        { "<leader>s", group = "Session" },
+        { "<leader>t", group = "ToggleTerm" },
+        { "<leader>u", group = "UI" },
+        { "<leader>v", group = "MiniVisits" },
+        { "<leader>x", group = "Trouble" },
+        { "<leader>z", group = "Fzf" },
       })
     end
   },
