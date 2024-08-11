@@ -436,7 +436,7 @@ local plugins = {
     build = ":TSUpdate",
     config = function()
       require("nvim-treesitter.configs").setup({
-        ensure_installed = { "c", "cpp", "lua", "vim", "vimdoc", "javascript", "python", "html", "bash", "markdown_inline" },
+        ensure_installed = { "c", "cpp", "lua", "vim", "vimdoc", "javascript", "python", "html", "bash", "markdown", "markdown_inline" },
         auto_install = false,
         sync_install = false,
         ignore_install = {},

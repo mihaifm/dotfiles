@@ -435,7 +435,7 @@ if [%1]==[bootstrap] (
   )
 
   vim +PlugInstall! +qa
-  nvim --headless +"Lazy^! install" +"TSInstallSync^! c cpp lua vim vimdoc javascript python html bash" +"qa"
+  nvim --headless +"Lazy^! install" +"TSInstallSync^! c cpp lua vim vimdoc javascript python html bash markdown markdown_inline" +"qa"
   nvim --headless +"MasonInstall lua-language-server" +"qa"
 
   goto end

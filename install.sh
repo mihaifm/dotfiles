@@ -301,7 +301,7 @@ if [[ $1 == "bootstrap" ]]; then
   (source scl_source enable devtoolset-12 && \
    nvim --headless \
      +"Lazy! install" \
-     +"TSInstallSync! c cpp lua vim vimdoc javascript python html bash"  \
+     +"TSInstallSync! c cpp lua vim vimdoc javascript python html bash markdown markdown_inline"  \
      +"qa")
 
   (nvim --headless +"MasonInstall lua-language-server" +"qa")
