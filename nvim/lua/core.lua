@@ -441,7 +441,15 @@ local plugins = {
         sync_install = false,
         ignore_install = {},
         modules = {},
-        highlight = { enable = false },
+        highlight = {
+          enable = true,
+          disable = function(lang, _)
+            if lang == 'markdown' or lang == 'markdown_inline' then
+              return false
+            end
+            return true
+          end
+        },
         indent = { enable = false },
         incremental_selection = {
           enable = false,
