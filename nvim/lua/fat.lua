@@ -217,9 +217,6 @@ local plugins = {
 
   { 'stevearc/dressing.nvim', enabled = false, opts = {} },
   { 'stevearc/aerial.nvim', opts = {} },
-
-  -- spectre requires rg, nvim-oxi and GNU sed
-  { 'nvim-pack/nvim-spectre', opts = {} },
   {
     'gelguy/wilder.nvim',
     enabled = false,
@@ -645,6 +642,12 @@ local plugins = {
       vim.keymap.set("n", fzfleader .. 'f', "<cmd>FzfLua files<CR>", { desc = 'Find files' })
       vim.keymap.set("n", fzfleader .. 'g', "<cmd>FzfLua live_grep_glob<CR>", { desc = 'Live grep with glob pattern' })
     end,
+  },
+  {
+    'MagicDuck/grug-far.nvim',
+    config = function()
+      require('grug-far').setup({})
+    end
   },
   {
     'MeanderingProgrammer/render-markdown.nvim',
