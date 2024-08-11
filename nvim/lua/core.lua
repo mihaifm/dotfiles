@@ -959,9 +959,7 @@ local plugins = {
     'max397574/better-escape.nvim',
     event = "InsertCharPre",
     config = function()
-      require('better_escape').setup({
-        mapping = { 'jj', 'jk' }
-      })
+      require('better_escape').setup()
     end
   },
   {
