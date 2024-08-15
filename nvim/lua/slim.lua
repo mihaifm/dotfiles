@@ -262,7 +262,7 @@ function FormatCsv()
       local lineData = parseCsv(line)
       table.insert(beautyData, lineData)
       for k, v in pairs(lineData) do
-        local utf8len = tonumber(string.match(vim.str_utfindex(v), "(%w+)"))
+        local utf8len = vim.str_utfindex(v)
         if not sizes[k] then sizes[k] = utf8len
         else sizes[k] = math.max(sizes[k], utf8len)
         end
@@ -286,7 +286,7 @@ function FormatCsv()
 
       if k == 1 then beauty = "│ " end
 
-      local utf8len = tonumber(string.match(vim.str_utfindex(lineData[k]), "(%w+)"))
+      local utf8len = vim.str_utfindex(lineData[k])
       lineData[k] = lineData[k] .. string.rep(" ", sizes[k] - utf8len)
       beauty = beauty .. lineData[k] .. " │ "
     end
