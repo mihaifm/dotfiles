@@ -168,6 +168,76 @@ vim.keymap.set('n', '<C-n>', '<cmd>YankCyclePrev<CR>', { desc = 'Paste previous 
 
 vim.keymap.set('n', 'yp', '<cmd>YankCycleHist<CR>', { desc = 'Paste from yank history' })
 
+----------------------
+-- Session management
+
+local sesdir = vim.fn.stdpath("state") .. "/sessions/"
+vim.fn.mkdir(sesdir, "p")
+
+-- save sessions automatically every 5 minutes
+local sesinterval = 5 * 60
+
+function SesFileName()
+  local name
+
+  if vim.env.TMUX then
+    local tmux_session = vim.fn.systemlist("tmux display -pt " .. vim.env.TMUX_PANE .. " '#{session_name}'")[1]
+    local tmux_window = vim.fn.systemlist("tmux display -pt " .. vim.env.TMUX_PANE .. " '#{window_index}'")[1]
+    local tmux_pane = vim.fn.systemlist("tmux display -pt " .. vim.env.TMUX_PANE .. " '#{pane_index}'")[1]
+
+    if tmux_session and tmux_window and tmux_pane then
+      name = tmux_session .. "%%" .. tmux_window .. "%%" .. tmux_pane
+    end
+  else
+    name = vim.fn.getcwd():gsub("[\\/:]+", "%%")
+
+    if vim.uv.fs_stat(".git") then
+      local branch = vim.fn.systemlist("git branch --show-current")[1]
+      if vim.v.shell_error == 0 then
+        name = name .. "%%" .. branch
+      end
+    end
+  end
+
+  return sesdir .. name .. ".vim"
+end
+
+function SesSave()
+  vim.cmd("mks! " .. vim.fn.fnameescape(SesFileName()))
+end
+
+function SesLoad(opts)
+  opts = opts or {}
+  local file
+  if opts.last then
+    local sessions = vim.fn.glob(sesdir .. "*.vim", true, true)
+    table.sort(sessions, function(a, b)
+      return vim.uv.fs_stat(a).mtime.sec > vim.uv.fs_stat(b).mtime.sec
+    end)
+    file = sessions[1]
+  else
+    file = SesFileName()
+  end
+  if file and vim.fn.filereadable(file) ~= 0 then
+    vim.cmd("silent! source " .. vim.fn.fnameescape(file))
+  end
+end
+
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  group = vim.api.nvim_create_augroup("session-vimleavepre", { clear = true }),
+  callback = function()
+    vim.cmd("mks! " .. vim.fn.fnameescape(SesFileName()))
+  end,
+})
+
+vim.api.nvim_create_user_command('SesSave', SesSave, {})
+vim.api.nvim_create_user_command('SesLoad', SesLoad, {})
+
+local autosave_timer = vim.uv.new_timer()
+autosave_timer:start(sesinterval * 1000, sesinterval * 1000, vim.schedule_wrap(function()
+  SesSave()
+end))
+
 -----------------------
 -- Toggle transparency
 

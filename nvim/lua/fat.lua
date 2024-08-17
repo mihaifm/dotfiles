@@ -111,7 +111,7 @@ local plugins = {
   -- unsorted plugins
   {
     'folke/persistence.nvim',
-    enabled = true,
+    enabled = false,
     config = function()
       local persistence = require('persistence')
       persistence.setup({})
