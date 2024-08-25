@@ -57,7 +57,6 @@ local plugins = {
 
       wk.add({
         { "<C-w>", group = "Window" },
-        { "t", group = "Telescope" },
         { "s", group = "Flash search" },
 
         { "<space>", group = "LSP" },
@@ -79,16 +78,18 @@ local plugins = {
         { "<space>r", desc = "Rename variable" },
 
         { "<leader>", group = "Leader" },
+        { "<leader>t", group = "Telescope" },
         { "<leader>f", group = "File" },
         { "<leader>g", group = "Git" },
         { "<leader>i", group = "Indent/Context" },
         { "<leader>p", group = "Dap" },
         { "<leader>s", group = "Session" },
-        { "<leader>t", group = "ToggleTerm" },
         { "<leader>u", group = "UI" },
         { "<leader>v", group = "MiniVisits" },
         { "<leader>x", group = "Trouble" },
         { "<leader>z", group = "Fzf" },
+        { "<leader>e", group = "Extras" },
+        { "<leader>et", group = "ToggleTerm" },
       })
     end
   },
@@ -207,7 +208,7 @@ local plugins = {
 
       local builtin = require("telescope.builtin")
 
-      local teleleader = "t"
+      local teleleader = "<leader>t"
 
       vim.keymap.set("n", teleleader .. 'f', function()
           builtin.find_files({ hidden = true, no_ignore = true })
@@ -745,7 +746,7 @@ local plugins = {
         end
       })
 
-      local togkey = '<leader>t'
+      local togkey = '<leader>et'
 
       vim.keymap.set('n', togkey .. 'f', "<Cmd>ToggleTerm direction=float<CR>",
         { desc = "ToggleTerm float" })
