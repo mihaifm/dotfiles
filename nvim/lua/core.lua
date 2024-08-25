@@ -8,7 +8,7 @@ vim.g.neovide_transparency = 0.96
 vim.g.neovide_hide_mouse_when_typing = true
 
 -- termdebug
-vim.g.termdebug_config = { wide = 1 }
+vim.g.termdebug_config = { wide = 1, sign = "󰯯" }
 
 -- vim-tpipeline
 vim.g.tpipeline_restore = 1
@@ -397,6 +397,10 @@ local plugins = {
             vim.cmd('hi! TelescopeNormal guibg=NONE')
             vim.cmd('hi! link NormalSB Normal')
             vim.cmd('hi! link FoldColumn SignColumn')
+
+            vim.cmd('hi! link debugButtons Constant')
+            vim.cmd('hi! link debugBreakpoint Statement')
+            vim.cmd('hi! link debugBreakpointDisabled Comment')
           end
         end
       })

@@ -185,6 +185,9 @@ vim.keymap.set('n', 'ZZ', '<nop>')
 -- vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = 'Move text down' })
 -- vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = 'Move text up' })
 
+-- exit terminal mode with esc
+vim.keymap.set('t', '<Esc>', '<C-\\><C-n>')
+
 -----------
 -- Plugins
 
@@ -207,6 +210,7 @@ local lazyopts = {
   install = { missing = false },
   checker = { enabled = false },
   change_detection = { enabled = false },
+  performance = { reset_packpath = false },
 }
 
 local plugins = {}
@@ -216,4 +220,3 @@ plugins = vim.list_extend(plugins, require('slim'))
 plugins = vim.list_extend(plugins, require('fat'))
 
 require("lazy").setup(plugins, lazyopts)
-
