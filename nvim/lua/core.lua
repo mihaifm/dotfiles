@@ -10,6 +10,10 @@ vim.g.neovide_hide_mouse_when_typing = true
 -- termdebug
 vim.g.termdebug_config = { wide = 1, sign = "󰯯" }
 
+if vim.fn.exists(":Termdebug") then
+  vim.opt.foldenable = false
+end
+
 -- vim-tpipeline
 vim.g.tpipeline_restore = 1
 

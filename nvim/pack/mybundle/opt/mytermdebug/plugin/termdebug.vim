@@ -1680,10 +1680,10 @@ func s:HandleCursor(msg)
           " TODO: find existing window
           exe $'split {fnameescape(fname)}'
           let s:sourcewin = win_getid()
-          call s:InstallWinbar(0)
         else
           exe $'edit {fnameescape(fname)}'
         endif
+        call s:InstallWinbar(0)
         augroup Termdebug
           au! SwapExists
         augroup END
