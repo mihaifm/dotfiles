@@ -192,8 +192,7 @@ local plugins = {
     opts = {
       formatters_by_ft = {
         lua = { 'stylua' },
-        -- use a sub-list to run only the first available formatter
-        javascript = { { "prettierd", "prettier" } },
+        javascript = { "prettierd", "prettier", stop_after_first = true },
       },
     },
   },
