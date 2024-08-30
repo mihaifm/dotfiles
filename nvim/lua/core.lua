@@ -615,17 +615,30 @@ local plugins = {
     event = 'InsertEnter',
     dependencies = {
       {
-        "L3MON4D3/LuaSnip",
-        dependencies = {
-          { "saadparwaiz1/cmp_luasnip" },
+        "garymjr/nvim-snippets",
+        opts = {
+          friendly_snippets = true,
+        },
+        dependencies = { "rafamadriz/friendly-snippets" },
+        keys = {
           {
-            "rafamadriz/friendly-snippets",
-            config = function()
-              require("luasnip.loaders.from_vscode").lazy_load()
-              require("luasnip.loaders.from_snipmate").lazy_load()
-              require("luasnip.loaders.from_lua").lazy_load()
+            "<Tab>",
+            function()
+              return vim.snippet.active({ direction = 1 }) and "<cmd>lua vim.snippet.jump(1)<cr>" or "<Tab>"
             end,
-          }
+            expr = true,
+            silent = true,
+            mode = { "i", "s" },
+          },
+          {
+            "<S-Tab>",
+            function()
+              return vim.snippet.active({ direction = -1 }) and "<cmd>lua vim.snippet.jump(-1)<cr>" or "<S-Tab>"
+            end,
+            expr = true,
+            silent = true,
+            mode = { "i", "s" },
+          },
         },
       },
       { "hrsh7th/cmp-path" },
@@ -641,13 +654,15 @@ local plugins = {
       vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
 
       local cmp = require("cmp")
-      local luasnip = require('luasnip')
-      luasnip.config.setup({})
 
       cmp.setup({
+        completion = {
+          completeopt = "menu,menuone,noinsert,noselect"
+        },
+        preselect = cmp.PreselectMode.None,
         snippet = {
           expand = function(args)
-            luasnip.lsp_expand(args.body)
+            return vim.snippet.expand(args.body)
           end,
         },
         window = {
@@ -655,22 +670,13 @@ local plugins = {
           documentation = cmp.config.window.bordered(),
         },
         mapping = cmp.mapping.preset.insert({
+          ["<C-l>"] = cmp.mapping.complete(),
           ["<C-b>"] = cmp.mapping.scroll_docs(-4),
           ["<C-f>"] = cmp.mapping.scroll_docs(4),
-          ["<C-Space>"] = cmp.mapping.complete(),
           ["<C-e>"] = cmp.mapping.abort(),
           ["<C-y>"] = cmp.mapping.confirm({ select = true }),
-
-          ['<C-l>'] = cmp.mapping(function()
-            if luasnip.expand_or_locally_jumpable() then
-              luasnip.expand_or_jump()
-            end
-          end, { 'i', 's' }),
-          ['<C-h>'] = cmp.mapping(function()
-            if luasnip.locally_jumpable(-1) then
-              luasnip.jump(-1)
-            end
-          end, { 'i', 's' }),
+          ["<CR>"] = cmp.mapping.confirm({ select = false }),
+          ["<C-h>"] = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace }),
         }),
         sources = {
           -- sources in group 2 won't appear if the ones in group 1 are available
@@ -678,7 +684,7 @@ local plugins = {
           { name = "nvim_lsp_signature_help", group_index = 1 },
           { name = "path", group_index = 1, option = { trailing_slash = true } },
           { name = "buffer", max_item_count = 3, group_index = 1 },
-          { name = "luasnip", group_index = 1 },
+          { name = "snippets", group_index = 1 },
           { name = "tmux", max_item_count = 2, keyword_length = 3, group_index = 1, option = { all_panes = true, label = '' } },
           { name = "rg", max_item_count = 3, keyword_length = 5, group_index = 1 }
         },
