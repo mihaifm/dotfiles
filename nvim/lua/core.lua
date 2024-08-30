@@ -80,6 +80,7 @@ local plugins = {
         { "<space>K", desc = "Hover documentation" },
         { "<space>f", desc = "Format code" },
         { "<space>r", desc = "Rename variable" },
+        { "<space>I", desc = "Toggle inlay hints" },
 
         { "<leader>", group = "Leader" },
         { "<leader>t", group = "Telescope" },
@@ -599,6 +600,10 @@ local plugins = {
           end
 
           map('n', lspleader .. 'dl', function() require("lsp_lines").toggle() end, 'Toggle virtual diagnostic lines')
+
+          map("n", lspleader .. 'I', function()
+            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+          end, 'Toggle inlay hints')
         end,
       })
     end
