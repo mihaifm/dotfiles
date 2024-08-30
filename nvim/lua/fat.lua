@@ -660,7 +660,24 @@ local plugins = {
     'MeanderingProgrammer/render-markdown.nvim',
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' },
     opts = {},
-  }
+  },
+  {
+    'max397574/better-escape.nvim',
+    event = "InsertCharPre",
+    config = function()
+      require('better_escape').setup({
+        default_mappings = false,
+        mappings = {
+          i = {
+            j = {
+              k = "<Esc>",
+              j = "<Esc>",
+            },
+          },
+        }
+      })
+    end
+  },
 }
 
 return plugins
