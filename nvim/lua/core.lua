@@ -501,7 +501,6 @@ local plugins = {
         branch = 'v2.x'
       },
       { 'williamboman/mason-lspconfig.nvim', },
-      { 'folke/neodev.nvim', opts = {} },
       { 'j-hui/fidget.nvim', opts = {} },
       { 'folke/neoconf.nvim', cmd = 'Neoconf' },
       {
@@ -708,7 +707,8 @@ local plugins = {
           { name = "buffer", max_item_count = 3, group_index = 1 },
           { name = "snippets", group_index = 1 },
           { name = "tmux", max_item_count = 2, keyword_length = 3, group_index = 1, option = { all_panes = true, label = '' } },
-          { name = "rg", max_item_count = 3, keyword_length = 5, group_index = 1 }
+          { name = "rg", max_item_count = 3, keyword_length = 5, group_index = 1 },
+          { name = "lazydev", group_index = 0 },
         },
         formatting = {
           format = require('lspkind').cmp_format({
@@ -1061,6 +1061,16 @@ local plugins = {
       vim.keymap.set({"n", "o", "x"}, "<C-_>", "<cmd>lua require('spider').motion('b')<CR>", { desc = "Previous word" })
     end
   },
+  {
+    "folke/lazydev.nvim",
+    ft = "lua",
+    opts = {
+      library = {
+        { path = "luvit-meta/library", words = { "vim%.uv" } },
+      },
+    },
+  },
+  { "Bilal2453/luvit-meta", lazy = true }, -- `vim.uv` typings
 }
 
 return plugins
