@@ -81,6 +81,9 @@ local plugins = {
         { "<space>f", desc = "Format code" },
         { "<space>r", desc = "Rename variable" },
         { "<space>I", desc = "Toggle inlay hints" },
+        { "<space>d", group = "Diagnostics" },
+        { "<space>dl", desc = "Toggle virtual diagnostic lines" },
+        { "<space>do", desc = "Open diagnostics for current line" },
 
         { "<leader>", group = "Leader" },
         { "<leader>t", group = "Telescope" },
@@ -503,9 +506,13 @@ local plugins = {
       { 'folke/neoconf.nvim', cmd = 'Neoconf' },
       {
         "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
-        enabled = false,
+        enabled = true,
         event = "LspAttach",
-        opts = {}
+        config = function()
+          require("lsp_lines").setup()
+
+          vim.diagnostic.config({ virtual_lines = false })
+        end
       }
     },
     config = function()
@@ -593,8 +600,6 @@ local plugins = {
             })
           end
 
-          map('n', lspleader .. 'dl', function() require("lsp_lines").toggle() end, 'Toggle virtual diagnostic lines')
-
           map("n", lspleader .. 'I', function()
             vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
           end, 'Toggle inlay hints')
@@ -612,6 +617,15 @@ local plugins = {
           end, { range = true })
 
           map({'n', 'x'}, lspleader .. 'f', ":FormatCode<CR>", "Format code")
+
+          local lsp_lines_enabled = false
+          map('n', lspleader .. 'dl', function()
+            lsp_lines_enabled = not lsp_lines_enabled
+            vim.diagnostic.config({ virtual_lines = lsp_lines_enabled })
+            vim.diagnostic.config({ virtual_text = not lsp_lines_enabled })
+          end, 'Toggle virtual diagnostic lines')
+
+          map('n', lspleader .. 'do', function() vim.diagnostic.open_float() end, 'Open diagnostics for current line')
         end,
       })
     end
