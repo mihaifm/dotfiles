@@ -56,7 +56,8 @@ local plugins = {
       local wk = require('which-key')
       wk.setup({
         delay = 500,
-        icons = { mappings = false }
+        icons = { mappings = false },
+        win = { no_overlap = false },
       })
 
       wk.add({
@@ -98,6 +99,7 @@ local plugins = {
         { "<leader>z", group = "Fzf" },
         { "<leader>e", group = "Extras" },
         { "<leader>et", group = "ToggleTerm" },
+        { "<leader>ea", group = "Autopairs" },
       })
     end
   },
