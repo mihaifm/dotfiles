@@ -333,45 +333,6 @@ local plugins = {
           }
         },
       })
-
-      local aerialLualine = false
-      local lua_statusbar_c = {}
-      vim.api.nvim_create_user_command("AerialLualineToggle", function()
-        aerialLualine = not aerialLualine
-        if aerialLualine then
-          lua_statusbar_c = { { 'filename' }, { 'aerial' } }
-        else
-          lua_statusbar_c = { { 'filename' } }
-        end
-        require('lualine').setup({ sections = { lualine_c = lua_statusbar_c } })
-      end, {})
-
-      vim.keymap.set("n", '<leader>ia', '<cmd>AerialLualineToggle<CR>', { desc = 'Toggle aerial lualine context' })
-
-      local navicLualine = false
-      local lua_winbar_c = {}
-      local navic_config = {
-        "navic",
-        color_correction = nil,
-        navic_opts = {
-          separator = " ⇢ ",
-          highlight = true,
-          depth_limit = 9,
-        }
-      }
-
-      vim.api.nvim_create_user_command("NavicLualineToggle", function()
-        navicLualine = not navicLualine
-        if navicLualine then
-          lua_winbar_c = { navic_config }
-        else
-          lua_winbar_c = {}
-        end
-        require('lualine').setup({ winbar = { lualine_c = lua_winbar_c } })
-      end, {})
-
-      vim.keymap.set("n", '<leader>in', '<cmd>NavicLualineToggle<CR>', { desc = 'Toggle navic winbar context' })
-
     end,
   },
   {

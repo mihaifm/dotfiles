@@ -138,6 +138,15 @@ local plugins = {
       pcall(require('telescope').load_extension, 'undo')
     end
   },
+  {
+    "ryanmsnyder/toggleterm-manager.nvim",
+    dependencies = {
+      "akinsho/nvim-toggleterm.lua",
+      "nvim-telescope/telescope.nvim",
+      "nvim-lua/plenary.nvim"
+    },
+    config = true
+  },
 
   --------------------
   -- unsorted plugins
@@ -250,8 +259,72 @@ local plugins = {
     'stevearc/aerial.nvim',
     config = function()
       require('aerial').setup()
+
+      local aerialLualine = false
+      local lua_statusbar_c = {}
+      vim.api.nvim_create_user_command("AerialLualineToggle", function()
+        aerialLualine = not aerialLualine
+        if aerialLualine then
+          lua_statusbar_c = { { 'filename' }, { 'aerial' } }
+        else
+          lua_statusbar_c = { { 'filename' } }
+        end
+        require('lualine').setup({ sections = { lualine_c = lua_statusbar_c } })
+      end, {})
+
+      vim.keymap.set("n", '<leader>ia', '<cmd>AerialLualineToggle<CR>', { desc = 'Toggle aerial lualine context' })
+
       pcall(require('telescope').load_extension, 'aerial')
     end
+  },
+  {
+    "SmiteshP/nvim-navic",
+    dependencies = {
+      { "SmiteshP/nvim-navbuddy" },
+    },
+    lazy = true,
+    init = function()
+      local navicLualine = false
+      local lua_winbar_c = {}
+      local navic_config = {
+        "navic",
+        color_correction = nil,
+        navic_opts = {
+          separator = " ⇢ ",
+          highlight = true,
+          depth_limit = 9,
+        }
+      }
+
+      vim.api.nvim_create_user_command("NavicLualineToggle", function()
+        navicLualine = not navicLualine
+        if navicLualine then
+          lua_winbar_c = { navic_config }
+        else
+          lua_winbar_c = {}
+        end
+        require('lualine').setup({ winbar = { lualine_c = lua_winbar_c } })
+      end, {})
+
+      vim.keymap.set("n", '<leader>in', '<cmd>NavicLualineToggle<CR>', { desc = 'Toggle navic winbar context' })
+
+      vim.api.nvim_create_autocmd("LspAttach", {
+        group = vim.api.nvim_create_augroup("navic-lspattach", { clear = true }),
+        callback = function(args)
+          require("nvim-navic").setup({
+            lazy_update_context = true
+          })
+
+          local buffer = args.buf
+          local client = vim.lsp.get_client_by_id(args.data.client_id)
+
+          if client and client.supports_method("textDocument/documentSymbol") then
+            require("nvim-navic").attach(client, buffer)
+            require('nvim-navbuddy').attach(client, buffer)
+          end
+        end,
+      })
+    end,
   },
   {
     'gelguy/wilder.nvim',
@@ -610,15 +683,6 @@ local plugins = {
     end
   },
   { "lewis6991/satellite.nvim", opts = {} },
-  {
-    "ryanmsnyder/toggleterm-manager.nvim",
-    dependencies = {
-      "akinsho/nvim-toggleterm.lua",
-      "nvim-telescope/telescope.nvim",
-      "nvim-lua/plenary.nvim"
-    },
-    config = true
-  },
   {
     "monaqa/dial.nvim",
     config = function()
