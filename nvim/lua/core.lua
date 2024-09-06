@@ -106,7 +106,6 @@ local plugins = {
   {
     -- NOTE telescope requires ripgrep for Live Grep
     "nvim-telescope/telescope.nvim",
-    -- branch = '0.1.x',
     version = false,
     event = 'VimEnter',
     dependencies = {
@@ -118,22 +117,7 @@ local plugins = {
         build = vim.fn.executable("make") == 1 and "make"
           or 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build'
       },
-      {
-        "ahmedkhalf/project.nvim",
-        event = "VeryLazy",
-        cmd = 'ProjectRoot',
-        opts = {
-          manual_mode = true,
-          detection_methods = { 'pattern' },
-          patterns = { '.git' }
-        },
-        config = function(_, opts)
-          require("project_nvim").setup(opts)
-        end
-      },
       { 'nvim-telescope/telescope-file-browser.nvim' },
-      { 'debugloop/telescope-undo.nvim' },
-      { "AckslD/nvim-neoclip.lua", opts = {} },
     },
     config = function()
       local telescope = require('telescope')
@@ -184,6 +168,10 @@ local plugins = {
           }
         },
         pickers = {
+          find_files = {
+            file_ignore_patterns = { 'node_modules', '.git', '.venv' },
+            hidden = true,
+          },
           live_grep = {
             layout_config = { width = 0.99 }
           },
@@ -195,6 +183,10 @@ local plugins = {
           },
           ['live_grep_args'] = {
             auto_quoting = false,
+            file_ignore_patterns = { 'node_modules', '.git', '.venv' },
+            additional_args = function()
+              return { '--hidden' }
+            end,
             mappings = {
               i = {
                 ['<C-k><C-k>'] = lga_actions.quote_prompt(),
@@ -210,11 +202,7 @@ local plugins = {
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
       pcall(require('telescope').load_extension, 'live_grep_args')
-      pcall(require('telescope').load_extension, 'projects')
-      pcall(require('telescope').load_extension, 'aerial')
       pcall(require('telescope').load_extension, 'file_browser')
-      pcall(require('telescope').load_extension, 'undo')
-      pcall(require('telescope').load_extension, 'neoclip')
 
       local builtin = require("telescope.builtin")
 

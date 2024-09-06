@@ -107,6 +107,38 @@ local plugins = {
   { "wsdjeg/vim-fetch" },
   { 'bfrg/vim-cpp-modern' },
 
+  -----------------------
+  -- Telescope extensions
+  {
+    "ahmedkhalf/project.nvim",
+    enabled = true,
+    event = "VeryLazy",
+    cmd = 'ProjectRoot',
+    opts = {
+      -- run :ProjectRoot to register a project
+      manual_mode = true,
+      detection_methods = { 'pattern' },
+      patterns = { '.git' }
+    },
+    config = function(_, opts)
+      require("project_nvim").setup(opts)
+      pcall(require('telescope').load_extension, 'projects')
+    end
+  },
+  {
+    "AckslD/nvim-neoclip.lua",
+    config = function()
+      require("neoclip").setup({})
+      pcall(require('telescope').load_extension, 'neoclip')
+    end
+  },
+  {
+    'debugloop/telescope-undo.nvim',
+    config = function()
+      pcall(require('telescope').load_extension, 'undo')
+    end
+  },
+
   --------------------
   -- unsorted plugins
   {
@@ -214,7 +246,13 @@ local plugins = {
   },
 
   { 'stevearc/dressing.nvim', enabled = false, opts = {} },
-  { 'stevearc/aerial.nvim', opts = {} },
+  {
+    'stevearc/aerial.nvim',
+    config = function()
+      require('aerial').setup()
+      pcall(require('telescope').load_extension, 'aerial')
+    end
+  },
   {
     'gelguy/wilder.nvim',
     enabled = false,
