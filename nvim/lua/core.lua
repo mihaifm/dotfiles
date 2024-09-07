@@ -644,12 +644,39 @@ local plugins = {
       { "hrsh7th/cmp-cmdline" },
       { "andersevenrud/cmp-tmux" },
       { "lukas-reineke/cmp-rg" },
-      { "onsails/lspkind.nvim" },
     },
     config = function()
       vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
 
       local cmp = require("cmp")
+
+      local kind_icons = {
+        Text = '󰉿',
+        Method = 'm',
+        Function = '󰊕',
+        Constructor = '',
+        Field = '',
+        Variable = '󰆧',
+        Class = '󰌗',
+        Interface = '',
+        Module = '',
+        Property = '',
+        Unit = '',
+        Value = '󰎠',
+        Enum = '',
+        Keyword = '󰌋',
+        Snippet = '',
+        Color = '󰏘',
+        File = '󰈙',
+        Reference = '',
+        Folder = '󰉋',
+        EnumMember = '',
+        Constant = '󰇽',
+        Struct = '',
+        Event = '',
+        Operator = '󰆕',
+        TypeParameter = '󰊄',
+      }
 
       cmp.setup({
         completion = {
@@ -687,16 +714,19 @@ local plugins = {
         },
         ---@diagnostic disable-next-line
         formatting = {
-          format = require('lspkind').cmp_format({
-            mode = 'symbol_text',
-            show_labelDetails = true,
-            menu = {
-              buffer = 'buf',
+          fields = { 'kind', 'abbr', 'menu' },
+          format = function(entry, vim_item)
+            vim_item.kind = string.format('%s ', kind_icons[vim_item.kind])
+            vim_item.menu = ({
+              snippets = 'snippet',
               nvim_lsp = 'LSP',
+              buffer = 'buf',
+              path = 'path',
               tmux = 'tmux',
-              rg = 'rg'
-            }
-          })
+              rg = 'rg',
+            })[entry.source.name]
+            return vim_item
+          end,
         },
         experimental = {
           ghost_text = {

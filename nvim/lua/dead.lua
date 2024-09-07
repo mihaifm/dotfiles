@@ -11,6 +11,28 @@ local plugins = {
     end,
   },
   {
+    "onsails/lspkind.nvim",
+    enabled = false,
+    config = function()
+      require('cmp').setup({
+        ---@diagnostic disable-next-line
+        formatting = {
+          fields = { 'abbr', 'kind', 'menu' },
+          format = require('lspkind').cmp_format({
+            mode = 'symbol_text',
+            show_labelDetails = true,
+            menu = {
+              buffer = 'buf',
+              nvim_lsp = 'LSP',
+              tmux = 'tmux',
+              rg = 'rg'
+            }
+          })
+        },
+      })
+    end
+  },
+  {
     'folke/noice.nvim',
     enabled = false,
     event = "VeryLazy",
