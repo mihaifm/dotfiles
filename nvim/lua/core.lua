@@ -661,6 +661,7 @@ local plugins = {
           { name = "rg", max_item_count = 3, keyword_length = 5, group_index = 1 },
           { name = "lazydev", group_index = 0 },
         },
+        ---@diagnostic disable-next-line
         formatting = {
           format = require('lspkind').cmp_format({
             mode = 'symbol_text',
@@ -820,6 +821,7 @@ local plugins = {
         end
       end, { desc = 'Peek fold' })
 
+      ---@diagnostic disable-next-line
       require('ufo').setup({
         preview = {
           win_config = {
