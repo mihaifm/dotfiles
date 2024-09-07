@@ -218,5 +218,6 @@ local plugins = {}
 plugins = vim.list_extend(plugins, require('core'))
 plugins = vim.list_extend(plugins, require('slim'))
 plugins = vim.list_extend(plugins, require('fat'))
+plugins = vim.list_extend(plugins, require('dead'))
 
 require("lazy").setup(plugins, lazyopts)
