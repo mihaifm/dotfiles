@@ -333,6 +333,21 @@ local plugins = {
           }
         },
       })
+
+      local lualineFullPath = false
+      vim.api.nvim_create_user_command("ToggleLualineFullPath", function()
+        lualineFullPath = not lualineFullPath
+        local lualine_c = {}
+
+        if lualineFullPath then
+          lualine_c = { 'filename', path = 2 }
+        else
+          lualine_c = { 'filename', path = 0 }
+        end
+        require('lualine').setup({ sections = { lualine_c = { lualine_c } } })
+      end, {})
+
+      vim.keymap.set("n", '<leader>ul', '<cmd>ToggleLualineFullPath<CR>', { desc = 'Toggle lualine full path' })
     end,
   },
   {
