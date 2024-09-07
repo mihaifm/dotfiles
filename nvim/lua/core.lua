@@ -467,7 +467,16 @@ local plugins = {
         branch = 'v2.x'
       },
       { 'williamboman/mason-lspconfig.nvim', },
-      { 'j-hui/fidget.nvim', opts = {} },
+      {
+        'j-hui/fidget.nvim',
+        config = function()
+          require('fidget').setup {}
+
+          vim.cmd("Fidget suppress")
+
+          vim.keymap.set('n', '<space>F', '<cmd>Fidget suppress<CR>', { desc = 'Toggle Fidget notifications' })
+        end
+      },
       { 'folke/neoconf.nvim', cmd = 'Neoconf' },
       {
         "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
