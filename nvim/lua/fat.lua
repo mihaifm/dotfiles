@@ -175,7 +175,14 @@ local plugins = {
       { "<leader>xL", "<cmd>Trouble loclist toggle<cr>", desc = "Location List (Trouble)" },
       { "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List (Trouble)" },
     },
-    opts = {}
+    cmd = { "Trouble" },
+    opts = {},
+    init = function()
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({ { "<leader>x", group = "Trouble" } })
+      end
+    end
   },
   {
     'stevearc/conform.nvim',
@@ -280,9 +287,14 @@ local plugins = {
     config = function()
       require('mini.visits').setup({})
 
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({ { '<leader>ev', group = 'MiniVisits' } })
+      end
+
       local map_vis = function(keys, call, desc)
         local rhs = '<Cmd>lua MiniVisits.' .. call .. '<CR>'
-        vim.keymap.set('n', '<Leader>' .. keys, rhs, { desc = desc })
+        vim.keymap.set('n', '<Leader>e' .. keys, rhs, { desc = desc })
       end
 
       map_vis('vp', 'select_path()', 'Select path')
@@ -531,6 +543,11 @@ local plugins = {
         }
       })
 
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({ { "<leader>z", group = "Fzf" } })
+      end
+
       local fzfleader = "<leader>z"
 
       vim.keymap.set("n", fzfleader .. 'z', "<cmd>FzfLua<CR>", { desc = 'Builtins' })
@@ -584,6 +601,11 @@ local plugins = {
           highlight_grey='Comment'
         },
       })
+
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({ { "<leader>ea", group = "Autopairs" } })
+      end
 
       vim.keymap.set("n", "<leader>eat", function()
         require("nvim-autopairs").toggle()

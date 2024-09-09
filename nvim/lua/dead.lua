@@ -146,9 +146,10 @@ local plugins = {
     config = function()
       local Hydra = require("hydra")
 
-      require('which-key').add({
-        { "<leader>eh", desc = "Hydra Options" },
-      })
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({ { "<leader>eh", desc = "Hydra Options" } })
+      end
 
       local hint =
         " ^ ^        Options \n" ..

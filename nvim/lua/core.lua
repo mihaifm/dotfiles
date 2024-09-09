@@ -44,8 +44,19 @@ local plugins = {
       vim.g.BufstopAutoSpeedToggle = 1
       vim.g.BufstopSplit = 'topleft'
 
-      vim.keymap.set('n', '<leader>b', function() vim.cmd('Bufstop') end,
-      { desc = 'Bufstop' })
+      vim.keymap.set('n', '<leader>b', function() vim.cmd('Bufstop') end, { desc = 'Bufstop' })
+
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({
+          { "<leader>1", hidden = true },
+          { "<leader>2", hidden = true },
+          { "<leader>3", hidden = true },
+          { "<leader>4", hidden = true },
+          { "<leader>5", hidden = true },
+          { "<leader>6", hidden = true },
+        })
+      end
     end
   },
   {
@@ -61,45 +72,14 @@ local plugins = {
       })
 
       wk.add({
-        { "<C-w>", group = "Window" },
-        { "s", group = "Flash search" },
-
         { "<space>", group = "LSP" },
-        { "<space>g", group = "Goto" },
-        { "<space>gD", desc = "Goto declaration" },
-        { "<space>gd", desc = "Goto definition" },
-        { "<space>gi", desc = "Goto implementation" },
-        { "<space>gr", desc = "Goto references" },
-        { "<space>gt", desc = "Goto type definition" },
-        { "<space>w", group = "Workspace folders" },
-        { "<space>wa", desc = "Add document folder" },
-        { "<space>wl", desc = "List document folders" },
-        { "<space>wr", desc = "Remove document folder" },
-        { "<space>s", group = "View symbols" },
-        { "<space>sd", desc = "Document symbols" },
-        { "<space>sw", desc = "Workspace symbols" },
-        { "<space>K", desc = "Hover documentation" },
-        { "<space>f", desc = "Format code" },
-        { "<space>r", desc = "Rename variable" },
-        { "<space>I", desc = "Toggle inlay hints" },
-        { "<space>d", group = "Diagnostics" },
-        { "<space>dl", desc = "Toggle virtual diagnostic lines" },
-        { "<space>do", desc = "Open diagnostics for current line" },
-
         { "<leader>", group = "Leader" },
-        { "<leader>t", group = "Telescope" },
         { "<leader>f", group = "File" },
         { "<leader>g", group = "Git" },
         { "<leader>i", group = "Indent/Context" },
-        { "<leader>p", group = "Dap" },
         { "<leader>s", group = "Session" },
         { "<leader>u", group = "UI" },
-        { "<leader>v", group = "MiniVisits" },
-        { "<leader>x", group = "Trouble" },
-        { "<leader>z", group = "Fzf" },
         { "<leader>e", group = "Extras" },
-        { "<leader>et", group = "ToggleTerm" },
-        { "<leader>ea", group = "Autopairs" },
       })
     end
   },
@@ -207,6 +187,11 @@ local plugins = {
       local builtin = require("telescope.builtin")
 
       local teleleader = "<leader>t"
+
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({ { teleleader, group = "Telescope" } })
+      end
 
       vim.keymap.set("n", teleleader .. 'f', function()
           builtin.find_files({ hidden = true, no_ignore = true })
@@ -398,6 +383,14 @@ local plugins = {
       { "<C-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash search" },
       { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
     },
+    config = function(_, opts)
+      require("flash").setup(opts)
+
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({ { "s", group = "Flash search" } })
+      end
+    end
   },
   {
     -- NOTE open nvim from the VS2022 Command Prompt to install parsers on Windows
@@ -529,6 +522,16 @@ local plugins = {
           end
 
           local lspleader = '<space>'
+
+          local has_wk, wk = pcall(require, 'which-key')
+          if has_wk then
+            wk.add({
+              { lspleader .. "d", group = "Diagnostics" },
+              { lspleader .. "s", group = "View symbols" },
+              { lspleader .. "w", group = "Workspace folders" },
+              { lspleader .. "g", group = "Goto" }
+            })
+          end
 
           map("n", lspleader .. 'gD', vim.lsp.buf.declaration, 'Goto declaration')
 
@@ -782,13 +785,18 @@ local plugins = {
         end
       })
 
-      local togkey = '<leader>et'
+      local togleader = '<leader>et'
 
-      vim.keymap.set('n', togkey .. 'f', "<Cmd>ToggleTerm direction=float<CR>",
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({ { togleader, group = "ToggleTerm" } })
+      end
+
+      vim.keymap.set('n', togleader .. 'f', "<Cmd>ToggleTerm direction=float<CR>",
         { desc = "ToggleTerm float" })
-      vim.keymap.set('n', togkey .. 'h', "<Cmd>ToggleTerm size=10 direction=horizontal<CR>",
+      vim.keymap.set('n', togleader .. 'h', "<Cmd>ToggleTerm size=10 direction=horizontal<CR>",
         { desc = "ToggleTerm horizontal split" })
-      vim.keymap.set('n', togkey .. 'v', "<Cmd>ToggleTerm size=80 direction=vertical<CR>",
+      vim.keymap.set('n', togleader .. 'v', "<Cmd>ToggleTerm size=80 direction=vertical<CR>",
         { desc = "ToggleTerm vertical split" })
 
       require("toggleterm").setup({
