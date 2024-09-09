@@ -302,13 +302,6 @@ local plugins = {
         options = {
           section_separators = { left = '', right = '' },
           component_separators = { left = '·', right = '·' },
-          disabled_filetypes = {
-            statusline = {
-              'vimpanel',
-              'dap-repl',
-              'dapui_console', 'dapui_watches', 'dapui_stacks', 'dapui_breakpoints', 'dapui_scopes'
-            }
-          }
         },
         sections = {
           lualine_b = {
