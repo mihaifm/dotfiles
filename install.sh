@@ -294,23 +294,23 @@ fi
 
 if [[ $1 == "bootstrap" ]]; then
 
+  # Tmux
+  git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+  ~/.tmux/plugins/tpm/scripts/install_plugins.sh
+
   # Vim
   vim +PlugInstall! +qa
 
   # Neovim
-  (source scl_source enable devtoolset-12 && \
-   nvim --headless \
-     +"Lazy! install" \
-     +"TSInstallSync! c cpp lua vim vimdoc javascript python html bash markdown markdown_inline"  \
+  (source scl_source enable devtoolset-12 && nvim --headless +"Lazy! install" +"qa")
+
+  (source scl_source enable devtoolset-12 && nvim --headless \
+     +"TSInstallSync! c cpp lua vim vimdoc query javascript python html bash markdown markdown_inline" \
      +"qa")
 
   (nvim --headless +"MasonInstall lua-language-server" +"qa")
 
   (sed -i "s:$HOME:~:g" ~/.local/share/nvim/mason/packages/lua-language-server/lua-language-server)
-
-  # Tmux
-  git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-  ~/.tmux/plugins/tpm/scripts/install_plugins.sh
 
   exit
 fi

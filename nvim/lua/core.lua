@@ -397,11 +397,13 @@ local plugins = {
     -- NOTE for Redhat run `source scl_source enable devtoolset-12`
     "nvim-treesitter/nvim-treesitter",
     enabled = true,
+    lazy = false,
     version = false,
-    build = ":TSUpdate",
+    -- build = ":TSUpdate",
     config = function()
       require("nvim-treesitter.configs").setup({
-        ensure_installed = { "c", "cpp", "lua", "vim", "vimdoc", "javascript", "python", "html", "bash", "markdown", "markdown_inline" },
+        -- ensure_installed = { "c", "cpp", "lua", "vim", "vimdoc", "query", "javascript", "python", "html", "bash", "markdown", "markdown_inline" },
+        ensure_installed = { },
         auto_install = false,
         sync_install = false,
         ignore_install = {},
