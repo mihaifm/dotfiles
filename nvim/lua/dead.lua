@@ -108,6 +108,11 @@ local plugins = {
     end
   },
   {
+    'echasnovski/mini.surround',
+    enabled = false,
+    opts = {}
+  },
+  {
     'echasnovski/mini.completion',
     enabled = false,
     version = false,
@@ -235,6 +240,25 @@ local plugins = {
           { '<Esc>', nil, { exit = true } }
         }
       })
+    end
+  },
+  { 'folke/neoconf.nvim', cmd = 'Neoconf' },
+  {
+    'NeogitOrg/neogit',
+    enabled = false, -- alpha software
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "sindrets/diffview.nvim",
+      "nvim-telescope/telescope.nvim"
+    },
+    opts = {
+      signs = {
+        section = { "", "" },
+        item = { "", "" }
+      }
+    },
+    config = function(_, opts)
+      require('neogit').setup(opts)
     end
   },
 }
