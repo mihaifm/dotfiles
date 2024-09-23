@@ -261,6 +261,34 @@ local plugins = {
       require('neogit').setup(opts)
     end
   },
+  {
+    "arsham/indent-tools.nvim",
+    enabled = false,
+    keys = { "]i", "[i", { mode = "v", "ii" }, { mode = "o", "ii" } },
+    dependencies = { "arsham/arshlib.nvim" },
+    config = function()
+      require("indent-tools").config {
+        normal = { repeatable = false }
+      }
+    end
+  },
+  {
+    'chentoast/marks.nvim',
+    enabled = false,
+    opts = {}
+  },
+  {
+    'rcarriga/nvim-notify',
+    enabled = false,
+    opts = {
+      stages = 'fade_in_slide_out'
+    },
+    init = function()
+      table.insert(ClearFunctions, function()
+        require('notify').dismiss({ silent = true, pending = true })
+      end)
+    end
+  },
 }
 
 return plugins

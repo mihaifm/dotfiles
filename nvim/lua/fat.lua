@@ -10,16 +10,23 @@ local plugins = {
       -- hide_fillchars = true,
       terminal_colors = true,
     },
+    event = "User LazyColorScheme"
   },
-  { "maxmx03/fluoromachine.nvim" },
-  { 'Mofiqul/dracula.nvim' },
+  {
+    "maxmx03/fluoromachine.nvim",
+    event = "User LazyColorScheme"
+  },
+  {
+    'Mofiqul/dracula.nvim',
+    event = "User LazyColorScheme"
+  },
   {
     'AstroNvim/astrotheme',
-    opts = { palette = "astrojupiter" }
+    opts = { palette = "astrojupiter" },
+    event = "User LazyColorScheme"
   },
   {
     "catppuccin/nvim",
-    lazy = true,
     name = "catppuccin",
     opts = {
       integrations = {
@@ -58,10 +65,15 @@ local plugins = {
         neogit = true,
       },
     },
+    event = "User LazyColorScheme"
   },
-  { 'projekt0n/github-nvim-theme' },
+  {
+    'projekt0n/github-nvim-theme',
+    event = "User LazyColorScheme"
+  },
   {
     "ellisonleao/gruvbox.nvim",
+    event = "User LazyColorScheme",
     config = function()
       vim.api.nvim_create_autocmd('ColorScheme', {
         group = vim.api.nvim_create_augroup('gruvbox-colorscheme', { clear = true }),
@@ -73,17 +85,41 @@ local plugins = {
       })
     end
   },
-  { "savq/melange-nvim" },
-  { 'ramojus/mellifluous.nvim' },
-  { 'mellow-theme/mellow.nvim' },
-  { "rose-pine/neovim", name = "rose-pine", opts = {} },
-  { "EdenEast/nightfox.nvim" },
-  { "olivercederborg/poimandres.nvim", opts = {} },
+  {
+    "savq/melange-nvim",
+    event = "User LazyColorScheme"
+  },
+  {
+    'ramojus/mellifluous.nvim',
+    event = "User LazyColorScheme"
+  },
+  {
+    'mellow-theme/mellow.nvim',
+    event = "User LazyColorScheme"
+  },
+  {
+    "rose-pine/neovim",
+    name = "rose-pine",
+    opts = {},
+    event = "User LazyColorScheme"
+  },
+  {
+    "EdenEast/nightfox.nvim",
+    event = "User LazyColorScheme"
+  },
+  {
+    "olivercederborg/poimandres.nvim",
+    opts = {},
+    event = "User LazyColorScheme"
+  },
 
   -----------------------
   -- vimscript survivors
 
-  { "tpope/vim-fugitive" },
+  {
+    "tpope/vim-fugitive",
+    cmd = "Git"
+  },
   {
     "dstein64/vim-startuptime",
     cmd = "StartupTime",
@@ -91,16 +127,27 @@ local plugins = {
       vim.g.startuptime_tries = 1
     end
   },
-  { "azabiong/vim-highlighter", lazy = false },
+  {
+    "azabiong/vim-highlighter",
+    keys = {
+      { "f<CR>", desc = 'Highlighter set' },
+      { "f<BS>", desc = 'Highlighter erase' },
+      { "f<Tab", desc = 'Highlighter find' },
+      { "f<C-L>", desc = 'Highlighter clear' },
+      { "t<CR>", desc = 'Highlighter set positional' }
+    }
+  },
   { "wsdjeg/vim-fetch" },
-  { 'bfrg/vim-cpp-modern' },
+  {
+    'bfrg/vim-cpp-modern',
+    ft = { "c", "cpp" }
+  },
 
   -----------------------
   -- Telescope extensions
   {
     "ahmedkhalf/project.nvim",
     enabled = true,
-    event = "VeryLazy",
     cmd = 'ProjectRoot',
     opts = {
       -- run :ProjectRoot to register a project
@@ -115,6 +162,7 @@ local plugins = {
   },
   {
     "AckslD/nvim-neoclip.lua",
+    event = 'User LazyTelescope',
     config = function()
       require("neoclip").setup({})
       pcall(require('telescope').load_extension, 'neoclip')
@@ -122,12 +170,14 @@ local plugins = {
   },
   {
     'debugloop/telescope-undo.nvim',
+    event = 'User LazyTelescope',
     config = function()
       pcall(require('telescope').load_extension, 'undo')
     end
   },
   {
     "ryanmsnyder/toggleterm-manager.nvim",
+    event = 'User LazyTelescope',
     dependencies = {
       "akinsho/nvim-toggleterm.lua",
       "nvim-telescope/telescope.nvim",
@@ -140,6 +190,7 @@ local plugins = {
   -- unsorted plugins
   {
     "folke/zen-mode.nvim",
+    cmd = 'ZenMode',
     opts = {
       window = {
         options = {
@@ -192,15 +243,36 @@ local plugins = {
         javascript = { "prettierd", "prettier", stop_after_first = true },
       },
     },
+    cmd = "FormatCode",
+    keys = {
+      { mode = {'n', 'x'}, '<space>f', ':FormatCode<CR>', desc = 'Format code' }
+    },
+    config = function()
+      vim.api.nvim_create_user_command("FormatCode", function(args)
+        local range = nil
+        if args.count ~= -1 then
+          local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
+          range = {
+            ["start"] = { args.line1, 0 },
+            ["end"] = { args.line2, end_line:len() },
+          }
+        end
+        require("conform").format({ async = true, lsp_format = "fallback", range = range })
+      end, { range = true })
+    end
   },
   {
     'stevearc/aerial.nvim',
+    cmd = { 'Aerial', 'ToggleAerialLualine' },
+    keys = {
+      { '<leader>ia', '<cmd>ToggleAerialLualine<CR>',  desc = 'Toggle Aerial Lualine context' }
+    },
     config = function()
       require('aerial').setup()
 
       local aerialLualine = false
       local lua_statusbar_c = {}
-      vim.api.nvim_create_user_command("AerialLualineToggle", function()
+      vim.api.nvim_create_user_command("ToggleAerialLualine", function()
         aerialLualine = not aerialLualine
         if aerialLualine then
           lua_statusbar_c = { { 'filename' }, { 'aerial' } }
@@ -210,18 +282,16 @@ local plugins = {
         require('lualine').setup({ sections = { lualine_c = lua_statusbar_c } })
       end, {})
 
-      vim.keymap.set("n", '<leader>ia', '<cmd>AerialLualineToggle<CR>', { desc = 'Toggle aerial lualine context' })
-
       pcall(require('telescope').load_extension, 'aerial')
     end
   },
   {
     "SmiteshP/nvim-navic",
+    event = 'LspAttach',
     dependencies = {
       { "SmiteshP/nvim-navbuddy" },
     },
-    lazy = true,
-    init = function()
+    config = function()
       local navicLualine = false
       local lua_winbar_c = {}
       local navic_config = {
@@ -234,7 +304,7 @@ local plugins = {
         }
       }
 
-      vim.api.nvim_create_user_command("NavicLualineToggle", function()
+      vim.api.nvim_create_user_command("ToggleNavicLualine", function()
         navicLualine = not navicLualine
         if navicLualine then
           lua_winbar_c = { navic_config }
@@ -244,7 +314,7 @@ local plugins = {
         require('lualine').setup({ winbar = { lualine_c = lua_winbar_c } })
       end, {})
 
-      vim.keymap.set("n", '<leader>in', '<cmd>NavicLualineToggle<CR>', { desc = 'Toggle navic winbar context' })
+      vim.keymap.set("n", '<leader>in', '<cmd>ToggleNavicLualine<CR>', { desc = 'Toggle Navic winbar context' })
 
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("navic-lspattach", { clear = true }),
@@ -270,20 +340,28 @@ local plugins = {
   },
   {
     'echasnovski/mini.files',
+    keys = {
+      {
+        '<leader>fc', function()
+          require('mini.files').open(vim.api.nvim_buf_get_name(0), true)
+        end, desc = 'MiniFiles open directory of current files'
+      },
+      {
+        '<leader>fo', function()
+          require('mini.files').open(vim.uv.cwd(), true)
+        end, desc = 'MiniFiles open current directory'
+      },
+    },
     version = false,
-    config = function ()
-      local mf = require('mini.files')
-      mf.setup({})
-      vim.keymap.set( 'n', '<leader>fc', function()
-        mf.open(vim.api.nvim_buf_get_name(0), true)
-      end, { desc = 'MiniFiles open directory of current files' })
-
-      vim.keymap.set('n', '<leader>fo', function()
-        mf.open(vim.uv.cwd(), true)
-      end, { desc = 'MiniFiles open current directory' })
-    end
   },
-  { 'echasnovski/mini.splitjoin', version = false, opts = {} },
+  {
+    'echasnovski/mini.splitjoin',
+    version = false,
+    keys = {
+      { 'gS', desc = 'Toggle arguments' }
+    },
+    opts = {}
+  },
   {
     'echasnovski/mini.visits',
     version = false,
@@ -310,7 +388,11 @@ local plugins = {
   {
     'akinsho/bufferline.nvim',
     enabled = true,
-    event = 'VeryLazy',
+    cmd = { 'ToggleTabline', 'BufferLinePick' },
+    keys = {
+      { '<leader>ub', '<cmd>ToggleTabline<CR>', desc = 'Toggle tabline/bufferline' },
+      { '<leader>up', '<cmd>BufferLinePick<CR>', desc = 'Bufferline pick' }
+    },
     version = "*",
     dependencies = 'nvim-tree/nvim-web-devicons',
     config = function()
@@ -324,28 +406,14 @@ local plugins = {
           vim.cmd('set showtabline=0')
         end
       end, {})
-
-      vim.keymap.set("n", '<leader>ub', '<cmd>ToggleTabline<CR>', { desc = 'Toggle tabline/bufferline' })
-      vim.keymap.set("n", '<leader>up', '<cmd>BufferLinePick<CR>', { desc = 'BufferLine Pick' })
-    end
-  },
-  {
-    'rcarriga/nvim-notify',
-    opts = {
-      stages = 'fade_in_slide_out'
-    },
-    init = function()
-      table.insert(ClearFunctions, function()
-        require('notify').dismiss({ silent = true, pending = true })
-      end)
     end
   },
   {
     "ggandor/leap.nvim",
     enabled = true,
-    config = function()
-      vim.keymap.set('n', '<M-s>', '<Plug>(leap)')
-    end
+    keys = {
+      { '<M-s>', '<Plug>(leap)', desc = 'Leap' }
+    },
   },
   {
     "hedyhli/outline.nvim",
@@ -354,6 +422,9 @@ local plugins = {
   },
   {
     'norcalli/nvim-colorizer.lua',
+    keys = {
+      { '<leader>uc', '<cmd>ColorizerToggle<CR>', desc = 'Colorizer' }
+    },
     config = function()
       require('colorizer').setup({
         '*'
@@ -362,19 +433,20 @@ local plugins = {
   },
   {
     'nmac427/guess-indent.nvim',
-    config = function()
-      require('guess-indent').setup({ auto_cmd = false })
-    end
+    cmd = 'GuessIndent',
+    opts = {
+      auto_cmd = false
+    }
   },
   {
     -- NOTE requires the nnn external binary
     "luukvbaal/nnn.nvim",
+    cmd = { 'NnnExplorer', 'NnnPicker' },
     cond = function () return vim.fn.has("win32") == 0 end,
     opts = {}
   },
   {
     "uga-rosa/ccc.nvim",
-    event = { "InsertEnter" },
     cmd = { "CccPick", "CccConvert", "CccHighlighterEnable", "CccHighlighterDisable", "CccHighlighterToggle" },
     opts = {
       highlighter = {
@@ -387,7 +459,11 @@ local plugins = {
       if opts.highlighter and opts.highlighter.auto_enable then vim.cmd.CccHighlighterEnable() end
     end,
   },
-  { "kevinhwang91/nvim-bqf", ft = "qf", opts = {} },
+  {
+    "kevinhwang91/nvim-bqf",
+    ft = "qf",
+    opts = {}
+  },
   {
     'sindrets/diffview.nvim',
     cmd = { "DiffviewOpen", "DiffviewFileHistory" },
@@ -400,39 +476,34 @@ local plugins = {
     }
   },
   {
-    "arsham/indent-tools.nvim",
-    dependencies = { "arsham/arshlib.nvim" },
-    config = function()
-      require("indent-tools").config {
-        normal = { repeatable = false }
-      }
-    end
-  },
-  {
     "chrisbra/csv.vim",
     ft = { "csv" },
     init = function()
       vim.g.csv_no_conceal = 1
     end
   },
-  { 'chentoast/marks.nvim', opts = {} },
   {
     'chrisgrieser/nvim-various-textobjs',
+    keys = {
+      { mode = { "o", "x" }, "a_", '<cmd>lua require("various-textobjs").subword("outer")<CR>' },
+      { mode = { "o", "x" }, "i_", '<cmd>lua require("various-textobjs").subword("inner")<CR>' }
+    },
     config = function()
       require("various-textobjs").setup ({ useDefaultKeymaps = false })
-
-      vim.keymap.set({ "o", "x" }, "a_", '<cmd>lua require("various-textobjs").subword("outer")<CR>')
-      vim.keymap.set({ "o", "x" }, "i_", '<cmd>lua require("various-textobjs").subword("inner")<CR>')
     end
   },
   {
     'karb94/neoscroll.nvim',
+    cmd = 'ToggleNeoscroll',
+    keys = {
+      { '<leader>us', '<cmd>ToggleNeoscroll<CR>', desc = 'Toggle smooth scrolling' }
+    },
     config = function()
       require('neoscroll').setup({ mappings = {} })
 
       local neoscrollToggled = false
 
-      local function toggleNeoscroll()
+      vim.api.nvim_create_user_command("ToggleNeoscroll", function()
         neoscrollToggled = not neoscrollToggled
 
         if neoscrollToggled then
@@ -445,8 +516,12 @@ local plugins = {
             }
           })
 
-          vim.keymap.set("n", "<C-j>", "<Cmd>lua require('neoscroll').scroll(3, true, 30)<CR>", { desc = 'Scroll up' })
-          vim.keymap.set("n", "<C-k>", "<Cmd>lua require('neoscroll').scroll(-3, true, 30)<CR>", { desc = 'Scroll down' })
+          vim.keymap.set("n", "<C-j>", function()
+            require('neoscroll').scroll(3, { move_cursor = true, duration = 30 })
+          end, { desc = 'Scroll up' })
+          vim.keymap.set("n", "<C-k>", function()
+            require('neoscroll').scroll(-3, { move_cursor = true, duration = 30 })
+          end, { desc = 'Scroll down' })
         else
           for _,v in pairs({
             '<C-u>', '<C-d>',
@@ -462,40 +537,55 @@ local plugins = {
           vim.keymap.set('n', '<C-j>', '3j3<C-e>', { desc = 'Scroll up' })
           vim.keymap.set('n', '<C-k>', '3k3<C-y>', { desc = 'Scroll down' })
         end
-      end
-
-      vim.keymap.set("n", '<leader>us', toggleNeoscroll, { desc = 'Toggle smooth scrolling' })
+      end, {})
     end
   },
   { "lewis6991/satellite.nvim", opts = {} },
   {
     "monaqa/dial.nvim",
+    keys = {
+      {
+        "<C-a>", function()
+          require("dial.map").manipulate("increment", "normal")
+        end, { desc = 'Increment' }
+      },
+      {
+        "<C-x>", function()
+          require("dial.map").manipulate("decrement", "normal")
+        end, { desc = 'Decrement' }
+      },
+      {
+        "g<C-a>", function()
+          require("dial.map").manipulate("increment", "gnormal")
+        end, { desc = 'Increment each line' }
+      },
+      {
+        "g<C-x>", function()
+          require("dial.map").manipulate("decrement", "gnormal")
+        end, { desc = 'Decrement each line' }
+      },
+      {
+        mode = 'v', "<C-a>", function()
+          require("dial.map").manipulate("increment", "visual")
+        end, { desc = 'Increment' }
+      },
+      {
+        mode = "v", "<C-x>", function()
+          require("dial.map").manipulate("decrement", "visual")
+        end, { desc = 'Decrement' }
+      },
+      {
+        mode = "v", "g<C-a>", function()
+          require("dial.map").manipulate("increment", "gvisual")
+        end, { desc = 'Increment each line' }
+      },
+      {
+        mode = "v", "g<C-x>", function()
+          require("dial.map").manipulate("decrement", "gvisual")
+        end, { desc = 'Decrement each line' }
+      },
+    },
     config = function()
-      vim.keymap.set("n", "<C-a>", function()
-        require("dial.map").manipulate("increment", "normal")
-      end, { desc = 'Increment' })
-      vim.keymap.set("n", "<C-x>", function()
-        require("dial.map").manipulate("decrement", "normal")
-      end, { desc = 'Decrement' })
-      vim.keymap.set("n", "g<C-a>", function()
-        require("dial.map").manipulate("increment", "gnormal")
-      end, { desc = 'Increment each line' })
-      vim.keymap.set("n", "g<C-x>", function()
-        require("dial.map").manipulate("decrement", "gnormal")
-      end, { desc = 'Decrement each line' })
-      vim.keymap.set("v", "<C-a>", function()
-        require("dial.map").manipulate("increment", "visual")
-      end, { desc = 'Increment' })
-      vim.keymap.set("v", "<C-x>", function()
-        require("dial.map").manipulate("decrement", "visual")
-      end, { desc = 'Decrement' })
-      vim.keymap.set("v", "g<C-a>", function()
-        require("dial.map").manipulate("increment", "gvisual")
-      end, { desc = 'Increment each line' })
-      vim.keymap.set("v", "g<C-x>", function()
-        require("dial.map").manipulate("decrement", "gvisual")
-      end, { desc = 'Decrement each line' })
-
       local augend = require "dial.augend"
       require('dial.config').augends:register_group({
         default = {
@@ -517,6 +607,21 @@ local plugins = {
   },
   {
     "ibhagwan/fzf-lua",
+    cmd = 'FzfLua',
+    keys = function()
+      local fzfleader = "<leader>z"
+
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({ { fzfleader, group = "Fzf" } })
+      end
+
+      return {
+        { fzfleader .. 'z', "<cmd>FzfLua<CR>", { desc = 'Builtins' } },
+        { fzfleader .. 'f', "<cmd>FzfLua files<CR>", { desc = 'Find files' } },
+        { fzfleader .. 'g', "<cmd>FzfLua live_grep_glob<CR>", { desc = 'Live grep with glob pattern' } }
+      }
+    end,
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
       require("fzf-lua").setup({
@@ -528,27 +633,18 @@ local plugins = {
           }
         }
       })
-
-      local has_wk, wk = pcall(require, 'which-key')
-      if has_wk then
-        wk.add({ { "<leader>z", group = "Fzf" } })
-      end
-
-      local fzfleader = "<leader>z"
-
-      vim.keymap.set("n", fzfleader .. 'z', "<cmd>FzfLua<CR>", { desc = 'Builtins' })
-      vim.keymap.set("n", fzfleader .. 'f', "<cmd>FzfLua files<CR>", { desc = 'Find files' })
-      vim.keymap.set("n", fzfleader .. 'g', "<cmd>FzfLua live_grep_glob<CR>", { desc = 'Live grep with glob pattern' })
     end,
   },
   {
     'MagicDuck/grug-far.nvim',
+    cmd = 'GrugFar',
     config = function()
       require('grug-far').setup({})
     end
   },
   {
     'MeanderingProgrammer/render-markdown.nvim',
+    ft = 'markdown',
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' },
     opts = {},
   },

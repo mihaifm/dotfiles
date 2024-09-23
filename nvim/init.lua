@@ -209,9 +209,6 @@ end
 vim.keymap.set('n', 'Q', '<nop>')
 vim.keymap.set('n', 'ZZ', '<nop>')
 
--- move things in visual mode
--- vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = 'Move text down' })
--- vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = 'Move text up' })
 
 -- exit terminal mode with esc
 vim.keymap.set('t', '<Esc>', '<C-\\><C-n>')

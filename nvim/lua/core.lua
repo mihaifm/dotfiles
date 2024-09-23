@@ -191,6 +191,7 @@ local plugins = {
       local has_wk, wk = pcall(require, 'which-key')
       if has_wk then
         wk.add({ { teleleader, group = "Telescope" } })
+        wk.add({ { "<leader>es", group = "Telescope" } })
       end
 
       vim.keymap.set("n", teleleader .. 'f', function()
@@ -227,6 +228,16 @@ local plugins = {
         { desc = 'Grep with args' })
 
       vim.keymap.set('n', teleleader .. 'p', function() vim.cmd('Telescope projects') end, { desc = 'Projects' })
+
+      vim.keymap.set('n', teleleader .. 'e', function()
+        vim.cmd('doautocmd User LazyColorScheme')
+        vim.cmd('Telescope colorscheme enable_preview=true')
+      end, { desc = 'Colorscheme' })
+
+      vim.keymap.set('n', '<leader>esl', function()
+        vim.cmd('doautocmd User LazyTelescope')
+      end, { desc = 'Load Telescope extensions' })
+
     end
   },
   {
@@ -364,7 +375,6 @@ local plugins = {
   {
     "folke/flash.nvim",
     enabled = true,
-    event = "VeryLazy",
     opts = {
       label = {
         -- regenerate labels after typing more characters
@@ -432,16 +442,22 @@ local plugins = {
   },
   {
     'nvim-treesitter/nvim-treesitter-context',
-    config = function()
-      local tsc = require('treesitter-context')
-      tsc.setup({
-        enable = false,
-        mode = 'cursor',
-        -- max_lines = 2
-      })
+    opts = {
+      mode = 'cursor',
+    },
+    cmd = { 'TSContextEnable' },
+    keys = {
+      { '<leader>ic', '<cmd>ToggleContext<CR>', desc = 'Toggle context' }
+    },
+    init = function(_, opts)
 
       vim.api.nvim_create_user_command('ToggleContext', function()
-        tsc.toggle()
+        if not require("lazy.core.config").plugins['nvim-treesitter-context']._.loaded then
+          require('treesitter-context').setup(opts)
+          return
+        end
+
+        require('treesitter-context').toggle()
       end, {})
 
       vim.keymap.set('n', '<leader>ic', '<cmd>ToggleContext<CR>', { desc = 'Toggle context' })
@@ -452,34 +468,37 @@ local plugins = {
     end
   },
   {
+    "williamboman/mason.nvim",
+    cmd = 'Mason',
+    opts = {}
+  },
+  {
+    'j-hui/fidget.nvim',
+    event = "LspAttach",
+    config = function()
+      require('fidget').setup {}
+
+      vim.cmd("Fidget suppress")
+
+      vim.keymap.set('n', '<space>F', '<cmd>Fidget suppress<CR>', { desc = 'Toggle Fidget notifications' })
+    end
+  },
+  {
+    "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
+    enabled = true,
+    event = "LspAttach",
+    config = function()
+      require("lsp_lines").setup()
+
+      vim.diagnostic.config({ virtual_lines = false })
+    end
+  },
+  {
     'neovim/nvim-lspconfig',
     dependencies = {
-      {
-        "williamboman/mason.nvim",
-        branch = 'v2.x'
-      },
-      { 'williamboman/mason-lspconfig.nvim', },
-      {
-        'j-hui/fidget.nvim',
-        config = function()
-          require('fidget').setup {}
-
-          vim.cmd("Fidget suppress")
-
-          vim.keymap.set('n', '<space>F', '<cmd>Fidget suppress<CR>', { desc = 'Toggle Fidget notifications' })
-        end
-      },
-      {
-        "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
-        enabled = true,
-        event = "LspAttach",
-        config = function()
-          require("lsp_lines").setup()
-
-          vim.diagnostic.config({ virtual_lines = false })
-        end
-      }
+      { "williamboman/mason-lspconfig.nvim", config = function() end },
     },
+    ft = { 'lua' },
     config = function()
       local servers = {
         -- clangd = {},
@@ -576,20 +595,6 @@ local plugins = {
           map("n", lspleader .. 'I', function()
             vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
           end, 'Toggle inlay hints')
-
-          vim.api.nvim_create_user_command("FormatCode", function(args)
-            local range = nil
-            if args.count ~= -1 then
-              local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
-              range = {
-                ["start"] = { args.line1, 0 },
-                ["end"] = { args.line2, end_line:len() },
-              }
-            end
-            require("conform").format({ async = true, lsp_format = "fallback", range = range })
-          end, { range = true })
-
-          map({'n', 'x'}, lspleader .. 'f', ":FormatCode<CR>", "Format code")
 
           local lsp_lines_enabled = false
           map('n', lspleader .. 'dl', function()
@@ -775,19 +780,6 @@ local plugins = {
     "akinsho/toggleterm.nvim",
     version = "*",
     config = function()
-      vim.api.nvim_create_autocmd('TermOpen', {
-        group = vim.api.nvim_create_augroup('toggleterm-termopen', { clear = true }),
-        pattern = { "term://*toggleterm*" },
-        callback = function(event)
-          local map = function(mode, keys, func, desc)
-            vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = desc })
-          end
-              map('t', '<esc>', [[<C-\><C-n>]], 'Exit terminal mode')
-              map('t', 'jk', [[<C-\><C-n>]], 'Exit terminal mode')
-              map('t', '<C-w>', [[<C-\><C-n><C-w>]], 'Change window')
-        end
-      })
-
       local togleader = '<leader>et'
 
       local has_wk, wk = pcall(require, 'which-key')
@@ -836,37 +828,85 @@ local plugins = {
       "TheGLander/indent-rainbowline.nvim"
     },
     opts = {
-      enabled = false
+      enabled = false,
+      indent = {
+        char = "│",
+        -- tab_char = "│",
+      },
+      scope = {
+        show_start = false
+      }
     },
     main = "ibl",
-    config = function(_, opts)
-      require("ibl").setup(opts)
-
+    keys = function(plugin)
       local rainbowToggled = false
+      local iblToggled = false
+
       local function toggleRainbowIndents()
         rainbowToggled = not rainbowToggled
 
-        local moreOpts = vim.deepcopy(opts)
-        moreOpts.enabled = true
+        local moreOpts = vim.deepcopy(plugin.opts)
 
         if rainbowToggled then
-          moreOpts = require("indent-rainbowline").make_opts(moreOpts)
+          moreOpts.enabled = true
+          moreOpts.indent.char = ""
+          moreOpts = require("indent-rainbowline").make_opts(moreOpts, {
+            color_transparency = 0.05,
+            colors = { 0x222222, 0xdddddd }
+          })
+        else
+          moreOpts.enabled = iblToggled
         end
+
         require("ibl").setup(moreOpts)
       end
 
-      vim.keymap.set("n", '<leader>ir', toggleRainbowIndents, { desc = 'Toggle rainbow indents' })
-      vim.keymap.set("n", '<leader>ib', '<cmd>IBLToggle<CR>', { desc = 'Toggle indent blankline' })
+      local function toggleIBL()
+        iblToggled = not iblToggled
+        plugin.opts.enabled = iblToggled
+
+        require('ibl').setup(plugin.opts)
+
+        if not iblToggled then
+          rainbowToggled = false
+        end
+      end
+
+      return {
+        { '<leader>ir', toggleRainbowIndents, desc = 'Toggle rainbow indents'},
+        { '<leader>ib', toggleIBL, desc = 'Toggle indent blankline' }
+      }
     end
   },
-  { 'stevearc/oil.nvim', opts = {} },
+  {
+    'stevearc/oil.nvim',
+    -- open Oil in a sidepanel: top 25sp +Oil
+    cmd = "Oil",
+    opts = {}
+  },
   {
     'kevinhwang91/nvim-ufo',
     enabled = true,
     dependencies = { 'kevinhwang91/promise-async' },
-    event = 'VeryLazy',
+    cmd = "ToggleFolds",
+    keys = {
+      { '<leader>uf', '<cmd>ToggleFolds<CR>', desc = 'Toggle Folds' }
+    },
     config = function()
-      vim.o.foldcolumn = '0'
+      local foldingEnabled = false
+
+      vim.api.nvim_create_user_command("ToggleFolds", function()
+        foldingEnabled = not foldingEnabled
+
+        if foldingEnabled then
+          vim.o.foldcolumn = '1'
+          vim.o.foldenable = true
+        else
+          vim.o.foldcolumn = '0'
+          vim.o.foldenable = false
+        end
+      end, {})
+
       vim.o.foldlevel = 99
       vim.o.foldlevelstart = 99
 
@@ -970,19 +1010,36 @@ local plugins = {
   {
     'echasnovski/mini.indentscope',
     version = false,
-    config = function()
+    opts = {
+      -- symbol = '▎'
+      symbol = '│',
+      draw = {
+        delay = 0
+      }
+    },
+    keys = {
+      {
+        '<leader>is', function()
+          vim.g.miniindentscope_disable = not vim.g.miniindentscope_disable
+          vim.cmd("hi! link MiniIndentscopeSymbol @keyword.function")
+        end, desc = 'Toggle indent scope'
+      }
+    },
+    init = function()
       vim.g.miniindentscope_disable = true
-
-      vim.keymap.set('n', '<leader>is', function()
-        vim.g.miniindentscope_disable = not vim.g.miniindentscope_disable
-      end, { desc = 'Toggle indent scope' })
-
-      require('mini.indentscope').setup({
-        symbol = '▎'
-      })
-    end,
+    end
   },
-  { 'echasnovski/mini.move', version = false, opts = {} },
+  {
+    'echasnovski/mini.move',
+    version = false,
+    opts = {},
+    keys = {
+      { '<M-j>', mode = { 'n', 'x'}, desc = 'Move line down' },
+      { '<M-k>', mode = { 'n', 'x'}, desc = 'Move line up' },
+      { '<M-h>', mode = { 'n', 'x'}, desc = 'Move line left' },
+      { '<M-l>', mode = { 'n', 'x'}, desc = 'Move line right' },
+    }
+  },
   {
     "echasnovski/mini.bufremove",
     keys = {
@@ -1074,11 +1131,10 @@ local plugins = {
   },
   {
     "chrisgrieser/nvim-spider",
-    enabled = true,
-    config = function()
-      vim.keymap.set({"n", "o", "x"}, "_", "<cmd>lua require('spider').motion('w')<CR>", { desc = "Next word" })
-      vim.keymap.set({"n", "o", "x"}, "<C-_>", "<cmd>lua require('spider').motion('b')<CR>", { desc = "Previous word" })
-    end
+    keys = {
+      { mode = {"n", "o", "x"}, "_", "<cmd>lua require('spider').motion('w')<CR>", desc = 'Next word' },
+      { mode = {"n", "o", "x"}, "<C-_>", "<cmd>lua require('spider').motion('b')<CR>", desc = 'Previous word' },
+    },
   },
   {
     "folke/lazydev.nvim",
