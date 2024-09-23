@@ -365,6 +365,8 @@ local plugins = {
             vim.cmd('hi! link debugButtons Constant')
             vim.cmd('hi! link debugBreakpoint Statement')
             vim.cmd('hi! link debugBreakpointDisabled Comment')
+
+            vim.cmd('hi GitSignsDeleteInline guibg=#45273a')
           end
         end
       })
