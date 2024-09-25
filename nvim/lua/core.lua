@@ -602,12 +602,38 @@ local plugins = {
           map('n', lspleader .. 'dl', function()
             lsp_lines_enabled = not lsp_lines_enabled
             vim.diagnostic.config({ virtual_lines = lsp_lines_enabled })
-            vim.diagnostic.config({ virtual_text = not lsp_lines_enabled })
           end, 'Toggle virtual diagnostic lines')
 
           map('n', lspleader .. 'do', function() vim.diagnostic.open_float() end, 'Open diagnostics for current line')
         end,
       })
+
+      vim.diagnostic.config({
+        virtual_text = {
+          prefix = '·',
+          spacing = 1,
+          format = function() return '' end
+        },
+        underline = false,
+        float = {
+          border = 'rounded',
+          header = '',
+          suffix='',
+          prefix=' '
+        },
+        signs = {
+          text = {
+            [vim.diagnostic.severity.ERROR] = '󰀩',
+            [vim.diagnostic.severity.WARN] = '󰀦',
+            [vim.diagnostic.severity.INFO] = '󰀧',
+            [vim.diagnostic.severity.HINT] = '󱇎'
+          }
+        }
+      })
+      vim.cmd('hi DiagnosticVirtualTextError guibg=none')
+      vim.cmd('hi DiagnosticVirtualTextWarn guibg=none')
+      vim.cmd('hi DiagnosticVirtualTextInfo guibg=none')
+      vim.cmd('hi DiagnosticVirtualTextHint guibg=none')
     end
   },
   {
