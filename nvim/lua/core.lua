@@ -33,6 +33,7 @@ local plugins = {
   {
     -- NOTE undotree requires diff utility (it normally comes with the vim91 distribution)
     "mbbill/undotree",
+    cmd = { 'UndotreeShow', 'UndotreeToggle' }
   },
   {
     "mihaifm/bufstop",
@@ -506,7 +507,7 @@ local plugins = {
   },
   {
     "williamboman/mason.nvim",
-    cmd = 'Mason',
+    cmd = { 'Mason', 'MasonInstall' },
     opts = {}
   },
   {
@@ -795,16 +796,25 @@ local plugins = {
             return vim_item
           end,
         },
-        experimental = {
-          ghost_text = {
-            hl_group = "CmpGhostText",
-          },
-        },
       })
 
       cmp.setup.filetype("fancycmd", {
         enabled = false,
       })
+
+      local ghost_text = false
+
+      vim.api.nvim_create_user_command("ToggleGhostText", function()
+        ghost_text = not ghost_text
+
+        if ghost_text then
+          cmp.setup({ experimental = { ghost_text = { hl_group = 'CmpGhostText' } } })
+        else
+          cmp.setup({ experimental = { ghost_text = false } })
+        end
+      end, {})
+
+      vim.keymap.set('n', '<leader>ug', '<cmd>ToggleGhostText<CR>', { desc = 'Toggle ghost text' })
 
       vim.api.nvim_create_autocmd('FileType', {
         group = vim.api.nvim_create_augroup('dadbod-completion-filetype', { clear = true }),
@@ -842,7 +852,8 @@ local plugins = {
   {
     "akinsho/toggleterm.nvim",
     version = "*",
-    config = function()
+    cmd = 'ToggleTerm',
+    keys = function()
       local togleader = '<leader>et'
 
       local has_wk, wk = pcall(require, 'which-key')
@@ -850,22 +861,21 @@ local plugins = {
         wk.add({ { togleader, group = "ToggleTerm" } })
       end
 
-      vim.keymap.set('n', togleader .. 'f', "<Cmd>ToggleTerm direction=float<CR>",
-        { desc = "ToggleTerm float" })
-      vim.keymap.set('n', togleader .. 'h', "<Cmd>ToggleTerm size=10 direction=horizontal<CR>",
-        { desc = "ToggleTerm horizontal split" })
-      vim.keymap.set('n', togleader .. 'v', "<Cmd>ToggleTerm size=80 direction=vertical<CR>",
-        { desc = "ToggleTerm vertical split" })
-
-      require("toggleterm").setup({
-        open_mapping = [[<c-\>]],
-        shading_factor = 2,
-        on_open = function()
-          vim.opt_local.foldcolumn = "0"
-          vim.opt_local.signcolumn = "no"
-        end
-      })
-    end
+      return {
+        { [[<C-\>]], desc = 'ToggleTerm' },
+        { togleader .. 'f', "<Cmd>ToggleTerm direction=float<CR>", desc = "ToggleTerm float" },
+        { togleader .. 'h', "<Cmd>ToggleTerm size=10 direction=horizontal<CR>", desc = "ToggleTerm horizontal split" },
+        { togleader .. 'v', "<Cmd>ToggleTerm size=80 direction=vertical<CR>", desc = "ToggleTerm vertical split" }
+      }
+    end,
+    opts = {
+      open_mapping = [[<c-\>]],
+      shading_factor = 2,
+      on_open = function()
+        vim.opt_local.foldcolumn = "0"
+        vim.opt_local.signcolumn = "no"
+      end
+    }
   },
   {
     "christoomey/vim-tmux-navigator",
@@ -1209,35 +1219,6 @@ local plugins = {
     },
   },
   { "Bilal2453/luvit-meta", lazy = true }, -- `vim.uv` typings
-  {
-    "windwp/nvim-autopairs",
-    config = function()
-      require("nvim-autopairs").setup({
-        fast_wrap = {
-          map = '<M-e>',
-          chars = { '{', '[', '(', '"', "'" },
-          pattern = [=[[%'%"%>%]%)%}%,]]=],
-          end_key = '$',
-          before_key = 'h',
-          after_key = 'l',
-          cursor_pos_before = true,
-          keys = 'qwertyuiopzxcvbnmasdfghjkl',
-          manual_position = true,
-          highlight = 'Search',
-          highlight_grey='Comment'
-        },
-      })
-
-      local has_wk, wk = pcall(require, 'which-key')
-      if has_wk then
-        wk.add({ { "<leader>ea", group = "Autopairs" } })
-      end
-
-      vim.keymap.set("n", "<leader>eat", function()
-        require("nvim-autopairs").toggle()
-      end, { desc = 'Toggle autopairs' })
-    end
-  },
   {
     "mfussenegger/nvim-dap",
     dependencies = {
