@@ -1,7 +1,13 @@
 local plugins = {
   { "tpope/vim-sleuth", enabled = false },
   { "tpope/vim-surround", enabled = false },
-  { 'vimpostor/vim-tpipeline', enabled = false },
+  {
+    'vimpostor/vim-tpipeline',
+    enabled = false,
+    init = function()
+      vim.g.tpipeline_restore = 1
+    end
+  },
   {
     "shaunsingh/nord.nvim",
     enabled = false,

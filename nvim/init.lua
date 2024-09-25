@@ -209,7 +209,6 @@ end
 vim.keymap.set('n', 'Q', '<nop>')
 vim.keymap.set('n', 'ZZ', '<nop>')
 
-
 -- exit terminal mode with esc
 vim.keymap.set('t', '<Esc>', '<C-\\><C-n>')
 

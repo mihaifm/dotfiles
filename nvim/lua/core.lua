@@ -14,9 +14,6 @@ if vim.fn.exists(":Termdebug") then
   vim.opt.foldenable = false
 end
 
--- vim-tpipeline
-vim.g.tpipeline_restore = 1
-
 ----------------------------------
 -- Single key for clearing things
 
@@ -409,7 +406,6 @@ local plugins = {
     -- NOTE for Redhat run `source scl_source enable devtoolset-12`
     "nvim-treesitter/nvim-treesitter",
     enabled = true,
-    lazy = false,
     version = false,
     -- build = ":TSUpdate",
     config = function()
@@ -431,15 +427,21 @@ local plugins = {
         },
         indent = { enable = false },
         incremental_selection = {
-          enable = false,
+          enable = true,
           keymaps = {
-            init_selection = "gnn",
-            node_incremental = "grn",
-            scope_incremental = "grc",
-            node_decremental = "grm",
+            init_selection = "<leader>rn",
+            node_incremental = "<leader>rn",
+            node_decremental = "<leader>rp",
           },
         }
       })
+
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({ { "<leader>r", group = "Treesitter" } })
+        wk.add({ { "<leader>rn", desc = "Select node incremental" } })
+        wk.add({ { "<leader>rp", desc = "Select node decremental" } })
+      end
     end
   },
   {
@@ -467,6 +469,39 @@ local plugins = {
       vim.keymap.set("n", "[c", function()
         require("treesitter-context").go_to_context(vim.v.count1)
       end, { desc = "Jump to context (upwards)", silent = true })
+    end
+  },
+  {
+    "nvim-treesitter/nvim-treesitter-textobjects",
+    opts = {
+      textobjects = {
+        select = {
+          enable = true,
+          keymaps = {
+            ["af"] = "@function.outer",
+            ["if"] = "@function.inner",
+            ["ac"] = "@class.outer",
+            ["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
+            ["as"] = { query = "@scope", query_group = "locals", desc = "Select language scope" },
+          },
+        },
+        move = {
+          enable = true,
+          goto_next_start = { ["]f"] = "@function.outer", ["]c"] = "@class.outer", ["]a"] = "@parameter.inner" },
+          goto_next_end = { ["]F"] = "@function.outer", ["]C"] = "@class.outer", ["]A"] = "@parameter.inner" },
+          goto_previous_start = { ["[f"] = "@function.outer", ["[c"] = "@class.outer", ["[a"] = "@parameter.inner" },
+          goto_previous_end = { ["[F"] = "@function.outer", ["[C"] = "@class.outer", ["[A"] = "@parameter.inner" },
+        },
+        lsp_interop = {
+          enable = false
+        },
+        swap = {
+          enable = false
+        }
+      },
+    },
+    config = function(_, opts)
+      require("nvim-treesitter.configs").setup(opts)
     end
   },
   {
