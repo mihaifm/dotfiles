@@ -158,7 +158,7 @@ if has("clipboard")
   exe 'inoremap <script> <C-V>' paste#paste_cmd['i']
   exe 'vnoremap <script> <C-V>' paste#paste_cmd['v']
 else
-  " clipboard unavailable, use c registry
+  " clipboard unavailable, use c register
   vmap <C-C> "cy
   map <C-V>	"cgP
   cmap <C-v> <C-R>c
@@ -234,32 +234,42 @@ set listchars+=precedes:<,extends:>
 """"""""""""""
 " Status line
 
+func! StlFiletype()
+  return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
+endfunc
+
+func! StlFilename()
+  if winwidth(0) > 70
+    return MyGetFileTypeSymbol(expand('%:t')) . expand('%:t')
+  else
+    return expand('%:t') !=# '' ? expand('%:t') : '[No Name]'
+  endif
+endfunc
+
+let stl_mode_map = { 'n': 'NORMAL', 'i': 'INSERT', 'R': 'REPLACE', 'v': 'VISUAL', 'V': 'V-LINE', "\<C-v>": 'V-BLOCK',
+                   \ 'c': 'COMMAND', 's': 'SELECT', 'S': 'S-LINE', "\<C-s>": 'S-BLOCK', 't': 'TERMINAL' }
+
+" mode is highlighted using hl-groups User1, User2 etc.
+let stl_mode_colors = { 'n': '%1*', 'i': '%5*', 'R': '%6*', 'v': '%2*', 'V': '%2*', "\<C-v>": '%2*',
+                       \'c': '%7*', 's': '%2*', 'S': '%2*', "\<C-s>": '%2*', 't': '%6*' }
+
 set laststatus=2
 set statusline=
-set statusline+=%1*                   " switch to User1 highlight
-set statusline+=%n                    " buffer number
-set statusline+=%1*
-set statusline+=%{'/'.bufnr('$')}\    " total buffers
+set statusline+=%{%get(stl_mode_colors,mode(),'%1*')%} " get the UserN hightlight group and switch to it
+set statusline+=\ %{get(stl_mode_map,mode(),'')}\      " mode
+set statusline+=%2*                                    " switch to User2 hightlight group
+set statusline+=\ %{StlFilename()}                     " filename
 set statusline+=%2*
-set statusline+=%<%1.200F              " filename
+set statusline+=\ %r%m                                 " read-only, modified flags
+set statusline+=%=\ 
 set statusline+=%3*
-set statusline+=\ %y%h%w              " filetype, help, example flags
-set statusline+=%3*
-set statusline+=%r%m                  " read-only, modified flags
-set statusline+=%3*
-set statusline+=%=\                   " indent right
-set statusline+=%1*
-set statusline+=%l                    " line number
-set statusline+=%1*
-set statusline+=/%{line('$')}         " total lines
-set statusline+=%1*
-set statusline+=,                     " ,
-set statusline+=%1*
-set statusline+=%c%V                  " [virtual] column numberV
-set statusline+=%3*
-set statusline+=\                     " [ ]
-set statusline+=%3*
-set statusline+=%<%P                  " percent
+set statusline+=%{StlFiletype()}\                      " filetype
+set statusline+=%4*
+set statusline+=\ %<%P\                                " percent
+set statusline+=%5*
+set statusline+=\ %l                                   " line number
+set statusline+=:                                      " :
+set statusline+=%c\                                    " column number
 
 """"""""""""""""""
 " Custom commands
@@ -303,6 +313,31 @@ function! Transparent()
 endfunc
 command! Transparent call Transparent()
 
+" toggle terminal
+function! ToggleTerminal()
+  let l:termNums = term_list()
+  let l:termWins = filter(getwininfo(), 'v:val.terminal')
+
+  if index(l:termNums, bufnr('%')) >= 0
+      " current buffer is a terminal
+      execute 'hid'
+  elseif len(l:termWins) > 0
+      " switch to the terminal buffer window
+      execute 'tabn' . l:termWins[0].tabnr
+      execute l:termWins[0].winnr . 'wincmd w'
+  elseif len(l:termNums) > 0
+      " show the terminal buffer in the current window
+      execute 'sb ' . l:termNums[0]
+  else
+      " no terminal, start one
+      execute 'term ++kill=hup'
+  endif
+endfunction
+
+map <silent> <C-\> :call ToggleTerminal()<CR>
+tnoremap <Esc> <C-\><C-n>
+tnoremap <silent> <C-\> <C-W>:call ToggleTerminal()<CR>
+
 """""""""""""""""""""
 " File type settings
 
@@ -311,6 +346,7 @@ highlight link markdownError Normal
 autocmd FileType vim setlocal iskeyword-=#
 autocmd FileType * setlocal iskeyword-=:
 autocmd FileType css,scss,html,eruby setlocal iskeyword +=-
+autocmd TerminalOpen * set nonumber|set norelativenumber|set signcolumn=no|set nobuflisted
 
 """"""""""
 " Plugins
@@ -320,33 +356,25 @@ execute pathogen#infect()
 
 let g:BufstopAutoSpeedToggle = 1
 
-let g:terminal_drawer_leader = '<C-\>'
-let g:terminal_drawer_shell = '++kill=hup'
-
-let g:vimspector_enable_mappings = 'HUMAN'
-
 let g:vim_tmux_clipboard#loadb_option = '-w'
 
 let g:tmux_navigator_no_mappings = 1
 
-let g:tpipeline_restore = 1
+let g:termdebug_config = {
+  \ 'command' : ['gdb', '-ex', 'set history save on'],
+  \ 'sign' : "\U1F151",
+  \ 'wide' : 1
+  \ }
 
 call plug#begin('~/.vimdata')
 
 Plug 'mihaifm/bufstop'
-Plug 'mihaifm/vimpanel'
 Plug 'mihaifm/4colors'
 Plug 'easymotion/vim-easymotion'
-Plug 'itchyny/lightline.vim'
-Plug 'puremourning/vimspector'
-Plug 'roxma/vim-tmux-clipboard'
-Plug 'christoomey/vim-tmux-navigator'
-Plug 'iaalm/terminal-drawer.vim'
 Plug 'mbbill/undotree'
+Plug 'roxma/vim-tmux-clipboard'
 Plug 'tpope/vim-commentary'
-Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
-Plug 'junegunn/fzf.vim'
-"Plug 'vimpostor/vim-tpipeline'
+Plug 'christoomey/vim-tmux-navigator'
 
 call plug#end()
 
