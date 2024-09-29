@@ -1060,7 +1060,7 @@ local plugins = {
             { action = "enew", desc = " New File", icon = " ", key = "n" },
             { action = "Telescope oldfiles", desc = " Recent Files", icon = " ", key = "r" },
             { action = "Telescope live_grep", desc = " Find Text", icon = " ", key = "g" },
-            { action = 'lua require("persistence").load({ last = true })', desc = " Restore Last Session", icon = " ", key = "s" },
+            { action = 'SesLoad', desc = " Restore Last Session", icon = " ", key = "s" },
             { action = "Lazy", desc = " Lazy", icon = "󰒲 ", key = "l" },
             { action = "qa", desc = " Quit", icon = " ", key = "q" },
           },
