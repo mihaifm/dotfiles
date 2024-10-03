@@ -32,10 +32,11 @@ vim.opt.wrap = false
 
 -- no backup file clutter
 vim.opt.swapfile = false
-vim.opt.undofile = false
 vim.opt.backup = false
 vim.opt.writebackup = false
--- vim.opt.shadafile = 'NONE'
+
+-- enable persistent undo
+vim.opt.undofile = true
 
 -- reduce Esc keycode delay
 vim.opt.ttimeoutlen = 50
