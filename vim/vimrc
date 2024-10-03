@@ -230,8 +230,8 @@ set nowrap
 " long lines are market with > and < at end of screen
 set listchars+=precedes:<,extends:>
 
-""""""""""""""
-" Status line
+"""""""""""""
+" Statusline
 
 func! StlFiletype()
   return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
@@ -274,16 +274,18 @@ set statusline+=%c\                                    " column number
 " Custom commands
 
 " show highlight group
+
 command! Hgroup :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . "> "
                   \ . "trans<". synIDattr(synID(line("."),col("."),0),"name") . "> "
                   \ . "lo<". synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"
 
 " find text in all open buffers
+
 function! Findb(text)
     exe "cex [] | silent! bufdo vimgrepa /" . a:text . "/ %"
     :copen
 endfunction
-command! -nargs=1 Findo call Findo(<q-args>)
+command! -nargs=1 Findo call Findb(<q-args>)
 
 function! ReturnHighlightTerm(group, term)
   let output = execute('hi ' . a:group)
@@ -291,6 +293,7 @@ function! ReturnHighlightTerm(group, term)
 endfunction
 
 " toggle transparency
+
 let s:hiBgData = { 'on': 0, 'vals': {},
       \'groups' : ['Normal', 'NonText', 'SignColumn', 'FoldColumn', 'LineNr', 'EndOfBuffer'] }
 
@@ -313,6 +316,7 @@ endfunc
 command! Transparent call Transparent()
 
 " toggle terminal
+
 function! ToggleTerminal()
   let l:termNums = term_list()
   let l:termWins = filter(getwininfo(), 'v:val.terminal')
@@ -336,6 +340,109 @@ endfunction
 map <silent> <C-\> :call ToggleTerminal()<CR>
 tnoremap <Esc> <C-\><C-n>
 tnoremap <silent> <C-\> <C-W>:call ToggleTerminal()<CR>
+
+" notes system
+
+let g:notes_dir = "~/.vimdata/notes"
+let g:notes_dir = fnamemodify(g:notes_dir, ":p")
+call mkdir(g:notes_dir, "p")
+
+function! NewNote()
+  let notes = globpath(g:notes_dir, "new*", 0, 1)
+  let pattern = 'new\(\d\+\)$'
+
+  let nums = []
+  for entry in notes
+    if entry =~? pattern
+      call add(nums, str2nr(matchstr(entry, '\d\+')))
+    endif
+  endfor
+
+  call sort(nums, 'n')
+  
+  let next_num = nums[-1] + 1
+  for i in range(1, len(nums) + 1)
+    if i != get(nums, i - 1, 0)
+      let next_num = i
+      break
+    endif
+  endfor
+
+  exe "silent e " . fnamemodify(g:notes_dir . "new" . next_num, ":p")
+  exe "silent w"
+endfunc
+
+command! New call NewNote()
+exe "autocmd InsertLeave,TextChanged " . g:notes_dir . "new*" . " silent write"
+
+command! -bar -nargs=1 -bang -complete=file Rename :
+  \ let s:file = expand('%:p') |
+  \ setlocal modified | keepalt saveas<bang> <args> |
+  \ if s:file !=# expand('%:p') | call delete(s:file) | exe "bwipe " . s:file | endif |
+  \ unlet s:file
+
+" session management
+
+let g:session_dir = "~/.vimdata/sessions"
+let g:session_dir = fnamemodify(g:session_dir, ":p")
+call mkdir(g:session_dir, "p")
+
+function SesFileName()
+  let name = ""
+
+  if $TMUX != ''
+    let tmux_session = systemlist("tmux display -pt " . $TMUX_PANE . " '#{session_name}'")[0]
+    let tmux_window = systemlist("tmux display -pt " . $TMUX_PANE . " '#{window_index}'")[0]
+    let tmux_pane = systemlist("tmux display -pt " . $TMUX_PANE . " '#{pane_index}'")[0]
+
+    let name = tmux_session . "%%" . tmux_window . "%%" . tmux_pane
+  else
+    let name = substitute(getcwd(), "[\\/:]", "%%", "g")
+
+    if isdirectory(".git")
+      let branch = systemlist("git branch --show-current")[0]
+      if v:shell_error == 0
+        let name = name . "%%" . branch
+      endif
+    endif
+  endif
+
+  return g:session_dir . name . ".vim"
+endfunc
+
+function SesSave()
+  exe "mks! " . fnameescape(SesFileName())
+endfunc
+
+function s:TComp(a, b)
+  let t_a = getftime(a:a)
+  let t_b = getftime(a:b)
+  return (t_a < t_b ? 1 : (t_a == t_b ? 0 : -1))
+endfunc
+
+function SesLoad(options)
+  let opts = a:options
+
+  let file = ""
+  if has_key(opts, "last")
+    let sessions = glob(g:session_dir . "*.vim", 1, 1)
+    call sort(sessions, "<SID>TComp")
+    let file = sessions[0]
+  else
+    let file = SesFileName()
+  endif
+  if file != ""  && filereadable(file)
+    exe "silent! source " fnameescape(file)
+  endif
+endfunc
+
+augroup session-vimleavepre
+  au!
+  au VimLeavePre * exe "mks! " . fnameescape(SesFileName())
+augroup END
+
+command! SesSave call SesSave()
+command! SesLoad call SesLoad({})
 
 """""""""""""""""""""
 " File type settings
