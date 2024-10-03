@@ -484,10 +484,6 @@ Plug 'christoomey/vim-tmux-navigator'
 
 call plug#end()
 
-if !empty(globpath(&rtp, 'colors/4colors.vim'))
-  colorscheme 4colors
-endif
-
 filetype plugin indent on
 syntax on
 

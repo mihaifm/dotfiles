@@ -16,8 +16,9 @@ map <leader>d :BufstopBack<CR>:bw! #<CR>
 autocmd BufWinEnter --Bufstop-- call matchadd('bufstopIcon1', '\v' . '|||')
 autocmd BufWinEnter --Bufstop-- call matchadd('bufstopIcon2', '\v' . '|')
 autocmd BufEnter --Bufstop-- setlocal statusline=%1*BUFSTOP\ %2*
-exe 'highlight! bufstopIcon1 ' . g:fourcolors#warmFg
-exe 'highlight! bufstopIcon2 ' . g:fourcolors#chillFg
+
+autocmd ColorScheme * exe 'highlight! bufstopIcon1 ' . g:fourcolors#warmFg
+autocmd ColorScheme * exe 'highlight! bufstopIcon2 ' . g:fourcolors#chillFg
 
 """""""""""
 " vimpanel
@@ -79,10 +80,14 @@ let g:EasyMotion_keys = 'asdghkqwertyuiopzxcvbnmfjl'
 """"""""""
 " 4colors
 
-exe 'hi User1 ' . g:fourcolors#darkFg . g:fourcolors#chillBg
-exe 'hi User2 ' . g:fourcolors#whiteFg . g:fourcolors#darkBg
-exe 'hi User3 ' . g:fourcolors#grayFg . g:fourcolors#darkBg
-exe 'hi User4 ' . g:fourcolors#darkFg . g:fourcolors#grayBg
-exe 'hi User5 ' . g:fourcolors#darkFg . g:fourcolors#whiteBg
-exe 'hi User6 ' . g:fourcolors#blackFg . g:fourcolors#hotBg
-exe 'hi User7 ' . g:fourcolors#darkFg . g:fourcolors#coldBg
+autocmd ColorScheme * exe 'hi User1 ' . g:fourcolors#darkFg . g:fourcolors#chillBg
+autocmd ColorScheme * exe 'hi User2 ' . g:fourcolors#whiteFg . g:fourcolors#darkBg
+autocmd ColorScheme * exe 'hi User3 ' . g:fourcolors#grayFg . g:fourcolors#darkBg
+autocmd ColorScheme * exe 'hi User4 ' . g:fourcolors#darkFg . g:fourcolors#grayBg
+autocmd ColorScheme * exe 'hi User5 ' . g:fourcolors#darkFg . g:fourcolors#whiteBg
+autocmd ColorScheme * exe 'hi User6 ' . g:fourcolors#blackFg . g:fourcolors#hotBg
+autocmd ColorScheme * exe 'hi User7 ' . g:fourcolors#darkFg . g:fourcolors#coldBg
+
+if !empty(globpath(&rtp, 'colors/4colors.vim'))
+  colorscheme 4colors
+endif
