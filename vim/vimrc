@@ -273,6 +273,9 @@ set statusline+=%c\                                    " column number
 """"""""""""""""""
 " Custom commands
 
+" data directory - stores plugin data, undo history, sessions, notes etc.
+let g:datadir = fnamemodify("~/.vimdata", ":p")
+
 " show highlight group
 
 command! Hgroup :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . "> "
@@ -343,12 +346,11 @@ tnoremap <silent> <C-\> <C-W>:call ToggleTerminal()<CR>
 
 " notes system
 
-let g:notes_dir = "~/.vimdata/notes"
-let g:notes_dir = fnamemodify(g:notes_dir, ":p")
-call mkdir(g:notes_dir, "p")
+let s:notes_dir = g:datadir . "/notes" 
+call mkdir(s:notes_dir, "p")
 
 function! NewNote()
-  let notes = globpath(g:notes_dir, "new*", 0, 1)
+  let notes = globpath(s:notes_dir, "new*", 0, 1)
   let pattern = 'new\(\d\+\)$'
 
   let nums = []
@@ -360,7 +362,7 @@ function! NewNote()
 
   call sort(nums, 'n')
   
-  let next_num = nums[-1] + 1
+  let next_num = len(nums) > 0 ? nums[-1] + 1 : 1
   for i in range(1, len(nums) + 1)
     if i != get(nums, i - 1, 0)
       let next_num = i
@@ -368,12 +370,12 @@ function! NewNote()
     endif
   endfor
 
-  exe "silent e " . fnamemodify(g:notes_dir . "new" . next_num, ":p")
+  exe "silent e " . fnamemodify(s:notes_dir . "/new" . next_num, ":p")
   exe "silent w"
 endfunc
 
 command! New call NewNote()
-exe "autocmd InsertLeave,TextChanged " . g:notes_dir . "new*" . " silent write"
+exe "autocmd InsertLeave,TextChanged " . s:notes_dir . "new*" . " silent write"
 
 command! -bar -nargs=1 -bang -complete=file Rename :
   \ let s:file = expand('%:p') |
@@ -383,9 +385,8 @@ command! -bar -nargs=1 -bang -complete=file Rename :
 
 " session management
 
-let g:session_dir = "~/.vimdata/sessions"
-let g:session_dir = fnamemodify(g:session_dir, ":p")
-call mkdir(g:session_dir, "p")
+let s:session_dir = g:datadir . "/sessions"
+call mkdir(s:session_dir, "p")
 
 function SesFileName()
   let name = ""
@@ -407,7 +408,7 @@ function SesFileName()
     endif
   endif
 
-  return g:session_dir . name . ".vim"
+  return s:session_dir . "/" . name . ".vim"
 endfunc
 
 function SesSave()
@@ -425,7 +426,7 @@ function SesLoad(options)
 
   let file = ""
   if has_key(opts, "last")
-    let sessions = glob(g:session_dir . "*.vim", 1, 1)
+    let sessions = glob(s:session_dir . "*.vim", 1, 1)
     call sort(sessions, "<SID>TComp")
     let file = sessions[0]
   else
@@ -472,7 +473,7 @@ let g:termdebug_config = {
   \ 'wide' : 1
   \ }
 
-call plug#begin('~/.vimdata')
+call plug#begin(g:datadir)
 
 Plug 'mihaifm/bufstop'
 Plug 'mihaifm/4colors'
