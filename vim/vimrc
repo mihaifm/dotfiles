@@ -8,6 +8,9 @@ set nocompatible
 set encoding=utf8
 scriptencoding utf-8
 
+" allow find to work in subfolders
+set path=.,**
+
 """""""""""""""""
 " Editor settings
 
@@ -116,62 +119,6 @@ let mapleader = ","
 let g:mapleader = ","
 let maplocalleader = ","
 
-if has("clipboard")
-  vmap <C-x> "+x
-  smap <C-x> <C-g>"+x
-  nmap <silent> <C-X> :call CutNonEmptyLineToClipboard()<CR>
-else
-  vmap <C-x> "cx
-  smap <C-x> <C-g>"cx
-  nmap <silent> <C-X> :call CutNonEmptyLineToCReg()<CR>
-endif
-
-" If the current line is non-empty cut it to the clipboard
-" An empty line is put into the black hole registry
-function! CutNonEmptyLineToClipboard()
-    if match(getline('.'), '^\s*$') == -1
-        normal 0"+d$
-    else
-        normal "_dd
-    endif
-endfunction
-
-function! CutNonEmptyLineToCReg()
-    if match(getline('.'), '^\s*$') == -1
-        normal 0"cd$
-    else
-        normal "_dd
-    endif
-endfunction
-
-if has("clipboard")
-  " CTRL-C is Copy
-  vmap <C-C> "+y
-
-  " CTRL-V is Paste
-  map <C-V>	"+gP
-
-  " enable Paste in command mode
-  cmap <C-v> <C-R>+
-
-  exe 'inoremap <script> <C-V>' paste#paste_cmd['i']
-  exe 'vnoremap <script> <C-V>' paste#paste_cmd['v']
-else
-  " clipboard unavailable, use c register
-  vmap <C-C> "cy
-  map <C-V>	"cgP
-  cmap <C-v> <C-R>c
-endif
-
-" Enable yanked text to be pasted multiple times
-xnoremap p pgvy
-
-" Use CTRL-Q to do what CTRL-V used to do
-noremap <C-Q> <C-V>
-
-" CTRL-C to copy text from cmd line
-cnoremap <C-c> <C-y>
-
 " better movement in command line
 if has("gui_running")
   cnoremap <C-H> <Left>
@@ -188,17 +135,10 @@ if has("clipboard")
   noremap <leader>fn :let @+=expand("%:t")<CR>
   noremap <leader>fd :let @+=expand("%:p:h")<CR>
 else
-  noremap <leader>ff :let @c=expand("%:p") \| call TmuxCopyReg("c")<CR>
-  noremap <leader>fn :let @c=expand("%:t") \| call TmuxCopyReg("c")<CR>
-  noremap <leader>fd :let @c=expand("%:p:h") \| call TmuxCopyReg("c")<CR>
+  noremap <leader>ff :let @"=expand("%:p") \| call MetaYank() \| redraw!<CR>
+  noremap <leader>fn :let @"=expand("%:t") \| call MetaYank() \| redraw!<CR>
+  noremap <leader>fd :let @"=expand("%:p:h") \| call MetaYank() \| redraw!<CR>
 endif
-
-function! TmuxCopyReg(r)
-  if $TMUX == ''
-        return
-    endif
-  call system('tmux loadb -w -', getreg(a:r))
-endfunc
 
 if has("win32")
   map <leader>e :silent r! explorer .<CR>
@@ -383,7 +323,8 @@ command! -bar -nargs=1 -bang -complete=file Rename :
   \ if s:file !=# expand('%:p') | call delete(s:file) | exe "bwipe " . s:file | endif |
   \ unlet s:file
 
-" session management
+"""""""""""""""""""""
+" Session management
 
 let s:session_dir = g:datadir . "/sessions"
 call mkdir(s:session_dir, "p")
@@ -445,11 +386,137 @@ augroup END
 command! SesSave call SesSave()
 command! SesLoad call SesLoad({})
 
+"""""""""""""""""""""""
+" Clipboard management
+
+func! s:TmuxBufferName()
+  let l:list = systemlist('tmux list-buffers -F"#{buffer_name}"')
+  return (len(l:list) == 0 ? "" : l:list[0])
+endfunc
+
+func! s:TmuxBuffer()
+  return system('tmux show-buffer')
+endfunc
+
+func! s:UpdateFromTmux()
+  let buffer_name = s:TmuxBufferName()
+  if s:lastbname != buffer_name
+    let @" = s:TmuxBuffer()
+  endif
+  let s:lastbname=s:TmuxBufferName()
+endfunc
+
+function! TmuxCopyReg(r)
+  if $TMUX == ''
+        return
+    endif
+  call system('tmux loadb -w -', getreg(a:r))
+endfunc
+
+function! Osc52Yank()
+  if $SHELL !~ "bash" && $SHELL !~ "zsh" && $SHELL !~ "fish"
+    return
+  endif
+
+  let buffer = system('base64 -w0', @0)
+  let buffer = substitute(buffer, "\n$", "", "")
+  let buffer = '\e]52;c;' . buffer . '\x07'
+  silent exe "!echo -ne " . shellescape(buffer) . " > " . shellescape(s:tty)
+endfunction
+
+function! MetaYank()
+  if $TMUX != ''
+    call TmuxCopyReg('"')
+  else
+    call Osc52Yank()
+  endif
+endfunc
+
+function! EnableClipProvider()
+  if $TMUX != ''
+    let s:lastbname=""
+
+    augroup tmuxclipboard
+      autocmd!
+      autocmd FocusLost * call s:UpdateFromTmux()
+      autocmd	FocusGained * call s:UpdateFromTmux()
+      autocmd TextYankPost * silent call system("tmux loadb -w" . " -", join(v:event["regcontents"], "\n"))
+    augroup END
+
+    let @" = s:TmuxBuffer()
+
+    return
+  endif
+
+  if $SHELL =~ "bash" || $SHELL =~ "zsh" || $SHELL =~ "fish"
+    call system(": >/dev/tty")
+    if v:shell_error == 0
+      let s:tty = "/dev/tty"
+    else
+      let s:tty = system("ps -p " . getpid() . " -o tty=")
+      if v:shell_error != 0 || s:tty =~ "?"
+        return
+      endif
+      let s:tty = "/dev/" . s:tty
+    endif
+
+    augroup osc
+      autocmd!
+      autocmd TextYankPost * if v:event.operator ==# 'y' | call Osc52Yank() | endif
+    augroup END
+
+    return
+  endif
+endfunc
+
+call EnableClipProvider()
+
+nmap <silent> <C-X> :call CutNonEmptyLineToClipboard()<CR>
+
+" If the current line is non-empty cut it to the clipboard
+" An empty line is put into the black hole registry
+function! CutNonEmptyLineToClipboard()
+  if match(getline('.'), '^\s*$') == -1
+    if has("clipboard")
+      normal 0"+d$
+    else
+      normal 0d$
+    endif
+  else
+    normal "_dd
+  endif
+endfunction
+
+" Copy-paste mappings
+if has("clipboard")
+  vmap <C-C> "+y
+  map <C-V>	"+gP
+
+  " Enable Paste in command mode
+  cmap <C-v> <C-R>+
+
+  exe 'inoremap <script> <C-V>' paste#paste_cmd['i']
+  exe 'vnoremap <script> <C-V>' paste#paste_cmd['v']
+else
+  " Clipboard unavailable, use unnamed register
+  vmap <C-c> y
+  map <C-v>	gP
+  cmap <C-v> <C-R>"
+endif
+
+" Enable yanked text to be pasted multiple times
+xnoremap p pgvy
+
+" Use CTRL-Q to do what CTRL-V used to do
+noremap <C-Q> <C-V>
+
+" CTRL-C to copy text from cmd line
+cnoremap <C-c> <C-y>
+
 """""""""""""""""""""
 " File type settings
 
 autocmd FileType markdown setlocal tabstop=4|set shiftwidth=4|set expandtab
-highlight link markdownError Normal
 autocmd FileType vim setlocal iskeyword-=#
 autocmd FileType * setlocal iskeyword-=:
 autocmd FileType css,scss,html,eruby setlocal iskeyword +=-
@@ -462,8 +529,6 @@ autocmd TerminalOpen * set nonumber|set norelativenumber|set signcolumn=no|set n
 execute pathogen#infect()
 
 let g:BufstopAutoSpeedToggle = 1
-
-let g:vim_tmux_clipboard#loadb_option = '-w'
 
 let g:tmux_navigator_no_mappings = 1
 
@@ -479,7 +544,6 @@ Plug 'mihaifm/bufstop'
 Plug 'mihaifm/4colors'
 Plug 'easymotion/vim-easymotion'
 Plug 'mbbill/undotree'
-Plug 'roxma/vim-tmux-clipboard'
 Plug 'tpope/vim-commentary'
 Plug 'christoomey/vim-tmux-navigator'
 

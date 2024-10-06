@@ -88,6 +88,8 @@ autocmd ColorScheme * exe 'hi User5 ' . g:fourcolors#darkFg . g:fourcolors#white
 autocmd ColorScheme * exe 'hi User6 ' . g:fourcolors#blackFg . g:fourcolors#hotBg
 autocmd ColorScheme * exe 'hi User7 ' . g:fourcolors#darkFg . g:fourcolors#coldBg
 
+autocmd FileType vim hi vimAugroupError guibg=NONE
+
 if !empty(globpath(&rtp, 'colors/4colors.vim'))
   colorscheme 4colors
 endif
