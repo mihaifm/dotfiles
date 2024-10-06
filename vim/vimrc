@@ -143,6 +143,10 @@ nmap <C-k> 3k3<C-y>
 " change current dir
 nmap <leader>cd :cd\ %:p:h<CR>
 
+" clear without yanking
+map <BS> "_d
+omap <BS> d
+
 """"""""""""""
 " Indentation
 
@@ -468,22 +472,6 @@ function! EnableClipProvider()
 endfunc
 
 call EnableClipProvider()
-
-nmap <silent> <C-X> :call CutNonEmptyLineToClipboard()<CR>
-
-" If the current line is non-empty cut it to the clipboard
-" An empty line is put into the black hole registry
-function! CutNonEmptyLineToClipboard()
-  if match(getline('.'), '^\s*$') == -1
-    if has("clipboard")
-      normal 0"+d$
-    else
-      normal 0d$
-    endif
-  else
-    normal "_dd
-  endif
-endfunction
 
 " Copy-paste mappings
 if has("clipboard")
