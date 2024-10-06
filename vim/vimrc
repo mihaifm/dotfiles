@@ -130,16 +130,6 @@ endif
 " remap : in select mode, which normally inserts text
 smap : <Esc>:
 
-if has("clipboard")
-  noremap <leader>ff :let @+=expand("%:p")<CR>
-  noremap <leader>fn :let @+=expand("%:t")<CR>
-  noremap <leader>fd :let @+=expand("%:p:h")<CR>
-else
-  noremap <leader>ff :let @"=expand("%:p") \| call MetaYank() \| redraw!<CR>
-  noremap <leader>fn :let @"=expand("%:t") \| call MetaYank() \| redraw!<CR>
-  noremap <leader>fd :let @"=expand("%:p:h") \| call MetaYank() \| redraw!<CR>
-endif
-
 if has("win32")
   map <leader>e :silent r! explorer .<CR>
 end
@@ -284,7 +274,8 @@ map <silent> <C-\> :call ToggleTerminal()<CR>
 tnoremap <Esc> <C-\><C-n>
 tnoremap <silent> <C-\> <C-W>:call ToggleTerminal()<CR>
 
-" notes system
+"""""""""""""""
+" Notes system
 
 let s:notes_dir = g:datadir . "/notes" 
 call mkdir(s:notes_dir, "p")
@@ -413,15 +404,29 @@ function! TmuxCopyReg(r)
   call system('tmux loadb -w -', getreg(a:r))
 endfunc
 
-function! Osc52Yank()
-  if $SHELL !~ "bash" && $SHELL !~ "zsh" && $SHELL !~ "fish"
-    return
+function GetTty()
+  call system(": >/dev/tty")
+  if v:shell_error == 0
+    return "/dev/tty"
+  else
+    let l:tty = system("ps -p " . getpid() . " -o tty=")
+    if v:shell_error == 0 && l:tty =~ "?"
+      return "/dev/" . l:tty
+    endif
   endif
+  return "/dev/null"
+endfun
 
+function! Osc52Yank()
   let buffer = system('base64 -w0', @0)
   let buffer = substitute(buffer, "\n$", "", "")
-  let buffer = '\e]52;c;' . buffer . '\x07'
-  silent exe "!echo -ne " . shellescape(buffer) . " > " . shellescape(s:tty)
+  let buffer = "\x1b]52;c;" . buffer . "\x07"
+
+  if s:osc_dev == 1
+    call writefile([buffer], '/dev/fd/2', 'b')
+  else
+    silent exe "!echo -ne " . shellescape(buffer)
+  endif
 endfunction
 
 function! MetaYank()
@@ -429,11 +434,16 @@ function! MetaYank()
     call TmuxCopyReg('"')
   else
     call Osc52Yank()
+
+    if s:osc_dev == 0
+      redraw!
+    endif
   endif
 endfunc
 
 function! EnableClipProvider()
-  if $TMUX != ''
+  if has('unix') && $TMUX != ''
+    " tmux provider
     let s:lastbname=""
 
     augroup tmuxclipboard
@@ -444,28 +454,16 @@ function! EnableClipProvider()
     augroup END
 
     let @" = s:TmuxBuffer()
-
-    return
-  endif
-
-  if $SHELL =~ "bash" || $SHELL =~ "zsh" || $SHELL =~ "fish"
-    call system(": >/dev/tty")
-    if v:shell_error == 0
-      let s:tty = "/dev/tty"
-    else
-      let s:tty = system("ps -p " . getpid() . " -o tty=")
-      if v:shell_error != 0 || s:tty =~ "?"
-        return
-      endif
-      let s:tty = "/dev/" . s:tty
+  elseif has('unix') && executable('base64')
+    " osc52 provider
+    let s:osc_dev = 0
+    if filewritable('/dev/fd/2') == 1
+      let s:osc_dev = 1
     endif
-
     augroup osc
       autocmd!
       autocmd TextYankPost * if v:event.operator ==# 'y' | call Osc52Yank() | endif
     augroup END
-
-    return
   endif
 endfunc
 
@@ -512,6 +510,17 @@ noremap <C-Q> <C-V>
 
 " CTRL-C to copy text from cmd line
 cnoremap <C-c> <C-y>
+
+" Mappings to copy file path/dirname/filename
+if has("clipboard")
+  noremap <leader>ff :let @+=expand("%:p")<CR>
+  noremap <leader>fn :let @+=expand("%:t")<CR>
+  noremap <leader>fd :let @+=expand("%:p:h")<CR>
+else
+  noremap <leader>ff :let @"=expand("%:p") \| call MetaYank()<CR>
+  noremap <leader>fn :let @"=expand("%:t") \| call MetaYank()<CR>
+  noremap <leader>fd :let @"=expand("%:p:h") \| call MetaYank()<CR>
+endif
 
 """""""""""""""""""""
 " File type settings
