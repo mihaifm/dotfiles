@@ -163,17 +163,6 @@ vim.keymap.set({'n', 'v'}, '<C-v>', 'P', { desc = 'Paste with CTRL-V' })
 vim.keymap.set('c', '<C-v>', '<C-r>+', { desc = 'Paste in command mode' })
 vim.keymap.set('i', '<C-v>', '<C-r>+', { desc = 'Paste in insert mode' })
 
-vim.keymap.set('v', '<C-x>', '"+x', { desc = 'Cut in visual mode' })
-
--- cut with CTRL-X, empty lines go the black hole registry
-vim.keymap.set('n', '<C-x>', function()
-  if vim.fn.match(vim.fn.getline('.'), '^\\s*$') == -1 then
-    vim.cmd('normal 0"+d$')
-  else
-    vim.cmd('normal "_dd')
-  end
-end, { desc = 'Cut in normal mode' })
-
 -- use CTRL-Q instead of CTRL-V to start visual block
 vim.keymap.set('n', '<C-q>', '<C-v>', { desc = 'Start visual block mode' })
 
@@ -199,6 +188,8 @@ vim.keymap.set('n', '<leader>fn', function() vim.cmd('let @+=expand("%:t")') end
   { desc = 'Copy file name' })
 vim.keymap.set('n', '<leader>fd', function() vim.cmd('let @+=expand("%:p:h")') end,
   { desc = 'Copy directory path for current file' })
+vim.keymap.set('n', '<leader>fl', function() vim.cmd('let @+=expand("%:p").":".line(".")') end,
+  { desc = 'Copy file path:line' })
 
 -- open Windows Explorer
 if vim.fn.has("win32") == 1 then
@@ -210,8 +201,9 @@ end
 vim.keymap.set('n', 'Q', '<nop>')
 vim.keymap.set('n', 'ZZ', '<nop>')
 
--- exit terminal mode with esc
-vim.keymap.set('t', '<Esc>', '<C-\\><C-n>')
+-- exit terminal mode with esc or C-w
+vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]])
+vim.keymap.set('t', '<C-w>', [[<C-\><C-n><C-w>]])
 
 -----------
 -- Plugins

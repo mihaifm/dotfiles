@@ -359,6 +359,7 @@ local plugins = {
             vim.cmd('hi! TelescopeNormal guibg=NONE')
             vim.cmd('hi! link NormalSB Normal')
             vim.cmd('hi! link FoldColumn SignColumn')
+            vim.cmd('hi! link DebugPC Visual')
 
             vim.cmd('hi! link debugButtons Constant')
             vim.cmd('hi! link debugBreakpoint Statement')
