@@ -263,25 +263,9 @@ local plugins = {
   },
   {
     'stevearc/aerial.nvim',
-    cmd = { 'Aerial', 'ToggleAerialLualine' },
-    keys = {
-      { '<leader>ia', '<cmd>ToggleAerialLualine<CR>',  desc = 'Toggle Aerial Lualine context' }
-    },
+    cmd = { 'AerialToggle' },
     config = function()
       require('aerial').setup()
-
-      local aerialLualine = false
-      local lua_statusbar_c = {}
-      vim.api.nvim_create_user_command("ToggleAerialLualine", function()
-        aerialLualine = not aerialLualine
-        if aerialLualine then
-          lua_statusbar_c = { { 'filename' }, { 'aerial' } }
-        else
-          lua_statusbar_c = { { 'filename' } }
-        end
-        require('lualine').setup({ sections = { lualine_c = lua_statusbar_c } })
-      end, {})
-
       pcall(require('telescope').load_extension, 'aerial')
     end
   },
@@ -292,30 +276,6 @@ local plugins = {
       { "SmiteshP/nvim-navbuddy" },
     },
     config = function()
-      local navicLualine = false
-      local lua_winbar_c = {}
-      local navic_config = {
-        "navic",
-        color_correction = nil,
-        navic_opts = {
-          separator = " ⇢ ",
-          highlight = true,
-          depth_limit = 9,
-        }
-      }
-
-      vim.api.nvim_create_user_command("ToggleNavicLualine", function()
-        navicLualine = not navicLualine
-        if navicLualine then
-          lua_winbar_c = { navic_config }
-        else
-          lua_winbar_c = {}
-        end
-        require('lualine').setup({ winbar = { lualine_c = lua_winbar_c } })
-      end, {})
-
-      vim.keymap.set("n", '<leader>in', '<cmd>ToggleNavicLualine<CR>', { desc = 'Toggle Navic winbar context' })
-
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("navic-lspattach", { clear = true }),
         callback = function(args)

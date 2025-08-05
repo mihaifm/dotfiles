@@ -286,58 +286,6 @@ local plugins = {
     end
   },
   {
-    "nvim-lualine/lualine.nvim",
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
-    enabled = true,
-    config = function()
-      vim.opt.statusline = ' '
-
-      require('lualine').setup({
-        options = {
-          section_separators = { left = '', right = '' },
-          component_separators = { left = '·', right = '·' },
-        },
-        sections = {
-          lualine_b = {
-            { 'branch', icon = '󰘬' }
-          },
-          lualine_c = {
-            {
-              'filename'
-            },
-          },
-          lualine_x = {
-            { 'filetype' },
-            {
-              'encoding',
-              cond = function() return (vim.opt.fileencoding:get() ~= 'utf-8') end
-            },
-            {
-              'fileformat',
-              cond = function() return (vim.opt.fileformat:get() ~= 'unix') end,
-              symbols = { unix = 'lf', dos = 'crlf', mac = 'cr' }
-            }
-          }
-        },
-      })
-
-      local lualineFullPath = false
-      vim.api.nvim_create_user_command("ToggleLualineFullPath", function()
-        lualineFullPath = not lualineFullPath
-        local lualine_c = {}
-
-        if lualineFullPath then
-          lualine_c = { 'filename', path = 2 }
-        else
-          lualine_c = { 'filename', path = 0 }
-        end
-        require('lualine').setup({ sections = { lualine_c = { lualine_c } } })
-      end, {})
-
-      vim.keymap.set("n", '<leader>ul', '<cmd>ToggleLualineFullPath<CR>', { desc = 'Toggle lualine full path' })
-    end,
-  },
-  {
     "folke/tokyonight.nvim",
     enabled = true,
     config = function()
@@ -614,22 +562,6 @@ local plugins = {
           map("n", lspleader .. 'wl', function()
             print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
           end, 'List workspace folders')
-
-          -- highlight references to the word under cursor (see :help CursorHold)
-          local client = vim.lsp.get_client_by_id(event.data.client_id)
-          if client and client.server_capabilities.documentHighlightProvider then
-            vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-              group = vim.api.nvim_create_augroup('lsp-cursorhold', { clear = true }),
-              buffer = event.buf,
-              callback = vim.lsp.buf.document_highlight,
-            })
-
-            vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
-              group = vim.api.nvim_create_augroup('lsp-cursormoved', { clear = true }),
-              buffer = event.buf,
-              callback = vim.lsp.buf.clear_references,
-            })
-          end
 
           map("n", lspleader .. 'I', function()
             vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())

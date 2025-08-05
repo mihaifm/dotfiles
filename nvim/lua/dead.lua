@@ -295,6 +295,58 @@ local plugins = {
       end)
     end
   },
+  {
+    "nvim-lualine/lualine.nvim",
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    enabled = false,
+    config = function()
+      vim.opt.statusline = ' '
+
+      require('lualine').setup({
+        options = {
+          section_separators = { left = '', right = '' },
+          component_separators = { left = '·', right = '·' },
+        },
+        sections = {
+          lualine_b = {
+            { 'branch', icon = '󰘬' }
+          },
+          lualine_c = {
+            {
+              'filename'
+            },
+          },
+          lualine_x = {
+            { 'filetype' },
+            {
+              'encoding',
+              cond = function() return (vim.opt.fileencoding:get() ~= 'utf-8') end
+            },
+            {
+              'fileformat',
+              cond = function() return (vim.opt.fileformat:get() ~= 'unix') end,
+              symbols = { unix = 'lf', dos = 'crlf', mac = 'cr' }
+            }
+          }
+        },
+      })
+
+      local lualineFullPath = false
+      vim.api.nvim_create_user_command("ToggleLualineFullPath", function()
+        lualineFullPath = not lualineFullPath
+        local lualine_c = {}
+
+        if lualineFullPath then
+          lualine_c = { 'filename', path = 2 }
+        else
+          lualine_c = { 'filename', path = 0 }
+        end
+        require('lualine').setup({ sections = { lualine_c = { lualine_c } } })
+      end, {})
+
+      vim.keymap.set("n", '<leader>ul', '<cmd>ToggleLualineFullPath<CR>', { desc = 'Toggle lualine full path' })
+    end,
+  },
 }
 
 return plugins

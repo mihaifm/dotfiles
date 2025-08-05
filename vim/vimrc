@@ -194,7 +194,7 @@ set statusline+=%2*                                    " switch to User2 hightli
 set statusline+=\ %{StlFilename()}                     " filename
 set statusline+=%2*
 set statusline+=\ %r%m                                 " read-only, modified flags
-set statusline+=%=\ 
+set statusline+=%=\                                    " switch to right alignment
 set statusline+=%3*
 set statusline+=%{StlFiletype()}\                      " filetype
 set statusline+=%4*
