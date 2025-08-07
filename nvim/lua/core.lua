@@ -1204,6 +1204,7 @@ local plugins = {
         args = { "--quiet", "--interpreter=dap" },
       }
 
+      ---@param conf { host?: string, port?: integer, start_neovim?: function }
       dap.adapters.nlua = function(callback, conf)
         local adapter = {
           type = "server",

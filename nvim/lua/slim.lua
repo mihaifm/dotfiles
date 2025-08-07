@@ -319,7 +319,7 @@ function FormatCsv()
     return out
   end
 
-  if vim.opt_local.modifiable:get() == false then
+  if vim.opt_local.modifiable == false then
     vim.opt_local.modifiable = true
   end
 
@@ -332,7 +332,7 @@ function FormatCsv()
       local lineData = parseCsv(line)
       table.insert(beautyData, lineData)
       for k, v in pairs(lineData) do
-        local utf8len = vim.str_utfindex(v)
+        local utf8len = vim.str_utfindex(v, "utf-8")
         if not sizes[k] then sizes[k] = utf8len
         else sizes[k] = math.max(sizes[k], utf8len)
         end
@@ -356,7 +356,7 @@ function FormatCsv()
 
       if k == 1 then beauty = "│ " end
 
-      local utf8len = vim.str_utfindex(lineData[k])
+      local utf8len = vim.str_utfindex(lineData[k], "utf-8")
       lineData[k] = lineData[k] .. string.rep(" ", sizes[k] - utf8len)
       beauty = beauty .. lineData[k] .. " │ "
     end

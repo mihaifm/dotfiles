@@ -286,7 +286,7 @@ local plugins = {
           local buffer = args.buf
           local client = vim.lsp.get_client_by_id(args.data.client_id)
 
-          if client and client.supports_method("textDocument/documentSymbol") then
+          if client and client.server_capabilities.documentSymbolProvider then
             require("nvim-navic").attach(client, buffer)
             require('nvim-navbuddy').attach(client, buffer)
           end
@@ -360,7 +360,7 @@ local plugins = {
       vim.cmd('set showtabline=0')
 
       vim.api.nvim_create_user_command('ToggleTabline', function()
-        if vim.opt.showtabline:get() ~= 2 then
+        if vim.opt.showtabline ~= 2 then
           vim.cmd('set showtabline=2')
         else
           vim.cmd('set showtabline=0')

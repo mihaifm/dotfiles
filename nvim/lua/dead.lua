@@ -140,7 +140,7 @@ local plugins = {
       vim.cmd('set showtabline=0')
 
       vim.api.nvim_create_user_command('ToggleTabline', function()
-        if vim.opt.showtabline:get() == 0 then
+        if vim.opt.showtabline == 0 then
           vim.cmd('BarbarEnable')
           vim.cmd('set showtabline=2')
         else
