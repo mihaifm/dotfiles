@@ -761,7 +761,7 @@ vim.api.nvim_create_autocmd({ "FileType", "BufEnter", "FocusGained" }, {
     end
 
     local branch_name, _ = branch_cmd.stdout:gsub("\n", "")
-    vim.b.branch_name = ' ' .. branch_name .. ' '
+    vim.b.branch_name = ' 󰘬 ' .. branch_name .. ' '
   end,
 })
 
