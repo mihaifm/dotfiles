@@ -253,17 +253,9 @@ local plugins = {
 
       local function gs_toggle_diff(value)
         gitsigns.toggle_linehl(value)
-        gitsigns.toggle_deleted(value)
+        gitsigns.toggle_signs(value)
         gitsigns.toggle_word_diff(value)
         gitsigns.toggle_numhl(value)
-      end
-
-      local function next_hunk()
-        gitsigns.nav_hunk('next')
-      end
-
-      local function prev_hunk()
-        gitsigns.nav_hunk('prev')
       end
 
       local gs_toggled = false
@@ -273,11 +265,11 @@ local plugins = {
         gs_toggle_diff(gs_toggled)
       end, { desc = "Git signs toggle diff" })
 
-      vim.keymap.set("n", "<leader>gn", next_hunk, { desc = "Git signs next hunk" })
-      vim.keymap.set("n", "[g", next_hunk, { desc = "Git signs next hunk" })
+      vim.keymap.set("n", "<leader>gn", "<Cmd>Gitsigns nav_hunk next<CR>", { desc = "Git signs next hunk" })
+      vim.keymap.set("n", "[g", "<Cmd>Gitsigns nav_hunk next<CR>", { desc = "Git signs next hunk" })
 
-      vim.keymap.set("n", "<leader>gp", prev_hunk, { desc = "Git signs previous hunk" })
-      vim.keymap.set("n", "]g", prev_hunk, { desc = "Git signs previous hunk" })
+      vim.keymap.set("n", "<leader>gp", "<Cmd>Gitsigns nav_hunk prev<CR>", { desc = "Git signs previous hunk" })
+      vim.keymap.set("n", "]g", "<Cmd>Gitsigns nav_hunk prev<CR>", { desc = "Git signs previous hunk" })
 
       table.insert(ClearFunctions, function()
         gs_toggled = false

@@ -579,7 +579,7 @@ local plugins = {
       return {
         { fzfleader .. 'z', "<cmd>FzfLua<CR>", { desc = 'Builtins' } },
         { fzfleader .. 'f', "<cmd>FzfLua files<CR>", { desc = 'Find files' } },
-        { fzfleader .. 'g', "<cmd>FzfLua live_grep_glob<CR>", { desc = 'Live grep with glob pattern' } }
+        { fzfleader .. 'g', "<cmd>FzfLua live_grep<CR>", { desc = 'Live grep with glob pattern' } }
       }
     end,
     dependencies = { "nvim-tree/nvim-web-devicons" },
