@@ -4,7 +4,7 @@
 -- neovide
 vim.g.neovide_padding_left = 5
 vim.g.neovide_padding_right = 5
-vim.g.neovide_transparency = 0.96
+vim.g.neovide_opacity = 0.96
 vim.g.neovide_hide_mouse_when_typing = true
 
 -- termdebug
