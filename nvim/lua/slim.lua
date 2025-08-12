@@ -572,6 +572,7 @@ end
 -- Statusline
 
 local expand_statusline_path = false
+local show_statusline_diagnostics = true
 
 function StlFileName()
   if expand_statusline_path then
@@ -608,6 +609,39 @@ function StlFileFormat()
   return vim.o.fileformat == 'dos' and '· crlf ' or ''
 end
 
+function StlDiagError()
+  if package.loaded["vim.diagnostic"] and show_statusline_diagnostics then
+    local counts = vim.diagnostic.count(0)
+    return  counts[vim.diagnostic.severity.ERROR] and '󰀩 ' .. counts[vim.diagnostic.severity.ERROR] .. ' ' or ""
+  end
+  return ""
+end
+
+function StlDiagWarn()
+  if package.loaded["vim.diagnostic"] and show_statusline_diagnostics then
+    local counts = vim.diagnostic.count(0)
+    return  counts[vim.diagnostic.severity.WARN] and '󰀦 ' .. counts[vim.diagnostic.severity.WARN] .. ' ' or ""
+  end
+  return ""
+end
+
+function StlDiagInfo()
+  if package.loaded["vim.diagnostic"] and show_statusline_diagnostics then
+    local counts = vim.diagnostic.count(0)
+    return  counts[vim.diagnostic.severity.INFO] and '󰀧 ' .. counts[vim.diagnostic.severity.INFO] .. ' ' or ""
+  end
+  return ""
+end
+
+function StlDiagHint()
+  if package.loaded["vim.diagnostic"] and show_statusline_diagnostics then
+    local counts = vim.diagnostic.count(0)
+    return  counts[vim.diagnostic.severity.HINT] and '󱇎 ' .. counts[vim.diagnostic.severity.HINT] .. ' ' or ""
+  end
+  return ""
+end
+
+
 vim.cmd([[
 let stl_mode_map = { 'n': 'NORMAL', 'i': 'INSERT', 'R': 'REPLACE', 'v': 'VISUAL', 'V': 'V-LINE', "\<C-v>": 'V-BLOCK',
                    \ 'c': 'COMMAND', 's': 'SELECT', 'S': 'S-LINE', "\<C-s>": 'S-BLOCK', 't': 'TERMINAL' }
@@ -631,8 +665,7 @@ let stl_sep2_colors = { 'n': '%#StlSep2Normal#', 'i': '%#StlSep2Insert#', 'R': '
 
 set laststatus=3
 
-set statusline=
-set statusline+=%{%get(stl_mode_colors,mode(),'%1*')%} " get the hl group for current mode and switch to it
+set statusline=%{%get(stl_mode_colors,mode(),'%1*')%} " get the hl group for current mode and switch to it
 set statusline+=\ %{get(stl_mode_map,mode(),'')}\      " mode
 set statusline+=%{%get(stl_sep1_colors,mode(),'%1*')%}
 set statusline+=
@@ -644,6 +677,14 @@ set statusline+=%#StatusLine#                          " switch to the StatusLin
 set statusline+=\ %{v:lua.StlFileName()}               " filename
 set statusline+=\ %r%m                                 " read-only, modified flags
 set statusline+=%=\                                    " switch to right alignment
+set statusline+=%#DiagnosticVirtualTextError#
+set statusline+=%{v:lua.StlDiagError()}                " diagnostics
+set statusline+=%#DiagnosticVirtualTextWarn#
+set statusline+=%{v:lua.StlDiagWarn()}                 " diagnostics
+set statusline+=%#DiagnosticVirtualTextInfo#
+set statusline+=%{v:lua.StlDiagInfo()}                 " diagnostics
+set statusline+=%#DiagnosticVirtualTextHint#
+set statusline+=%{v:lua.StlDiagHint()}                 " diagnostics
 set statusline+=%#StlIconColor#                        " switch to a custom StlIconColor hightlight group
 set statusline+=%{v:lua.StlFileIcon()}\                " file icon
 set statusline+=%#StatusLine#                          " switch to the StatusLine hightlight group
@@ -769,5 +810,11 @@ vim.keymap.set('n', '<leader>ul', function()
   expand_statusline_path = not expand_statusline_path
   vim.cmd.redrawstatus()
 end, { desc = 'Toggle statusline full path' })
+
+vim.keymap.set('n', '<leader>ud', function()
+  show_statusline_diagnostics = not show_statusline_diagnostics
+  vim.cmd.redrawstatus()
+end, { desc = 'Toggle statusline diagnostics' })
+
 
 return {}
