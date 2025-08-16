@@ -294,6 +294,17 @@ fi
 
 if [[ $1 == "bootstrap" ]]; then
 
+  # detect OS
+  if [[ -r /etc/os-release ]]; then
+  . /etc/os-release
+  fi
+
+  if [[ "$ID" == "rhel" ]]; then
+    build_env="source scl_source enable devtoolset-12"
+  else
+    build_env="true"
+  fi
+
   # Tmux
   git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
   ~/.tmux/plugins/tpm/scripts/install_plugins.sh
@@ -302,15 +313,13 @@ if [[ $1 == "bootstrap" ]]; then
   vim +PlugInstall! +qa
 
   # Neovim
-  (source scl_source enable devtoolset-12 && nvim --headless +"Lazy! install" +"qa")
+  ($build_env && nvim --headless +"Lazy! install" +"qa")
 
-  (source scl_source enable devtoolset-12 && nvim --headless \
-     +"TSInstallSync! c cpp lua vim vimdoc query javascript python html bash markdown markdown_inline" \
-     +"qa")
+  ($build_env && nvim --headless \
+    +"TSInstallSync! c cpp lua vim vimdoc query javascript python html bash markdown markdown_inline" \
+    +"qa")
 
   (nvim --headless +"MasonInstall lua-language-server" +"qa")
-
-  (sed -i "s:$HOME:~:g" ~/.local/share/nvim/mason/packages/lua-language-server/lua-language-server)
 
   exit
 fi
