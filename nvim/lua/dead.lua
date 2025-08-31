@@ -347,6 +347,35 @@ local plugins = {
       vim.keymap.set("n", '<leader>ul', '<cmd>ToggleLualineFullPath<CR>', { desc = 'Toggle lualine full path' })
     end,
   },
+  {
+    "akinsho/toggleterm.nvim",
+    enabled = false,
+    version = "*",
+    cmd = 'ToggleTerm',
+    keys = function()
+      local togleader = '<leader>et'
+
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({ { togleader, group = "ToggleTerm" } })
+      end
+
+      return {
+        { [[<C-\>]], desc = 'ToggleTerm' },
+        { togleader .. 'f', "<Cmd>ToggleTerm direction=float<CR>", desc = "ToggleTerm float" },
+        { togleader .. 'h', "<Cmd>ToggleTerm size=10 direction=horizontal<CR>", desc = "ToggleTerm horizontal split" },
+        { togleader .. 'v', "<Cmd>ToggleTerm size=80 direction=vertical<CR>", desc = "ToggleTerm vertical split" }
+      }
+    end,
+    opts = {
+      open_mapping = [[<c-\>]],
+      shading_factor = 2,
+      on_open = function()
+        vim.opt_local.foldcolumn = "0"
+        vim.opt_local.signcolumn = "no"
+      end
+    }
+  },
 }
 
 return plugins

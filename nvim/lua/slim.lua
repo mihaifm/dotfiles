@@ -816,5 +816,82 @@ vim.keymap.set('n', '<leader>ud', function()
   vim.cmd.redrawstatus()
 end, { desc = 'Toggle statusline diagnostics' })
 
+-------------------
+-- Terminal toggle
+
+local terminal_state = {
+  buf = nil,
+  win = nil,
+  direction = 'horizontal'
+}
+
+local function setup_terminal_buffer(buf)
+  vim.api.nvim_set_option_value('foldcolumn', '0', { win = 0 })
+  vim.api.nvim_set_option_value('signcolumn', 'no', { win = 0 })
+
+  if vim.api.nvim_buf_line_count(buf) == 1 and vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1] == '' then
+    vim.fn.jobstart(vim.o.shell, { term = true })
+  end
+
+  vim.cmd('startinsert')
+end
+
+local function create_terminal_window(direction, size)
+  local width = vim.o.columns
+  local height = vim.o.lines
+
+  if direction == 'float' then
+    local win_width = math.floor(width * 0.8)
+    local win_height = math.floor(height * 0.8)
+    local row = math.floor((height - win_height) / 2)
+    local col = math.floor((width - win_width) / 2)
+
+    return vim.api.nvim_open_win(terminal_state.buf, true, {
+      relative = 'editor',
+      width = win_width,
+      height = win_height,
+      row = row,
+      col = col,
+      style = 'minimal',
+      border = 'rounded'
+    })
+  elseif direction == 'horizontal' then
+    vim.cmd('botright ' .. (size or 10) .. 'split')
+    vim.api.nvim_set_current_buf(terminal_state.buf)
+    return vim.api.nvim_get_current_win()
+  elseif direction == 'vertical' then
+    vim.cmd('botright ' .. (size or 80) .. 'vsplit')
+    vim.api.nvim_set_current_buf(terminal_state.buf)
+    return vim.api.nvim_get_current_win()
+  end
+end
+
+local function toggle_terminal(direction, size)
+  direction = direction or terminal_state.direction
+  terminal_state.direction = direction
+
+  -- Create terminal buffer if it doesn't exist
+  if not terminal_state.buf or not vim.api.nvim_buf_is_valid(terminal_state.buf) then
+    terminal_state.buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_set_option_value('bufhidden', 'hide', { buf = terminal_state.buf })
+    vim.api.nvim_set_option_value('filetype', 'terminal', { buf = terminal_state.buf })
+  end
+
+  -- Check if terminal window exists and is visible
+  if terminal_state.win and vim.api.nvim_win_is_valid(terminal_state.win) then
+    vim.api.nvim_win_close(terminal_state.win, false)
+    terminal_state.win = nil
+    return
+  end
+
+  -- Create and show terminal window
+  terminal_state.win = create_terminal_window(direction, size)
+  setup_terminal_buffer(terminal_state.buf)
+end
+
+vim.keymap.set({'n', 't'}, [[<C-\>]], function() toggle_terminal() end, { desc = 'Toggle terminal' })
+vim.keymap.set('n', '<leader>etf', function() toggle_terminal('float') end, { desc = 'Toggle float terminal' })
+vim.keymap.set('n', '<leader>eth', function() toggle_terminal('horizontal', 10) end, { desc = 'Toggle horizontal terminal' })
+vim.keymap.set('n', '<leader>etv', function() toggle_terminal('vertical', 80) end, { desc = 'Toggle vertical terminal' })
 
 return {}
