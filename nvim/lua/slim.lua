@@ -894,4 +894,157 @@ vim.keymap.set('n', '<leader>etf', function() toggle_terminal('float') end, { de
 vim.keymap.set('n', '<leader>eth', function() toggle_terminal('horizontal', 10) end, { desc = 'Toggle horizontal terminal' })
 vim.keymap.set('n', '<leader>etv', function() toggle_terminal('vertical', 80) end, { desc = 'Toggle vertical terminal' })
 
+------------------
+-- Project picker
+
+local function get_tracking_file()
+  local data_path = vim.fn.stdpath('data')
+  return data_path .. '/git_folders.txt'
+end
+
+local function is_git_repo(path)
+  local git_dir = path .. '/.git'
+  return vim.fn.isdirectory(git_dir) == 1
+end
+
+local function load_folders()
+  local file_path = get_tracking_file()
+  local folders = {}
+
+  local file, err = io.open(file_path, 'r')
+  if not file then
+    vim.notify('Failed to open project tracking file: ' .. (err or 'unknown error'), vim.log.levels.WARN)
+    return folders
+  end
+
+  for line in file:lines() do
+    line = vim.trim(line)
+    if line ~= '' then
+      -- ordered list
+      table.insert(folders, line)
+    end
+  end
+  file:close()
+
+  return folders
+end
+
+local function save_folders(folders)
+  local file_path = get_tracking_file()
+
+  local file, err = io.open(file_path, 'w')
+  if not file then
+    vim.notify('Failed to open project tracking file: ' .. (err or 'unknown error'), vim.log.levels.WARN)
+    return
+  end
+
+  for _, folder in ipairs(folders) do
+    file:write(folder .. '\n')
+  end
+  file:close()
+end
+
+local function add_folder(path)
+  path = vim.fn.fnamemodify(path, ':p:h')
+
+  if not is_git_repo(path) then
+    return
+  end
+
+  local folders = load_folders()
+
+  -- remove the path if it already exists
+  local new_folders = {}
+  for _, folder in ipairs(folders) do
+    if folder ~= path then
+      table.insert(new_folders, folder)
+    end
+  end
+
+  -- add the path to the beginning (most recent)
+  table.insert(new_folders, 1, path)
+
+  save_folders(new_folders)
+end
+
+function TrackFolders()
+  local current_dir = vim.fn.getcwd()
+  add_folder(current_dir)
+
+  vim.api.nvim_create_augroup('GitFolderTracker', { clear = true })
+
+  vim.api.nvim_create_autocmd('DirChanged', {
+    group = 'GitFolderTracker',
+    callback = function()
+      local new_dir = vim.fn.getcwd()
+      add_folder(new_dir)
+    end
+  })
+
+  vim.api.nvim_create_autocmd('VimEnter', {
+    group = 'GitFolderTracker',
+    callback = function()
+      local new_dir = vim.fn.getcwd()
+      add_folder(new_dir)
+    end
+  })
+end
+
+function TrackCurrentFolder()
+  -- manually add current directory
+  add_folder(vim.fn.getcwd())
+end
+
+function ClearTrackedFolders()
+  local file_path = get_tracking_file()
+  local file, err = io.open(file_path, 'w')
+
+  if not file then
+    vim.notify('Failed to open project tracking file: ' .. (err or 'unknown error'), vim.log.levels.WARN)
+    return
+  end
+
+  file:close()
+  vim.notify('Cleared all tracked git folders', vim.log.levels.INFO)
+end
+
+function PickFolder()
+  local folders = load_folders()
+
+  if #folders == 0 then
+    vim.notify('No tracked Git folders found', vim.log.levels.INFO)
+    return
+  end
+
+  local items = {}
+  for _, folder in ipairs(folders) do
+    -- create display label with folder name and full path
+    local name = vim.fn.fnamemodify(folder, ':t')
+    local parent = vim.fn.fnamemodify(folder, ':h:t')
+    local display = name
+    if parent and parent ~= '' and parent ~= '/' then
+      display = parent .. '/' .. name
+    end
+    table.insert(items, {
+      label = display .. ' (' .. folder .. ')',
+      value = folder
+    })
+  end
+
+  vim.ui.select(items, {
+    prompt = 'Select Git folder:',
+    format_item = function(item)
+      return item.label
+    end,
+  }, function(choice)
+    if choice then
+      vim.cmd('cd ' .. vim.fn.fnameescape(choice.value))
+      vim.notify('Changed to: ' .. choice.value, vim.log.levels.INFO)
+    end
+  end)
+end
+
+TrackFolders()
+vim.api.nvim_create_user_command('PickFolder', PickFolder, {})
+
 return {}

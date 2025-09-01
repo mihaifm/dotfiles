@@ -957,7 +957,7 @@ local plugins = {
             { action = "Telescope find_files",desc = " Find File", icon = " ", key = "f" },
             { action = "enew", desc = " New File", icon = " ", key = "n" },
             { action = "Telescope oldfiles", desc = " Recent Files", icon = " ", key = "r" },
-            { action = "Telescope live_grep", desc = " Find Text", icon = " ", key = "g" },
+            { action = "PickFolder", desc = " Open Project Folder", icon = " ", key = "g" },
             { action = 'SesLoad', desc = " Restore Last Session", icon = " ", key = "s" },
             { action = "Lazy", desc = " Lazy", icon = "󰒲 ", key = "l" },
             { action = "qa", desc = " Quit", icon = " ", key = "q" },
