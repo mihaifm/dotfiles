@@ -911,9 +911,8 @@ local function load_folders()
   local file_path = get_tracking_file()
   local folders = {}
 
-  local file, err = io.open(file_path, 'r')
+  local file = io.open(file_path, 'r')
   if not file then
-    vim.notify('Failed to open project tracking file: ' .. (err or 'unknown error'), vim.log.levels.WARN)
     return folders
   end
 
@@ -932,9 +931,8 @@ end
 local function save_folders(folders)
   local file_path = get_tracking_file()
 
-  local file, err = io.open(file_path, 'w')
+  local file = io.open(file_path, 'w')
   if not file then
-    vim.notify('Failed to open project tracking file: ' .. (err or 'unknown error'), vim.log.levels.WARN)
     return
   end
 
@@ -997,22 +995,21 @@ end
 
 function ClearTrackedFolders()
   local file_path = get_tracking_file()
-  local file, err = io.open(file_path, 'w')
+  local file = io.open(file_path, 'w')
 
   if not file then
-    vim.notify('Failed to open project tracking file: ' .. (err or 'unknown error'), vim.log.levels.WARN)
     return
   end
 
   file:close()
-  vim.notify('Cleared all tracked git folders', vim.log.levels.INFO)
+  print('Cleared all tracked git folders')
 end
 
 function PickFolder()
   local folders = load_folders()
 
   if #folders == 0 then
-    vim.notify('No tracked Git folders found', vim.log.levels.INFO)
+    print('No tracked Git folders found')
     return
   end
 
@@ -1032,14 +1029,14 @@ function PickFolder()
   end
 
   vim.ui.select(items, {
-    prompt = 'Select Git folder:',
+    prompt = 'Select project folder:',
     format_item = function(item)
       return item.label
     end,
   }, function(choice)
     if choice then
       vim.cmd('cd ' .. vim.fn.fnameescape(choice.value))
-      vim.notify('Changed to: ' .. choice.value, vim.log.levels.INFO)
+      print('Changed to: ' .. choice.value)
     end
   end)
 end
