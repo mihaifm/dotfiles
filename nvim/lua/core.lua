@@ -638,6 +638,7 @@ local plugins = {
       { "hrsh7th/cmp-cmdline" },
       { "andersevenrud/cmp-tmux" },
       { "lukas-reineke/cmp-rg" },
+      { "zbirenbaum/copilot-cmp", opts = {} },
     },
     config = function()
       vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
@@ -670,6 +671,7 @@ local plugins = {
         Event = '',
         Operator = '󰆕',
         TypeParameter = '󰊄',
+        Copilot = "",
       }
 
       cmp.setup({
@@ -697,6 +699,7 @@ local plugins = {
         }),
         sources = {
           -- sources in group 2 won't appear if the ones in group 1 are available
+          { name = "copilot", group_index = 1 },
           { name = "nvim_lsp", group_index = 1 },
           { name = "nvim_lsp_signature_help", group_index = 1 },
           { name = "path", group_index = 1, option = { trailing_slash = true } },
