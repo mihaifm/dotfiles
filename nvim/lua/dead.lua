@@ -376,6 +376,32 @@ local plugins = {
       end
     }
   },
+  {
+    "yetone/avante.nvim",
+    event = "VeryLazy",
+    enabled = false,
+    version = false,
+    build = vim.fn.has("win32") ~= 0 and "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" or "make",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "MunifTanjim/nui.nvim",
+      "nvim-tree/nvim-web-devicons",
+    },
+    config = function()
+      require("avante").setup({
+        provider = "openai",
+        providers = {
+          openai = {
+            api_key = os.getenv("AVANTE_OPENAI_API_KEY"),
+            model = "gpt-5",
+            extra_request_body = {
+              temperature = 1,
+            },
+          },
+        },
+      })
+    end,
+  },
 }
 
 return plugins
