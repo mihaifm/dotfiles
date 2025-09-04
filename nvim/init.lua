@@ -158,7 +158,7 @@ vim.g.maplocalleader = ','
 
 -- copy-paste with CTRL-C CTRL-V
 vim.keymap.set({ 'n', 'v'}, '<C-c>', '"+y', { desc = 'Copy with CTRL-C' })
-vim.keymap.set({'n', 'v'}, '<C-v>', 'P', { desc = 'Paste with CTRL-V' })
+vim.keymap.set({'n', 'v'}, '<C-v>', '"+p', { desc = 'Paste with CTRL-V' })
 
 vim.keymap.set('c', '<C-v>', '<C-r>+', { desc = 'Paste in command mode' })
 vim.keymap.set('i', '<C-v>', '<C-r>+', { desc = 'Paste in insert mode' })

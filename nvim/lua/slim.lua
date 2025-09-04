@@ -46,38 +46,6 @@ end
 
 setupYankLeader()
 
--- custom paste handler (called when pasting in the terminal with CTRL-V)
-vim.paste = (function(overridden)
-  local mode = ''
-  local stored_regs = {}
-  local affected_regs = { "*", "+", '"', "-" }
-
-  return function(lines, phase)
-    if phase == 1 then
-      mode = vim.api.nvim_get_mode()["mode"]
-
-      if mode == 'v' or mode == 'V' then
-        -- backup potentially affected regs
-        for _, reg in ipairs(affected_regs) do
-          stored_regs[reg] = vim.fn.getreg(reg)
-        end
-      end
-    end
-
-    overridden(lines, phase)
-
-    if phase == 3 and (mode == 'v' or mode == 'V') then
-      vim.defer_fn(function()
-        -- restore potentially affected regs
-        for _, reg in ipairs(affected_regs) do
-          vim.fn.setreg(reg, stored_regs[reg])
-        end
-        stored_regs = {}
-      end, 10)
-    end
-  end
-end)(vim.paste)
-
 -- yank ring implementation
 local yankHistory = {}
 local yankIndex = 0
@@ -167,6 +135,97 @@ vim.keymap.set('n', '<C-p>', '<cmd>YankCycleNext<CR>', { desc = 'Paste next yank
 vim.keymap.set('n', '<C-n>', '<cmd>YankCyclePrev<CR>', { desc = 'Paste previous yank' })
 
 vim.keymap.set('n', 'yp', '<cmd>YankCycleHist<CR>', { desc = 'Paste from yank history' })
+
+------------------------
+-- Custom paste handler
+
+-- prevents register pollution when pasting over a visual selection
+vim.paste = (function(overridden)
+  local mode = ''
+  local stored_regs = {}
+  local affected_regs = { "*", "+", '"', "-" }
+
+  return function(lines, phase)
+    if phase == 1 then
+      mode = vim.api.nvim_get_mode()["mode"]
+
+      if mode == 'v' or mode == 'V' then
+        -- backup potentially affected regs
+        for _, reg in ipairs(affected_regs) do
+          stored_regs[reg] = vim.fn.getreg(reg)
+        end
+      end
+    end
+
+    overridden(lines, phase)
+
+    if phase == 3 and (mode == 'v' or mode == 'V') then
+      vim.defer_fn(function()
+        -- restore potentially affected regs
+        for _, reg in ipairs(affected_regs) do
+          vim.fn.setreg(reg, stored_regs[reg])
+        end
+        stored_regs = {}
+      end, 10)
+    end
+  end
+end)(vim.paste)
+
+--------------
+-- OSC52 yank
+
+local function setup_osc52()
+  if vim.fn.has('win32') == 1 then return end
+  if vim.env.TMUX then return end
+  -- don't check for has('clipboard'), neovim bugs out
+  if vim.g.clipboard ~= nil then return end
+
+  local function osc52_send(s)
+    local b64 = vim.fn.system("base64", s):gsub("%s+$","")
+    local osc = "\x1b]52;c;" .. b64 .. "\x07"
+
+    local ok = pcall(function()
+      -- write to TTY so it reaches the terminal even in cooked modes
+      local f = io.open("/dev/tty", "w")
+      if f then
+        f:write(osc)
+        f:flush()
+        f:close()
+      else
+        -- falls back to stdout if no /dev/tty.
+        io.write(osc)
+      end
+    end)
+
+    return ok
+  end
+
+  local last = {["+"] = {lines={}, regtype="v"}, ["*"] = {lines={}, regtype="v"}}
+
+  local function copy_osc52(which)
+    return function(lines, regtype)
+      local text = table.concat(lines, "\n")
+      osc52_send(text)
+      last[which].lines = vim.deepcopy(lines)
+      last[which].regtype = regtype
+    end
+  end
+
+  local function paste_memory(which)
+    return function()
+      return vim.deepcopy(last[which].lines), last[which].regtype
+    end
+  end
+
+  vim.g.clipboard = {
+    name = "osc52",
+    copy  = { ["+"] = copy_osc52("+"), ["*"] = copy_osc52("*") },
+    paste = { ["+"] = paste_memory("+"), ["*"] = paste_memory("*") },
+    cache_enabled = true,
+  }
+end
+
+setup_osc52()
 
 ----------------------
 -- Session management
