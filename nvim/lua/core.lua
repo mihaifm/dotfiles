@@ -1004,17 +1004,6 @@ local plugins = {
     end
   },
   {
-    'echasnovski/mini.move',
-    version = false,
-    opts = {},
-    keys = {
-      { '<M-j>', mode = { 'n', 'x'}, desc = 'Move line down' },
-      { '<M-k>', mode = { 'n', 'x'}, desc = 'Move line up' },
-      { '<M-h>', mode = { 'n', 'x'}, desc = 'Move line left' },
-      { '<M-l>', mode = { 'n', 'x'}, desc = 'Move line right' },
-    }
-  },
-  {
     "echasnovski/mini.bufremove",
     keys = {
       {
