@@ -961,7 +961,7 @@ local plugins = {
             { action = "enew", desc = " New File", icon = " ", key = "n" },
             { action = "Telescope oldfiles", desc = " Recent Files", icon = " ", key = "r" },
             { action = "PickFolder", desc = " Open Project Folder", icon = " ", key = "g" },
-            { action = 'SesLoad', desc = " Restore Last Session", icon = " ", key = "s" },
+            { action = "SesLoad", desc = " Restore Last Session", icon = " ", key = "s" },
             { action = "Lazy", desc = " Lazy", icon = "󰒲 ", key = "l" },
             { action = "qa", desc = " Quit", icon = " ", key = "q" },
           },
