@@ -1102,13 +1102,24 @@ local plugins = {
   {
     "folke/lazydev.nvim",
     ft = "lua",
-    opts = {
-      library = {
-        { path = "luvit-meta/library", words = { "vim%.uv" } },
-      },
-    },
+    config = function()
+      -- monkeypatch to remove a call to the deprecated client.notify function
+      local lsp = require("lazydev.lsp")
+      lsp.update = function(client)
+        lsp.assert(client)
+          client:notify("workspace/didChangeConfiguration", {
+            settings = { Lua = {} },
+          })
+      end
+
+      require("lazydev").setup {
+        library = {
+          -- Load luvit types when the `vim.uv` word is found
+          { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+        },
+      }
+    end
   },
-  { "Bilal2453/luvit-meta", lazy = true }, -- `vim.uv` typings
   {
     "mfussenegger/nvim-dap",
     dependencies = {
