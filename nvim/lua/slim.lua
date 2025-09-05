@@ -230,18 +230,19 @@ setup_osc52()
 ----------------------
 -- Session management
 
-local sesdir = vim.fn.stdpath("state") .. "/sessions/"
+vim.o.sessionoptions = 'buffers,curdir,folds,help,tabpages,winsize,winpos,localoptions'
+
+local sesdir = vim.fs.joinpath(vim.fn.stdpath('state'), 'sessions')
 vim.fn.mkdir(sesdir, "p")
 
--- save sessions automatically every 5 minutes
-math.randomseed(os.time())
-local sesinterval = 5 * 60 + math.random(1, 30)
+-- save sessions automatically every ~5 minutes with a small jitter
+local sesinterval = 5 * 60 + os.time() % 30
 
 function SesFileName(scope)
   local ses_filename = scope
 
   if scope == 'tmux' then
-    if not vim.env.TMUX_PANE then
+    if not (vim.env.TMUX and vim.env.TMUX_PANE) then
       print("Not in a tmux session")
       return nil
     end
@@ -256,17 +257,22 @@ function SesFileName(scope)
   elseif scope == 'global' then
     ses_filename = ses_filename .. "%%" .. "session"
   elseif scope == 'project' then
-    ses_filename = ses_filename .. vim.fn.getcwd():gsub("[\\/:]+", "%%%%")
+    local root = vim.fn.getcwd()
 
-    if vim.uv.fs_stat(".git") then
-      local branch = vim.fn.systemlist("git branch --show-current")[1]
-      if vim.v.shell_error == 0 then
-        ses_filename = ses_filename .. "%%" .. branch
-      end
+    local toplevel = vim.fn.systemlist('git rev-parse --show-toplevel')[1]
+    if vim.v.shell_error == 0 and toplevel and #toplevel > 0 then
+      root = toplevel
+    end
+
+    ses_filename = ses_filename .. root:gsub("[\\/:]+", "%%%%")
+
+    local branch = vim.fn.systemlist("git branch --show-current")[1]
+    if vim.v.shell_error == 0 and branch and #branch > 0 then
+      ses_filename = ses_filename .. "%%" .. branch
     end
   end
 
-  return sesdir .. ses_filename .. ".vim"
+  return vim.fs.joinpath(sesdir, ses_filename .. ".vim")
 end
 
 local function get_default_session_scope()
@@ -293,13 +299,6 @@ function SesLoad(scope)
   end
 end
 
-vim.api.nvim_create_autocmd("VimLeavePre", {
-  group = vim.api.nvim_create_augroup("session-vimleavepre", { clear = true }),
-  callback = function()
-    SesSave()
-  end,
-})
-
 vim.api.nvim_create_user_command("SesSave", function(opts)
   local scope = opts.args and opts.args ~= '' and opts.args or nil
   SesSave(scope)
@@ -320,9 +319,25 @@ end, {
 })
 
 local autosave_timer = vim.uv.new_timer()
-autosave_timer:start(sesinterval * 1000, sesinterval * 1000, vim.schedule_wrap(function()
-  SesSave()
-end))
+if autosave_timer then
+  autosave_timer:start(sesinterval * 1000, sesinterval * 1000, vim.schedule_wrap(function()
+    SesSave()
+  end))
+end
+
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  group = vim.api.nvim_create_augroup("session-vimleavepre", { clear = true }),
+  callback = function()
+    SesSave()
+
+    if autosave_timer then
+      pcall(function()
+        autosave_timer:stop()
+        autosave_timer:close()
+      end)
+    end
+  end,
+})
 
 -----------------------
 -- Toggle transparency
