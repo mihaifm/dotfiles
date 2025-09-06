@@ -436,6 +436,25 @@ local plugins = {
     }
   },
   {
+    "folke/snacks.nvim",
+    cond = function()
+      return vim.fn.executable("lazygit") == 1
+    end,
+    keys = {
+      { "<leader>gg", function() require("snacks.lazygit").open() end, desc = "LazyGit (root dir)" },
+      { "<leader>gG", function() require("snacks.lazygit").open({ cwd = vim.fn.expand("%:p:h") }) end, desc = "LazyGit (cwd)" },
+    },
+    opts = {
+      lazygit = { enabled = true },
+    },
+    init = function()
+      local has_wk, wk = pcall(require, 'which-key')
+      if has_wk then
+        wk.add({ { '<leader>g', group = 'Git' } })
+      end
+    end,
+  },
+  {
     "chrisbra/csv.vim",
     ft = { "csv" },
     init = function()
