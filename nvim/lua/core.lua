@@ -946,8 +946,9 @@ local plugins = {
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
       local logo = require('logo')
+      local tips = require('tips')
 
-      logo = string.rep("\n", 8) .. logo .. "\n\n"
+      logo = string.rep("\n", 4) .. logo .. "\n"
 
       local opts = {
         theme = "doom",
@@ -955,7 +956,7 @@ local plugins = {
           statusline = false,
         },
         config = {
-          header = vim.split(logo, "\n"),
+          header = vim.split(logo .. "\n" .. tips.random_tip() .. "\n\n", "\n"),
           center = {
             { action = "Telescope find_files",desc = " Find File", icon = " ", key = "f" },
             { action = "enew", desc = " New File", icon = " ", key = "n" },
@@ -977,6 +978,20 @@ local plugins = {
         button.desc = button.desc .. string.rep(" ", 43 - #button.desc)
         button.key_format = "  %s"
       end
+
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = 'dashboard',
+        group = vim.api.nvim_create_augroup('DashboardBackticks', { clear = true }),
+        callback = function()
+          -- hihglight inline code and conceal backtick delimiters
+          vim.opt_local.conceallevel = 2
+          vim.opt_local.concealcursor = 'nv'
+          vim.cmd([[
+          syntax region TipsInlineCode matchgroup=TipsBackticks start=+`+ end=+`+ keepend oneline concealends
+          highlight def link TipsInlineCode Visual
+          ]])
+        end,
+      })
 
       require("dashboard").setup(opts)
     end,
