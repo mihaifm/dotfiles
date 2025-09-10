@@ -50,7 +50,7 @@ vim.opt.updatetime = 350
 -- show whitespace characters
 vim.opt.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣', precedes = '<', extends = '>' }
-vim.opt.fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:,diff: ]]
+vim.opt.fillchars = { eob = ' ', fold = ' ', foldopen = '', foldsep = ' ', foldclose = '', diff = ' ' }
 
 -- keep some rows/columns visible when moving cursor at the edges of the screen
 vim.opt.scrolloff = 3

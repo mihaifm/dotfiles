@@ -360,7 +360,7 @@ local plugins = {
       vim.cmd('set showtabline=0')
 
       vim.api.nvim_create_user_command('ToggleTabline', function()
-        if vim.opt.showtabline ~= 2 then
+        if vim.o.showtabline ~= 2 then
           vim.cmd('set showtabline=2')
         else
           vim.cmd('set showtabline=0')
