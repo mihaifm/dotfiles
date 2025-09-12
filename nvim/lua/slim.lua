@@ -995,6 +995,25 @@ vim.keymap.set('n', '<leader>etf', function() toggle_terminal('float') end, { de
 vim.keymap.set('n', '<leader>eth', function() toggle_terminal('horizontal', 10) end, { desc = 'Toggle horizontal terminal' })
 vim.keymap.set('n', '<leader>etv', function() toggle_terminal('vertical', 80) end, { desc = 'Toggle vertical terminal' })
 
+vim.api.nvim_create_user_command('ToggleTerminal', function(opts)
+  local subcommand = opts.args and opts.args ~= '' and opts.args or nil
+  
+  if subcommand == 'float' then
+    toggle_terminal('float')
+  elseif subcommand == 'horizontal' then
+    toggle_terminal('horizontal', 10)
+  elseif subcommand == 'vertical' then
+    toggle_terminal('vertical', 80)
+  else
+    toggle_terminal()
+  end
+end, {
+  nargs = '?',
+  complete = function()
+    return {'float', 'horizontal', 'vertical'}
+  end
+})
+
 ------------------
 -- Project picker
 
