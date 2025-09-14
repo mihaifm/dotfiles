@@ -233,8 +233,12 @@ local lazyopts = {
 local plugins = {}
 
 plugins = vim.list_extend(plugins, require('core'))
-plugins = vim.list_extend(plugins, require('slim'))
 plugins = vim.list_extend(plugins, require('fat'))
 plugins = vim.list_extend(plugins, require('dead'))
 
+local slim = require('slim')
+slim.statusline()
+
 require("lazy").setup(plugins, lazyopts)
+
+

@@ -410,7 +410,7 @@ local plugins = {
     cmd = { "CccPick", "CccConvert", "CccHighlighterEnable", "CccHighlighterDisable", "CccHighlighterToggle" },
     opts = {
       highlighter = {
-        auto_enable = true,
+        auto_enable = false,
         lsp = true,
       },
     },
@@ -646,6 +646,7 @@ local plugins = {
   },
   {
     "windwp/nvim-autopairs",
+    cmd = { 'ToggleAutopairs' },
     keys = {
       { '<leader>eat', desc = 'Toggle autopairs' }
     },
@@ -672,11 +673,15 @@ local plugins = {
         },
       })
 
-      require("nvim-autopairs").toggle()
+      require("nvim-autopairs").disable()
 
       vim.keymap.set("n", "<leader>eat", function()
         require("nvim-autopairs").toggle()
       end, { desc = 'Toggle autopairs' })
+
+      vim.api.nvim_create_user_command('ToggleAutopairs', function()
+        require("nvim-autopairs").toggle()
+      end, {})
     end
   },
   {

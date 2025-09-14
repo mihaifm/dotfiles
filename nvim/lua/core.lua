@@ -14,6 +14,8 @@ if vim.fn.exists(":Termdebug") then
   vim.opt.foldenable = false
 end
 
+vim.g.miniindentscope_disable = true
+
 ----------------------------------
 -- Single key for clearing things
 
@@ -812,45 +814,70 @@ local plugins = {
       }
     },
     main = "ibl",
-    keys = function(plugin)
+    cmd = { "ToggleIBL", "ToggleIBLRainbow", "IBLEnable", "IBLEnableScope", "IBLDisable", "IBLDisableScope" },
+    keys =  {
+      { '<leader>ir', "<cmd>ToggleIBLRainbow<cr>", desc = 'Toggle rainbow indents'},
+      { '<leader>ib', "<cmd>ToggleIBL<cr>", desc = 'Toggle indent blankline' }
+    },
+    config = function(_, opts)
       local rainbowToggled = false
       local iblToggled = false
+      local iblScopeToggled = false
 
       local function toggleRainbowIndents()
         rainbowToggled = not rainbowToggled
 
-        local moreOpts = vim.deepcopy(plugin.opts)
+        if rainbowToggled then
+          iblToggled = true
+        end
+
+        local moreOpts = vim.deepcopy(opts)
 
         if rainbowToggled then
-          moreOpts.enabled = true
           moreOpts.indent.char = ""
           moreOpts = require("indent-rainbowline").make_opts(moreOpts, {
             color_transparency = 0.05,
             colors = { 0x222222, 0xdddddd }
           })
-        else
-          moreOpts.enabled = iblToggled
         end
+
+        moreOpts.enabled = iblToggled
 
         require("ibl").setup(moreOpts)
       end
 
       local function toggleIBL()
         iblToggled = not iblToggled
-        plugin.opts.enabled = iblToggled
-
-        require('ibl').setup(plugin.opts)
+        opts.enabled = iblToggled
+        opts.scope.enabled = iblScopeToggled
 
         if not iblToggled then
           rainbowToggled = false
+          iblScopeToggled = false
         end
+
+        require('ibl').setup(opts)
       end
 
-      return {
-        { '<leader>ir', toggleRainbowIndents, desc = 'Toggle rainbow indents'},
-        { '<leader>ib', toggleIBL, desc = 'Toggle indent blankline' }
-      }
-    end
+      local function toggleIBLScope()
+        iblScopeToggled = not iblScopeToggled
+
+        if iblScopeToggled == true then
+          iblToggled = true
+        end
+
+        rainbowToggled = false
+
+        opts.enabled = iblToggled
+        opts.scope.enabled = iblScopeToggled
+
+        require('ibl').setup(opts)
+      end
+
+      vim.api.nvim_create_user_command('ToggleIBL', toggleIBL, {})
+      vim.api.nvim_create_user_command('ToggleIBLScope', toggleIBLScope, {})
+      vim.api.nvim_create_user_command('ToggleIBLRainbow', toggleRainbowIndents, {})
+    end,
   },
   {
     'stevearc/oil.nvim',
@@ -1014,9 +1041,6 @@ local plugins = {
         end, desc = 'Toggle indent scope'
       }
     },
-    init = function()
-      vim.g.miniindentscope_disable = true
-    end
   },
   {
     "echasnovski/mini.bufremove",

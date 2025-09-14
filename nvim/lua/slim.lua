@@ -1,3 +1,5 @@
+local M = {}
+
 -----------------
 -- Yank overhaul
 
@@ -675,247 +677,276 @@ end
 local expand_statusline_path = false
 local show_statusline_diagnostics = true
 
-function StlFileName()
-  if expand_statusline_path then
-    return vim.fn.expand('%:p') == '' and '[No Name]' or vim.fn.expand('%:p')
-  end
-  return vim.fn.expand('%:t') == '' and '[No Name]' or vim.fn.expand('%:t')
-end
-
-function StlFileType()
-  return vim.fn.winwidth(0) > 70 and (vim.o.filetype == '' and 'no ft' or vim.o.filetype) or ''
-end
-
-local status_bg = 'none'
-
-function StlFileIcon()
-  local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-  if not has_devicons then
-    return
+M.statusline = function()
+  function StlFileName()
+    if expand_statusline_path then
+      return vim.fn.expand('%:p') == '' and '[No Name]' or vim.fn.expand('%:p')
+    end
+    return vim.fn.expand('%:t') == '' and '[No Name]' or vim.fn.expand('%:t')
   end
 
-  local icon, color = devicons.get_icon_color_by_filetype(vim.o.filetype)
-  if icon then
-    vim.cmd('hi StlIconColor guibg=' .. status_bg .. ' guifg=' .. color)
-    return icon
+  function StlFileType()
+    return vim.fn.winwidth(0) > 70 and (vim.o.filetype == '' and 'no ft' or vim.o.filetype) or ''
   end
-  return ''
-end
 
-function StlBranchName()
-  return vim.b.branch_name
-end
+  local status_bg = 'none'
 
-function StlFileFormat()
-  return vim.o.fileformat == 'dos' and '· crlf ' or ''
-end
+  function StlFileIcon()
+    local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
+    if not has_devicons then
+      return
+    end
 
-function StlDiagError()
-  if package.loaded["vim.diagnostic"] and show_statusline_diagnostics then
-    local counts = vim.diagnostic.count(0)
-    return  counts[vim.diagnostic.severity.ERROR] and '󰀩 ' .. counts[vim.diagnostic.severity.ERROR] .. ' ' or ""
+    local icon, color = devicons.get_icon_color_by_filetype(vim.o.filetype)
+    if icon then
+      vim.cmd('hi StlIconColor guibg=' .. status_bg .. ' guifg=' .. color)
+      return icon
+    end
+    return ''
   end
-  return ""
-end
 
-function StlDiagWarn()
-  if package.loaded["vim.diagnostic"] and show_statusline_diagnostics then
-    local counts = vim.diagnostic.count(0)
-    return  counts[vim.diagnostic.severity.WARN] and '󰀦 ' .. counts[vim.diagnostic.severity.WARN] .. ' ' or ""
+  function StlBranchName()
+    return vim.b.branch_name
   end
-  return ""
-end
 
-function StlDiagInfo()
-  if package.loaded["vim.diagnostic"] and show_statusline_diagnostics then
-    local counts = vim.diagnostic.count(0)
-    return  counts[vim.diagnostic.severity.INFO] and '󰀧 ' .. counts[vim.diagnostic.severity.INFO] .. ' ' or ""
+  function StlFileFormat()
+    return vim.o.fileformat == 'dos' and '· crlf ' or ''
   end
-  return ""
-end
 
-function StlDiagHint()
-  if package.loaded["vim.diagnostic"] and show_statusline_diagnostics then
-    local counts = vim.diagnostic.count(0)
-    return  counts[vim.diagnostic.severity.HINT] and '󱇎 ' .. counts[vim.diagnostic.severity.HINT] .. ' ' or ""
+  function StlDiagError()
+    if package.loaded["vim.diagnostic"] and show_statusline_diagnostics then
+      local counts = vim.diagnostic.count(0)
+      return  counts[vim.diagnostic.severity.ERROR] and '󰀩 ' .. counts[vim.diagnostic.severity.ERROR] .. ' ' or ""
+    end
+    return ""
   end
-  return ""
-end
+
+  function StlDiagWarn()
+    if package.loaded["vim.diagnostic"] and show_statusline_diagnostics then
+      local counts = vim.diagnostic.count(0)
+      return  counts[vim.diagnostic.severity.WARN] and '󰀦 ' .. counts[vim.diagnostic.severity.WARN] .. ' ' or ""
+    end
+    return ""
+  end
+
+  function StlDiagInfo()
+    if package.loaded["vim.diagnostic"] and show_statusline_diagnostics then
+      local counts = vim.diagnostic.count(0)
+      return  counts[vim.diagnostic.severity.INFO] and '󰀧 ' .. counts[vim.diagnostic.severity.INFO] .. ' ' or ""
+    end
+    return ""
+  end
+
+  function StlDiagHint()
+    if package.loaded["vim.diagnostic"] and show_statusline_diagnostics then
+      local counts = vim.diagnostic.count(0)
+      return  counts[vim.diagnostic.severity.HINT] and '󱇎 ' .. counts[vim.diagnostic.severity.HINT] .. ' ' or ""
+    end
+    return ""
+  end
+
+  vim.cmd([[
+  let stl_mode_map = { 'n': 'NORMAL', 'i': 'INSERT', 'R': 'REPLACE', 'v': 'VISUAL', 'V': 'V-LINE', "\<C-v>": 'V-BLOCK',
+  \ 'c': 'COMMAND', 's': 'SELECT', 'S': 'S-LINE', "\<C-s>": 'S-BLOCK', 't': 'TERMINAL' }
+
+  let stl_mode_colors = { 'n': '%#StlModeNormal#', 'i': '%#StlModeInsert#', 'R': '%#StlModeReplace#', 'v': '%#StlModeVisual#', 
+  \'V': '%#StlModeVLine#', "\<C-v>": '%#StlModeVBlock#', 'c': '%#StlModeCommand#', 's': '%#StlModeSelect#', 
+  \'S': '%#StlModeSLine#', "\<C-s>": '%#StlModeSBlock#', 't': '%#StlModeTerminal#' }
+
+  let stl_alt_colors = { 'n': '%#StlAltNormal#', 'i': '%#StlAltInsert#', 'R': '%#StlAltReplace#', 'v': '%#StlAltVisual#', 
+  \'V': '%#StlAltVLine#', "\<C-v>": '%#StlAltVBlock#', 'c': '%#StlAltCommand#', 's': '%#StlAltSelect#', 
+  \'S': '%#StlAltSLine#', "\<C-s>": '%#StlAltSBlock#', 't': '%#StlAltTerminal#' }
+
+  let stl_sep1_colors = { 'n': '%#StlSep1Normal#', 'i': '%#StlSep1Insert#', 'R': '%#StlSep1Replace#', 'v': '%#StlSep1Visual#', 
+  \'V': '%#StlSep1VLine#', "\<C-v>": '%#StlSep1VBlock#', 'c': '%#StlSep1Command#', 's': '%#StlSep1Select#', 
+  \'S': '%#StlSep1SLine#', "\<C-s>": '%#StlSep1SBlock#', 't': '%#StlSep1Terminal#' }
+
+  let stl_sep2_colors = { 'n': '%#StlSep2Normal#', 'i': '%#StlSep2Insert#', 'R': '%#StlSep2Replace#', 'v': '%#StlSep2Visual#', 
+  \'V': '%#StlSep2VLine#', "\<C-v>": '%#StlSep2VBlock#', 'c': '%#StlSep2Command#', 's': '%#StlSep2Select#', 
+  \'S': '%#StlSep2SLine#', "\<C-s>": '%#StlSep2SBlock#', 't': '%#StlSep2Terminal#' }
 
 
-vim.cmd([[
-let stl_mode_map = { 'n': 'NORMAL', 'i': 'INSERT', 'R': 'REPLACE', 'v': 'VISUAL', 'V': 'V-LINE', "\<C-v>": 'V-BLOCK',
-                   \ 'c': 'COMMAND', 's': 'SELECT', 'S': 'S-LINE', "\<C-s>": 'S-BLOCK', 't': 'TERMINAL' }
+  set laststatus=3
 
-let stl_mode_colors = { 'n': '%#StlModeNormal#', 'i': '%#StlModeInsert#', 'R': '%#StlModeReplace#', 'v': '%#StlModeVisual#', 
-                        \'V': '%#StlModeVLine#', "\<C-v>": '%#StlModeVBlock#', 'c': '%#StlModeCommand#', 's': '%#StlModeSelect#', 
-                        \'S': '%#StlModeSLine#', "\<C-s>": '%#StlModeSBlock#', 't': '%#StlModeTerminal#' }
+  set statusline=%{%get(stl_mode_colors,mode(),'%1*')%} " get the hl group for current mode and switch to it
+  set statusline+=\ %{get(stl_mode_map,mode(),'')}\      " mode
+  set statusline+=%{%get(stl_sep1_colors,mode(),'%1*')%}
+  set statusline+=
+  set statusline+=%{%get(stl_alt_colors,mode(),'%1*')%}  " switch to the alternative hl group for the current mode
+  set statusline+=%{v:lua.StlBranchName()}               " branch name
+  set statusline+=%{%get(stl_sep2_colors,mode(),'%1*')%}
+  set statusline+=
+  set statusline+=%#StatusLine#                          " switch to the StatusLine hightlight group
+  set statusline+=\ %{v:lua.StlFileName()}               " filename
+  set statusline+=\ %r%m                                 " read-only, modified flags
+  set statusline+=%=\                                    " switch to right alignment
+  set statusline+=%#DiagnosticVirtualTextError#
+  set statusline+=%{v:lua.StlDiagError()}                " diagnostics
+  set statusline+=%#DiagnosticVirtualTextWarn#
+  set statusline+=%{v:lua.StlDiagWarn()}                 " diagnostics
+  set statusline+=%#DiagnosticVirtualTextInfo#
+  set statusline+=%{v:lua.StlDiagInfo()}                 " diagnostics
+  set statusline+=%#DiagnosticVirtualTextHint#
+  set statusline+=%{v:lua.StlDiagHint()}                 " diagnostics
+  set statusline+=%#StlIconColor#                        " switch to a custom StlIconColor hightlight group
+  set statusline+=%{v:lua.StlFileIcon()}\                " file icon
+  set statusline+=%#StatusLine#                          " switch to the StatusLine hightlight group
+  set statusline+=%{v:lua.StlFileType()}\                " filetype
+  set statusline+=%{v:lua.StlFileFormat()}               " file format
+  set statusline+=%{%get(stl_sep2_colors,mode(),'%1*')%}
+  set statusline+=
+  set statusline+=%{%get(stl_alt_colors,mode(),'%1*')%}  " switch to the alternative hl group for the current mode
+  set statusline+=\ %<%P\                                " percent
+  set statusline+=%{%get(stl_sep1_colors,mode(),'%1*')%}
+  set statusline+=
+  set statusline+=%{%get(stl_mode_colors,mode(),'%1*')%}
+  set statusline+=\ %l                                   " line number
+  set statusline+=:                                      " :
+  set statusline+=%c\                                    " column number
+  ]])
 
-let stl_alt_colors = { 'n': '%#StlAltNormal#', 'i': '%#StlAltInsert#', 'R': '%#StlAltReplace#', 'v': '%#StlAltVisual#', 
-                       \'V': '%#StlAltVLine#', "\<C-v>": '%#StlAltVBlock#', 'c': '%#StlAltCommand#', 's': '%#StlAltSelect#', 
-                       \'S': '%#StlAltSLine#', "\<C-s>": '%#StlAltSBlock#', 't': '%#StlAltTerminal#' }
-
-let stl_sep1_colors = { 'n': '%#StlSep1Normal#', 'i': '%#StlSep1Insert#', 'R': '%#StlSep1Replace#', 'v': '%#StlSep1Visual#', 
-                       \'V': '%#StlSep1VLine#', "\<C-v>": '%#StlSep1VBlock#', 'c': '%#StlSep1Command#', 's': '%#StlSep1Select#', 
-                       \'S': '%#StlSep1SLine#', "\<C-s>": '%#StlSep1SBlock#', 't': '%#StlSep1Terminal#' }
-
-let stl_sep2_colors = { 'n': '%#StlSep2Normal#', 'i': '%#StlSep2Insert#', 'R': '%#StlSep2Replace#', 'v': '%#StlSep2Visual#', 
-                       \'V': '%#StlSep2VLine#', "\<C-v>": '%#StlSep2VBlock#', 'c': '%#StlSep2Command#', 's': '%#StlSep2Select#', 
-                       \'S': '%#StlSep2SLine#', "\<C-s>": '%#StlSep2SBlock#', 't': '%#StlSep2Terminal#' }
-
-
-set laststatus=3
-
-set statusline=%{%get(stl_mode_colors,mode(),'%1*')%} " get the hl group for current mode and switch to it
-set statusline+=\ %{get(stl_mode_map,mode(),'')}\      " mode
-set statusline+=%{%get(stl_sep1_colors,mode(),'%1*')%}
-set statusline+=
-set statusline+=%{%get(stl_alt_colors,mode(),'%1*')%}  " switch to the alternative hl group for the current mode
-set statusline+=%{v:lua.StlBranchName()}               " branch name
-set statusline+=%{%get(stl_sep2_colors,mode(),'%1*')%}
-set statusline+=
-set statusline+=%#StatusLine#                          " switch to the StatusLine hightlight group
-set statusline+=\ %{v:lua.StlFileName()}               " filename
-set statusline+=\ %r%m                                 " read-only, modified flags
-set statusline+=%=\                                    " switch to right alignment
-set statusline+=%#DiagnosticVirtualTextError#
-set statusline+=%{v:lua.StlDiagError()}                " diagnostics
-set statusline+=%#DiagnosticVirtualTextWarn#
-set statusline+=%{v:lua.StlDiagWarn()}                 " diagnostics
-set statusline+=%#DiagnosticVirtualTextInfo#
-set statusline+=%{v:lua.StlDiagInfo()}                 " diagnostics
-set statusline+=%#DiagnosticVirtualTextHint#
-set statusline+=%{v:lua.StlDiagHint()}                 " diagnostics
-set statusline+=%#StlIconColor#                        " switch to a custom StlIconColor hightlight group
-set statusline+=%{v:lua.StlFileIcon()}\                " file icon
-set statusline+=%#StatusLine#                          " switch to the StatusLine hightlight group
-set statusline+=%{v:lua.StlFileType()}\                " filetype
-set statusline+=%{v:lua.StlFileFormat()}               " file format
-set statusline+=%{%get(stl_sep2_colors,mode(),'%1*')%}
-set statusline+=
-set statusline+=%{%get(stl_alt_colors,mode(),'%1*')%}  " switch to the alternative hl group for the current mode
-set statusline+=\ %<%P\                                " percent
-set statusline+=%{%get(stl_sep1_colors,mode(),'%1*')%}
-set statusline+=
-set statusline+=%{%get(stl_mode_colors,mode(),'%1*')%}
-set statusline+=\ %l                                   " line number
-set statusline+=:                                      " :
-set statusline+=%c\                                    " column number
-]])
-
-vim.api.nvim_create_autocmd('ColorScheme', {
-  group = vim.api.nvim_create_augroup('statusline-colorscheme', { clear = true }),
-  callback = function()
-    local getColor = function(group, part)
-      local hl = vim.api.nvim_get_hl(0, {name = group, link = false})
-      if hl and hl.reverse then
-        if part == 'bg' then part = 'fg'
-        elseif part == 'fg' then part = 'bg'
+  vim.api.nvim_create_autocmd('ColorScheme', {
+    group = vim.api.nvim_create_augroup('statusline-colorscheme', { clear = true }),
+    callback = function()
+      local getColor = function(group, part)
+        local hl = vim.api.nvim_get_hl(0, {name = group, link = false})
+        if hl and hl.reverse then
+          if part == 'bg' then part = 'fg'
+          elseif part == 'fg' then part = 'bg'
+          end
         end
+
+        if hl and hl[part] then
+          return string.format('#%06x', hl[part])
+        end
+        return 'none'
       end
 
-      if hl and hl[part] then
-        return string.format('#%06x', hl[part])
+      local normal_bg = getColor('Function', 'fg')
+      local normal_fg = getColor('Normal', 'bg')
+      local insert_bg = getColor('String', 'fg')
+      local replace_bg = getColor('Constant', 'fg')
+      local visual_bg = getColor('Visual', 'bg')
+      local visual_fg = getColor('Normal', 'fg')
+      local command_bg = getColor('Constant', 'fg')
+      local terminal_bg = getColor('Identifier', 'fg')
+
+      vim.cmd('hi! StlModeNormal guifg=' .. normal_fg .. ' guibg=' .. normal_bg)
+      vim.cmd('hi! StlModeInsert guifg=' .. normal_fg .. ' guibg=' .. insert_bg)
+      vim.cmd('hi! StlModeReplace guifg=' .. normal_fg .. ' guibg=' .. replace_bg)
+      vim.cmd('hi! StlModeCommand guifg=' .. normal_fg .. ' guibg=' .. command_bg)
+      vim.cmd('hi! StlModeTerminal guifg=' .. normal_fg .. ' guibg=' .. terminal_bg)
+      vim.cmd('hi! StlModeVisual guifg=' .. visual_fg .. ' guibg=' .. visual_bg)
+      vim.cmd('hi! StlModeVLine guifg=' .. visual_fg .. ' guibg=' .. visual_bg)
+      vim.cmd('hi! StlModeVBlock guifg=' .. visual_fg .. ' guibg=' .. visual_bg)
+      vim.cmd('hi! StlModeSelect guifg=' .. visual_fg .. ' guibg=' .. visual_bg)
+      vim.cmd('hi! StlModeSLine guifg=' .. visual_fg .. ' guibg=' .. visual_bg)
+      vim.cmd('hi! StlModeSBlock guifg=' .. visual_fg .. ' guibg=' .. visual_bg)
+
+      local alt_bg = getColor('Visual', 'bg')
+
+      vim.cmd('hi! StlAltNormal guifg=' .. normal_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlAltInsert guifg=' .. insert_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlAltReplace guifg=' .. replace_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlAltCommand guifg=' .. command_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlAltTerminal guifg=' .. terminal_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlAltVisual guifg=' .. visual_fg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlAltVLine guifg=' .. visual_fg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlAltVBlock guifg=' .. visual_fg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlAltSelect guifg=' .. visual_fg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlAltSLine guifg=' .. visual_fg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlAltSBlock guifg=' .. visual_fg .. ' guibg=' .. alt_bg)
+
+      vim.cmd('hi! StlSep1Normal guifg=' .. normal_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlSep1Insert guifg=' .. insert_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlSep1Replace guifg=' .. replace_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlSep1Command guifg=' .. command_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlSep1Terminal guifg=' .. terminal_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlSep1Visual guifg=' .. visual_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlSep1VLine guifg=' .. visual_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlSep1VBlock guifg=' .. visual_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlSep1Select guifg=' .. visual_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlSep1SLine guifg=' .. visual_bg .. ' guibg=' .. alt_bg)
+      vim.cmd('hi! StlSep1SBlock guifg=' .. visual_bg .. ' guibg=' .. alt_bg)
+
+      status_bg = getColor('StatusLine', 'bg')
+
+      vim.cmd('hi! StlSep2Normal guifg=' .. visual_bg .. ' guibg=' .. status_bg)
+      vim.cmd('hi! StlSep2Insert guifg=' .. visual_bg .. ' guibg=' .. status_bg)
+      vim.cmd('hi! StlSep2Replace guifg=' .. visual_bg .. ' guibg=' .. status_bg)
+      vim.cmd('hi! StlSep2Command guifg=' .. visual_bg .. ' guibg=' .. status_bg)
+      vim.cmd('hi! StlSep2Terminal guifg=' .. visual_bg .. ' guibg=' .. status_bg)
+      vim.cmd('hi! StlSep2Visual guifg=' .. visual_bg .. ' guibg=' .. status_bg)
+      vim.cmd('hi! StlSep2VLine guifg=' .. visual_bg .. ' guibg=' .. status_bg)
+      vim.cmd('hi! StlSep2VBlock guifg=' .. visual_bg .. ' guibg=' .. status_bg)
+      vim.cmd('hi! StlSep2Select guifg=' .. visual_bg .. ' guibg=' .. status_bg)
+      vim.cmd('hi! StlSep2SLine guifg=' .. visual_bg .. ' guibg=' .. status_bg)
+      vim.cmd('hi! StlSep2SBlock guifg=' .. visual_bg .. ' guibg=' .. status_bg)
+
+      vim.cmd('hi! link User1 Function')
+    end
+  })
+
+  local has_git = vim.fn.executable('git')
+
+  vim.api.nvim_create_autocmd({ "FileType", "BufEnter", "FocusGained" }, {
+    desc = "keep branch and buffer name variables updated",
+    group = vim.api.nvim_create_augroup('statusline-focusgained', { clear = true }),
+    callback = function()
+      if has_git == 0 then
+        vim.b.branch_name = ''
+        return
       end
-      return 'none'
+
+      local branch_cmd = vim.system({ "git", "branch", "--show-current" }):wait()
+      if branch_cmd.stdout == "" or branch_cmd.code ~= 0 then
+        vim.b.branch_name = ''
+        return
+      end
+
+      local branch_name, _ = branch_cmd.stdout:gsub("\n", "")
+      vim.b.branch_name = ' 󰘬 ' .. branch_name .. ' '
+    end,
+  })
+
+  vim.api.nvim_create_user_command('ToggleStlFullPath', function(opts)
+    local subcommand = opts.args and opts.args ~= '' and opts.args or nil
+
+    if subcommand == 'on' then
+      expand_statusline_path = true
+    elseif subcommand == 'off' then
+      expand_statusline_path = false
+    else
+      expand_statusline_path = not expand_statusline_path
     end
 
-    local normal_bg = getColor('Function', 'fg')
-    local normal_fg = getColor('Normal', 'bg')
-    local insert_bg = getColor('String', 'fg')
-    local replace_bg = getColor('Constant', 'fg')
-    local visual_bg = getColor('Visual', 'bg')
-    local visual_fg = getColor('Normal', 'fg')
-    local command_bg = getColor('Constant', 'fg')
-    local terminal_bg = getColor('Identifier', 'fg')
+    vim.cmd.redrawstatus()
+  end, { nargs = '?', complete = function() return { 'on', 'off' } end })
 
-    vim.cmd('hi! StlModeNormal guifg=' .. normal_fg .. ' guibg=' .. normal_bg)
-    vim.cmd('hi! StlModeInsert guifg=' .. normal_fg .. ' guibg=' .. insert_bg)
-    vim.cmd('hi! StlModeReplace guifg=' .. normal_fg .. ' guibg=' .. replace_bg)
-    vim.cmd('hi! StlModeCommand guifg=' .. normal_fg .. ' guibg=' .. command_bg)
-    vim.cmd('hi! StlModeTerminal guifg=' .. normal_fg .. ' guibg=' .. terminal_bg)
-    vim.cmd('hi! StlModeVisual guifg=' .. visual_fg .. ' guibg=' .. visual_bg)
-    vim.cmd('hi! StlModeVLine guifg=' .. visual_fg .. ' guibg=' .. visual_bg)
-    vim.cmd('hi! StlModeVBlock guifg=' .. visual_fg .. ' guibg=' .. visual_bg)
-    vim.cmd('hi! StlModeSelect guifg=' .. visual_fg .. ' guibg=' .. visual_bg)
-    vim.cmd('hi! StlModeSLine guifg=' .. visual_fg .. ' guibg=' .. visual_bg)
-    vim.cmd('hi! StlModeSBlock guifg=' .. visual_fg .. ' guibg=' .. visual_bg)
+  vim.api.nvim_create_user_command('ToggleStlDiagnostics', function(opts)
+    local subcommand = opts.args and opts.args ~= '' and opts.args or nil
 
-    local alt_bg = getColor('Visual', 'bg')
+    if subcommand == 'on' then
+      show_statusline_diagnostics = true
+    elseif subcommand == 'off' then
+      show_statusline_diagnostics = false
+    else
+      show_statusline_diagnostics = not show_statusline_diagnostics
+    end
 
-    vim.cmd('hi! StlAltNormal guifg=' .. normal_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlAltInsert guifg=' .. insert_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlAltReplace guifg=' .. replace_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlAltCommand guifg=' .. command_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlAltTerminal guifg=' .. terminal_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlAltVisual guifg=' .. visual_fg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlAltVLine guifg=' .. visual_fg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlAltVBlock guifg=' .. visual_fg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlAltSelect guifg=' .. visual_fg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlAltSLine guifg=' .. visual_fg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlAltSBlock guifg=' .. visual_fg .. ' guibg=' .. alt_bg)
+    vim.cmd.redrawstatus()
+  end, { nargs = '?', complete = function() return { 'on', 'off' } end })
 
-    vim.cmd('hi! StlSep1Normal guifg=' .. normal_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlSep1Insert guifg=' .. insert_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlSep1Replace guifg=' .. replace_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlSep1Command guifg=' .. command_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlSep1Terminal guifg=' .. terminal_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlSep1Visual guifg=' .. visual_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlSep1VLine guifg=' .. visual_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlSep1VBlock guifg=' .. visual_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlSep1Select guifg=' .. visual_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlSep1SLine guifg=' .. visual_bg .. ' guibg=' .. alt_bg)
-    vim.cmd('hi! StlSep1SBlock guifg=' .. visual_bg .. ' guibg=' .. alt_bg)
+  vim.keymap.set('n', '<leader>ul', '<cmd>ToggleStlFullPath<cr>', { desc = 'Toggle statusline full path' })
+  vim.keymap.set('n', '<leader>ud', '<cmd>ToggleStlDiagnostics<cr>', { desc = 'Toggle statusline diagnostics' })
 
-    status_bg = getColor('StatusLine', 'bg')
-
-    vim.cmd('hi! StlSep2Normal guifg=' .. visual_bg .. ' guibg=' .. status_bg)
-    vim.cmd('hi! StlSep2Insert guifg=' .. visual_bg .. ' guibg=' .. status_bg)
-    vim.cmd('hi! StlSep2Replace guifg=' .. visual_bg .. ' guibg=' .. status_bg)
-    vim.cmd('hi! StlSep2Command guifg=' .. visual_bg .. ' guibg=' .. status_bg)
-    vim.cmd('hi! StlSep2Terminal guifg=' .. visual_bg .. ' guibg=' .. status_bg)
-    vim.cmd('hi! StlSep2Visual guifg=' .. visual_bg .. ' guibg=' .. status_bg)
-    vim.cmd('hi! StlSep2VLine guifg=' .. visual_bg .. ' guibg=' .. status_bg)
-    vim.cmd('hi! StlSep2VBlock guifg=' .. visual_bg .. ' guibg=' .. status_bg)
-    vim.cmd('hi! StlSep2Select guifg=' .. visual_bg .. ' guibg=' .. status_bg)
-    vim.cmd('hi! StlSep2SLine guifg=' .. visual_bg .. ' guibg=' .. status_bg)
-    vim.cmd('hi! StlSep2SBlock guifg=' .. visual_bg .. ' guibg=' .. status_bg)
-
-    vim.cmd('hi! link User1 Function')
+  M.getStatuslineState = function()
+    return {
+      expand_path = expand_statusline_path,
+      show_diagnostics = show_statusline_diagnostics
+    }
   end
-})
-
-local has_git = vim.fn.executable('git')
-
-vim.api.nvim_create_autocmd({ "FileType", "BufEnter", "FocusGained" }, {
-  desc = "keep branch and buffer name variables updated",
-  group = vim.api.nvim_create_augroup('statusline-focusgained', { clear = true }),
-  callback = function()
-    if has_git == 0 then
-      vim.b.branch_name = ''
-      return
-    end
-
-    local branch_cmd = vim.system({ "git", "branch", "--show-current" }):wait()
-    if branch_cmd.stdout == "" or branch_cmd.code ~= 0 then
-      vim.b.branch_name = ''
-      return
-    end
-
-    local branch_name, _ = branch_cmd.stdout:gsub("\n", "")
-    vim.b.branch_name = ' 󰘬 ' .. branch_name .. ' '
-  end,
-})
-
-vim.keymap.set('n', '<leader>ul', function()
-  expand_statusline_path = not expand_statusline_path
-  vim.cmd.redrawstatus()
-end, { desc = 'Toggle statusline full path' })
-
-vim.keymap.set('n', '<leader>ud', function()
-  show_statusline_diagnostics = not show_statusline_diagnostics
-  vim.cmd.redrawstatus()
-end, { desc = 'Toggle statusline diagnostics' })
+end
 
 -------------------
 -- Terminal toggle
@@ -997,7 +1028,7 @@ vim.keymap.set('n', '<leader>etv', function() toggle_terminal('vertical', 80) en
 
 vim.api.nvim_create_user_command('ToggleTerminal', function(opts)
   local subcommand = opts.args and opts.args ~= '' and opts.args or nil
-  
+
   if subcommand == 'float' then
     toggle_terminal('float')
   elseif subcommand == 'horizontal' then
@@ -1164,4 +1195,4 @@ end
 TrackFolders()
 vim.api.nvim_create_user_command('PickFolder', PickFolder, {})
 
-return {}
+return M
