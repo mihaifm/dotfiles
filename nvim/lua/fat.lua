@@ -452,6 +452,37 @@ local plugins = {
       if has_wk then
         wk.add({ { '<leader>g', group = 'Git' } })
       end
+
+      table.insert(ClearFunctions, function()
+        -- clear the remote tab created by lazygit
+        -- open file in the previous tab
+        local tabnr    = vim.fn.tabpagenr()
+        local tabcount = vim.fn.tabpagenr('$')
+
+        if tabcount <= 1 then
+          return
+        end
+
+        local bufnr = vim.api.nvim_get_current_buf()
+        local name  = vim.api.nvim_buf_get_name(bufnr)
+
+        local target = (tabnr > 1) and (tabnr - 1) or (tabnr + 1)
+
+        vim.cmd("tabclose")
+
+        if vim.fn.tabpagenr() ~= target then
+          vim.cmd("tabnext " .. target)
+        end
+
+        if name ~= "" then
+          vim.cmd("edit " .. vim.fn.fnameescape(name))
+        else
+          -- unnamed or scratch buffer: try to show it by bufnr
+          if vim.api.nvim_buf_is_loaded(bufnr) then
+            pcall(vim.api.nvim_set_current_buf, bufnr)
+          end
+        end
+      end)
     end,
   },
   {
