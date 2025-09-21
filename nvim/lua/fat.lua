@@ -1,3 +1,18 @@
+local function is_plugin_loaded(plugin)
+  local lc = require("lazy.core.config")
+  return lc.plugins[plugin] and lc.plugins[plugin]._.loaded
+end
+
+local function is_ft_loaded(ft)
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    if vim.bo[buf].filetype == ft then
+      return true
+    end
+  end
+  return false
+end
+
 local plugins = {
   ----------------------
   -- colorscheme battle
@@ -723,6 +738,394 @@ local plugins = {
       require("copilot").setup({
         suggestion = { enabled = false },
         panel = { enabled = false },
+      })
+    end,
+  },
+  {
+    "mihaifm/megatoggler",
+    config = function()
+      vim.keymap.set("n", "<leader>m", function() vim.cmd("MegaToggler") end, { desc = 'MegaToggler' })
+
+      require("megatoggler").setup({
+        persist_file = "~/dotfiles/.nvimsettings.json",
+        ui = {
+          title = ""
+        },
+        tabs = {
+          {
+            id = "Globals",
+            items = {
+              {
+                id = 'Tabstop',
+                label = 'Tabstop      ',
+                get = function() return vim.opt_global.tabstop:get() end,
+                on_set = function(v) vim.opt_global.tabstop = v end,
+                edit_size = 3
+              },
+              {
+                id = 'Shift Width',
+                label = 'Shift Width  ',
+                get = function() return vim.opt_global.shiftwidth:get() end,
+                on_set = function(v) vim.opt_global.shiftwidth = v end,
+                edit_size = 3
+              },
+              {
+                id = "Expand Tab",
+                get = function() return vim.opt_global.expandtab:get() end,
+                on_toggle = function(on) vim.opt_global.expandtab = on end,
+              },
+              {
+                id = "Ignore Case",
+                get = function() return vim.o.ignorecase end,
+                on_toggle = function(on) vim.o.ignorecase = on end,
+              },
+              {
+                id = "Smart Case",
+                get = function() return vim.o.smartcase end,
+                on_toggle = function(on) vim.o.smartcase = on end,
+              },
+              {
+                id = "Line Numbers",
+                get = function() return vim.opt_global.number:get() end,
+                on_toggle = function(on) vim.opt_global.number = on end,
+              },
+              {
+                id = "Relative Numbers",
+                get = function() return vim.opt_global.relativenumber:get() end,
+                on_toggle = function(on) vim.opt_global.relativenumber = on end,
+              },
+              {
+                id = "Path",
+                label = 'Path         ',
+                get = function() return table.concat(vim.opt_global.path:get(), ",") end,
+                on_set = function(v) vim.opt_global.path = v end
+              },
+              {
+                id = "Inc Command",
+                label = 'Inc Command  ',
+                get = function() return vim.o.inccommand end,
+                on_set = function(v) vim.o.inccommand = v end,
+                edit_size = 10
+              },
+            }
+          },
+          {
+            id = "local",
+            label = "Local",
+            items = {
+              {
+                id = 'Tabstop',
+                label = 'Tabstop      ',
+                persist = false,
+                get = function() return vim.bo.tabstop end,
+                on_set = function(v) vim.bo.tabstop = v end
+              },
+              {
+                id = 'Shift Width',
+                label = 'Shift Width  ',
+                persist = false,
+                get = function() return vim.bo.shiftwidth end,
+                on_set = function(v) vim.bo.shiftwidth = v end
+              },
+              {
+                id = "Expand Tab",
+                persist = false,
+                get = function() return vim.bo.expandtab end,
+                on_toggle = function(on) vim.bo.expandtab = on end,
+              },
+              {
+                id = 'spell',
+                label = 'Spell',
+                persist = false,
+                get = function() return vim.wo.spell end,
+                on_toggle = function(on) vim.wo.spell = on end
+              },
+              {
+                id = 'Wrap',
+                persist = false,
+                get = function() return vim.wo.wrap end,
+                on_toggle = function(on) vim.wo.wrap = on end
+              },
+              {
+                id = "Path",
+                label = 'Path         ',
+                persist = false,
+                get = function() return table.concat(vim.opt.path:get(), ",") end,
+                on_set = function(v) vim.opt.path = v end
+              },
+            },
+          },
+          {
+            id = "Editor",
+            items = {
+              {
+                id = "Folds",
+                get = function() return vim.o.foldenable end,
+                on_toggle = function() vim.cmd("ToggleFolds") end
+              },
+              {
+                id = "Autopairs",
+                get = function()
+                  if not is_plugin_loaded('nvim-autopairs') then return false end
+                  return not require("nvim-autopairs").state.disabled
+                end,
+                on_toggle = function(on)
+                  if on == false and not is_plugin_loaded('nvim-autopairs') then return end
+                  if on then
+                    require("nvim-autopairs").enable()
+                  else
+                    require("nvim-autopairs").disable()
+                  end
+                end
+              },
+              {
+                id = 'Highlight Color Codes',
+                persist = false,
+                get = function()
+                  return require('ccc.highlighter').attached_buffer[vim.api.nvim_get_current_buf()] == true
+                end,
+                on_toggle = function()
+                  vim.cmd("CccHighlighterToggle")
+                end
+              },
+              {
+                id = "Smooth scrolling",
+                persist = false,
+                get = function() return true end,
+                on_toggle = function() vim.cmd("ToggleNeoscroll") end,
+                icons = { checked = "", unchecked = "" },
+              },
+              {
+                id = 'Cmd Height',
+                get = function() return vim.o.cmdheight end,
+                on_set = function(v) vim.o.cmdheight = v end
+              },
+            },
+          },
+          {
+            id = "context",
+            label = "Context",
+            items = {
+              {
+                id = "Virtual Text Context",
+                persist = false,
+                get = function() return true end,
+                on_toggle = function() vim.cmd("NvimContextVtToggle") end,
+                icons = { checked = "", unchecked = "" },
+              },
+              {
+                id = "Treesitter Context",
+                persist = false,
+                get = function()
+                  if not is_plugin_loaded('nvim-treesitter-context') then
+                    return false
+                  end
+                  return require('treesitter-context').enabled() end,
+                  on_toggle = function() vim.cmd("ToggleContext") end,
+                },
+                {
+                  id = "Ghost Text",
+                  get = function() return require('cmp.config').get().experimental.ghost_text end,
+                  on_toggle = function() vim.cmd("ToggleGhostText") end
+                },
+                {
+                  id = "IBL: Indent Guides",
+                  get = function()
+                    if not is_plugin_loaded('indent-blankline.nvim') then return false end
+                    return require('ibl.config').config and require('ibl.config').config.enabled
+                  end,
+                  on_toggle = function(on)
+                    if on == false and not is_plugin_loaded('indent-blankline.nvim') then return end
+                    vim.cmd("ToggleIBL")
+                  end,
+                },
+                {
+                  id = "IBL: Rainbow Indent",
+                  get = function()
+                    if not is_plugin_loaded('indent-rainbowline.nvim') then return false end
+                    return require('ibl.config').config.indent.highlight ~= "IblIndent"
+                  end,
+                  on_toggle = function(on)
+                    if on == false and not is_plugin_loaded('indent-rainbowline.nvim') then return end
+                    vim.cmd("ToggleIBLRainbow")
+                  end,
+                  padding = 2
+                },
+                {
+                  id = "IBL: Scope Highlight",
+                  get = function()
+                    if not is_plugin_loaded('indent-blankline.nvim') then return false end
+                    return
+                      require('ibl.config').config and
+                      require('ibl.config').config.enabled and
+                      require('ibl.config').config.scope and
+                      require('ibl.config').config.scope.enabled
+                  end,
+                  on_toggle = function(on)
+                    if on == false and not is_plugin_loaded('indent-blankline.nvim') then return end
+                    if on == true and not is_plugin_loaded('indent-blankline.nvim') then
+                      vim.cmd("ToggleIBL")
+                    end
+                    vim.cmd("ToggleIBLScope")
+                  end,
+                  padding = 2
+                },
+                {
+                  id = "Indent Scope Guide",
+                  get = function()
+                    if not is_plugin_loaded('mini.indentscope') then return false end
+                    return not vim.g.miniindentscope_disable
+                  end,
+                  on_toggle = function(on)
+                    vim.g.miniindentscope_disable = not on
+
+                    if on == false and not is_plugin_loaded('mini.indentscope') then return end
+                    if on == true and not is_plugin_loaded('mini.indentscope') then
+                      require("mini.indentscope")
+                    end
+
+                    vim.schedule(function()
+                      vim.cmd("hi! link MiniIndentscopeSymbol @keyword.function")
+                    end)
+                  end,
+                }
+              }
+            },
+          {
+            id = "Interface",
+            items = {
+              {
+                id = 'Tabline',
+                get = function() return vim.o.showtabline == 2 end,
+                on_toggle = function(on)
+                  if not is_plugin_loaded('bufferline.nvim') then
+                    if on == true then vim.cmd("ToggleTabline") end
+                    return
+                  end
+                  if on then
+                    vim.o.showtabline = 2
+                  else
+                    vim.o.showtabline = 0
+                  end
+                end
+              },
+              {
+                id = 'Statusline Full Path',
+                get = function() return require('slim').getStatuslineState().expand_path end,
+                on_toggle = function(on)
+                  if on then vim.cmd("ToggleStlFullPath on") else vim.cmd("ToggleStlFullPath off") end
+                end
+              },
+              {
+                id = 'Statusline Diagnostics',
+                get = function() return require('slim').getStatuslineState().show_diagnostics end,
+                on_toggle = function(on)
+                  if on then vim.cmd("ToggleStlDiagnostics on") else vim.cmd("ToggleStlDiagnostics off") end
+                end
+              },
+              {
+                id = 'Aerial',
+                get = function()
+                  return is_ft_loaded('aerial')
+                end,
+                on_toggle = function()
+                  vim.cmd("AerialToggle")
+                end
+              },
+              {
+                id = 'Neotree',
+                get = function()
+                  return is_ft_loaded('neo-tree')
+                end,
+                on_toggle = function()
+                  vim.cmd("Neotree toggle")
+                end
+              },
+              {
+                id = 'Terminal',
+                get = function() return is_ft_loaded('terminal') end,
+                on_toggle = function() vim.cmd("ToggleTerminal") end
+              },
+            },
+          },
+          {
+            id = "Lang",
+            items = {
+              {
+                id = 'render-markdown',
+                label = 'Render Markdown',
+                get = function() return require('render-markdown').get() end,
+                on_toggle = function() require('render-markdown').toggle() end,
+              },
+            },
+          },
+          {
+            id = "Git",
+            items = {
+              {
+                id = "Gitsigns: Current Line Blame",
+                get = function()
+                  local ok, cfgmod = pcall(require, "gitsigns.config")
+                  return ok and cfgmod.config.current_line_blame == true or false
+                end,
+                on_toggle = function(on)
+                  require("gitsigns").toggle_current_line_blame(on)
+                end,
+              },
+              {
+                id = "Gitsigns: NumHL",
+                get = function()
+                  local ok, cfgmod = pcall(require, "gitsigns.config")
+                  return ok and cfgmod.config.numhl == true or false
+                end,
+                on_toggle = function(on)
+                  require("gitsigns").toggle_numhl(on)
+                end,
+              },
+              {
+                id = "Gitsigns: LineHL",
+                get = function()
+                  local ok, cfgmod = pcall(require, "gitsigns.config")
+                  return ok and cfgmod.config.linehl == true or false
+                end,
+                on_toggle = function(on)
+                  require("gitsigns").toggle_linehl(on)
+                end,
+              },
+              {
+                id = "Gitsigns: Deleted",
+                get = function()
+                  local ok, cfgmod = pcall(require, "gitsigns.config")
+                  return ok and cfgmod.config.show_deleted == true or false
+                end,
+                on_toggle = function(on)
+                  ---@diagnostic disable-next-line: deprecated
+                  require("gitsigns").toggle_deleted(on)
+                end,
+              },
+              {
+                id = "Gitsigns: Word Diff",
+                get = function()
+                  local ok, cfgmod = pcall(require, "gitsigns.config")
+                  return ok and cfgmod.config.word_diff == true or false
+                end,
+                on_toggle = function(on)
+                  require("gitsigns").toggle_word_diff(on)
+                end,
+              },
+              {
+                id = "Gitsigns: Signs",
+                get = function()
+                  local ok, cfgmod = pcall(require, "gitsigns.config")
+                  return ok and cfgmod.config.signcolumn ~= false or false
+                end,
+                on_toggle = function(on)
+                  require("gitsigns").toggle_signs(on)
+                end,
+              },
+            },
+          }
+        },
       })
     end,
   }
