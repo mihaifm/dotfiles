@@ -569,6 +569,8 @@ local plugins = {
           end, 'Toggle virtual diagnostic lines')
 
           map('n', lspleader .. 'do', function() vim.diagnostic.open_float() end, 'Open diagnostics for current line')
+          map('n', lspleader .. 'dn', function() vim.diagnostic.jump({ count = 1, float = true }) end, 'Goto next')
+          map('n', lspleader .. 'dp', function() vim.diagnostic.jump({ count = -1, float = true }) end, 'Goto prev')
         end,
       })
 
