@@ -731,17 +731,6 @@ local plugins = {
     end
   },
   {
-    "zbirenbaum/copilot.lua",
-    enabled = true,
-    cmd = "Copilot",
-    config = function()
-      require("copilot").setup({
-        suggestion = { enabled = false },
-        panel = { enabled = false },
-      })
-    end,
-  },
-  {
     "mihaifm/megatoggler",
     config = function()
       vim.keymap.set("n", "<leader>m", function() vim.cmd("MegaToggler") end, { desc = 'MegaToggler' })

@@ -260,7 +260,11 @@ local plugins = {
       })
     end
   },
-  { 'folke/neoconf.nvim', cmd = 'Neoconf' },
+  {
+    'folke/neoconf.nvim',
+    enabled = false,
+    cmd = 'Neoconf'
+  },
   {
     'NeogitOrg/neogit',
     enabled = false, -- alpha software
@@ -387,6 +391,17 @@ local plugins = {
         vim.opt_local.signcolumn = "no"
       end
     }
+  },
+  {
+    "zbirenbaum/copilot.lua",
+    enabled = false,
+    cmd = "Copilot",
+    config = function()
+      require("copilot").setup({
+        suggestion = { enabled = false },
+        panel = { enabled = false },
+      })
+    end,
   },
   {
     "yetone/avante.nvim",
