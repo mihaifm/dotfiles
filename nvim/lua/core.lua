@@ -257,8 +257,6 @@ local plugins = {
       local function gs_toggle_diff(value)
         gitsigns.toggle_linehl(value)
         gitsigns.toggle_deleted(value) -- not properly deprecated
-        gitsigns.toggle_word_diff(value)
-        gitsigns.toggle_numhl(value)
       end
 
       local gs_toggled = false

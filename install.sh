@@ -1,6 +1,12 @@
 #!/bin/bash
 
-apps=("vim" "neovim" "tmux" "nethack" "gitui")
+apps=(
+  "vim"
+  "neovim"
+  "tmux"
+  "nethack"
+  #"gitui"
+)
 
 vim_conf_live_folders=('~/.vim')
 vim_conf_snap_folders=('.vim')
@@ -244,7 +250,7 @@ if [[ $1 == 'repo' ]]; then
           echo "installing $repo_folder to $live_folder"
 
           echo "removing $live_folder.old"
-          rm -rf $live_folder.old
+          rm -rf "$live_folder.old"
 
           echo "moving $live_folder to $live_folder.old"
           mv "$live_folder" "$live_folder.old"
@@ -260,7 +266,7 @@ if [[ $1 == 'repo' ]]; then
       repo_files="${app}_${type}_repo_files"
 
       if [ ! -z ${!live_files} ]; then
-        echo "restoring $app $type files"
+        echo "installing $app $type files"
         eval "arr_size=\${#$live_files[@]}"
 
         for (( i=0; i<$arr_size; i++ )); do
@@ -271,10 +277,10 @@ if [[ $1 == 'repo' ]]; then
           eval "live_file=$live_file"
           eval "repo_file=$repo_file"
 
-          echo "restoring $repo_file to $live_file"
+          echo "installing $repo_file to $live_file"
 
           echo "removing $live_file.old"
-          rm -rf $live_file.old
+          rm -rf "$live_file.old"
 
           echo "moving $live_file to $live_file.old"
           mv "$live_file" "$live_file.old"
@@ -294,17 +300,6 @@ fi
 
 if [[ $1 == "bootstrap" ]]; then
 
-  # detect OS
-  if [[ -r /etc/os-release ]]; then
-  . /etc/os-release
-  fi
-
-  if [[ "$ID" == "rhel" ]]; then
-    build_env="source scl_source enable devtoolset-12"
-  else
-    build_env="true"
-  fi
-
   # Tmux
   git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
   ~/.tmux/plugins/tpm/scripts/install_plugins.sh
@@ -313,9 +308,9 @@ if [[ $1 == "bootstrap" ]]; then
   vim +PlugInstall! +qa
 
   # Neovim
-  ($build_env && nvim --headless +"Lazy! install" +"qa")
+  (nvim --headless +"Lazy! install" +"qa")
 
-  ($build_env && nvim --headless \
+  (nvim --headless \
     +"TSInstallSync! c cpp lua vim vimdoc query javascript python html bash markdown markdown_inline" \
     +"qa")
 

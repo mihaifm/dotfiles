@@ -736,7 +736,6 @@ local plugins = {
       vim.keymap.set("n", "<leader>m", function() vim.cmd("MegaToggler") end, { desc = 'MegaToggler' })
 
       require("megatoggler").setup({
-        persist_file = "~/dotfiles/.nvimsettings.json",
         ui = {
           title = ""
         },
