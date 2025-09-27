@@ -26,7 +26,7 @@ case "$1" in
     cmd_repo
     ;;
   bootstrap)
-    bootstrap
+    bootstrap "$2"
     ;;
   *)
     echo "usage: $0 {snap|restore|clean|repo|bootstrap}"
