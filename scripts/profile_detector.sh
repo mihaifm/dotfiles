@@ -33,6 +33,9 @@ detect_profile() {
     elif [ -n "$ID_LIKE" ]; then
       DOTFILES_DISTRO="${ID_LIKE%% *}"
     fi
+    if [ -f /etc/pve/.version ]; then
+      DOTFILES_DISTRO="proxmox"
+    fi
   fi
 
   # compose profile string
