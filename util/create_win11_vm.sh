@@ -12,7 +12,7 @@ fi
 
 DISK_STORE="local-lvm"
 ISO_PATH="/var/lib/vz/template/iso"
-WIN_ISO="${ISO_PATH}/Win11_25H2_English_x64.iso"
+WIN_ISO="${ISO_PATH}/Win11_25H2_NoPrompt.iso"
 VIRTIO_ISO="${ISO_PATH}/virtio-win-0.1.285.iso"
 
 VM_CORES=4
