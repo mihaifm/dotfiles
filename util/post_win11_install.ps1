@@ -34,6 +34,7 @@ function PostInstall-Apps {
 	winget install --id Notepad++.Notepad++ @wingetargs
 	winget install --id Mozilla.Firefox @wingetargs
 	winget install --id Microsoft.PowerShell @wingetargs
+	winget install --id Neovim.Neovim @wingetargs
 
 	Write-Host "Done installing apps" -ForegroundColor Green
 }
@@ -166,13 +167,7 @@ function PostInstall-WSL {
 	Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart -ErrorAction SilentlyContinue | Out-Null
 
 	# Install WSL (includes Ubuntu by default)
-	wsl --install -d Ubuntu
-
-	# Wait until WSL is ready
-	Write-Host "Waiting for WSL setup to complete..." -ForegroundColor Yellow
-	while (-not (Get-Command wsl.exe -ErrorAction SilentlyContinue)) {
-		Start-Sleep -Seconds 5
-	}
+	wsl --install --no-launch -d Ubuntu
 
 	Write-Host "WSL installation complete" -ForegroundColor Green
 }
