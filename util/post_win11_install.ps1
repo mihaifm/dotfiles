@@ -4,29 +4,10 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
   exit 1
 }
 
-#########################
-# Trigger Windows Update
-
-$windowsUpdateScript = @'
-Install-PackageProvider -Name NuGet -Force
-Install-Module PSWindowsUpdate -Force -Scope AllUsers -AllowClobber
-Import-Module PSWindowsUpdate
-Get-WindowsUpdate -Install -AcceptAll -IgnoreReboot | Out-Null
-'@
-
-function PostInstall-WindowsUpdate {
-  Write-Host "Triggering Windows Update" -ForegroundColor Cyan
-
-  # Launch the update process in the background (non-blocking)
-  Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"$windowsUpdateScript`"" -Verb RunAs
-
-  Write-Host "Done triggering Windows Update" -ForegroundColor Green
-}
-
 ###############
 # Install apps
 
-function PostInstall-Apps {
+function Install-MyApps {
   Write-Host "Installing apps" -ForegroundColor Cyan
 
   $wingetargs = @("--exact", "--accept-package-agreements", "--accept-source-agreements", "--silent", "--source", "winget")
@@ -42,7 +23,7 @@ function PostInstall-Apps {
 ##################
 # Edge extensions
 
-function PostInstall-EdgeExtensions {
+function Install-MyEdgeExtensions {
   Write-Host "Installing Edge extensions" -ForegroundColor Cyan
 
   $extensions = @(
@@ -68,7 +49,7 @@ function PostInstall-EdgeExtensions {
 #####################
 # Firefox extensions
 
-function PostInstall-FirefoxExtensions {
+function Install-MyFirefoxExtensions {
   Write-Host "Installing Firefox extensions" -ForegroundColor Cyan
 
   $registryPath = "HKLM:\SOFTWARE\Policies\Mozilla\Firefox"
@@ -104,7 +85,7 @@ function PostInstall-FirefoxExtensions {
 #############
 # Nerd Fonts
 
-function PostInstall-NerdFonts {
+function Install-MyNerdFonts {
   Write-Host "Installing Nerd Fonts" -ForegroundColor Cyan
 
   & "C:\Program Files\PowerShell\7\pwsh.exe" -c "Set-PSResourceRepository -Name PSGallery -Trusted"
@@ -129,7 +110,8 @@ function PostInstall-NerdFonts {
   function Ensure-Object([object]$parent, [string]$name) {
     if (-not $parent.PSObject.Properties[$name]) {
       $parent | Add-Member -NotePropertyName $name -NotePropertyValue ([pscustomobject]@{})
-    } elseif ($parent.$name -isnot [pscustomobject]) {
+    }
+    elseif ($parent.$name -isnot [pscustomobject]) {
       $parent.$name = [pscustomobject]$parent.$name
     }
     return $parent.$name
@@ -138,7 +120,8 @@ function PostInstall-NerdFonts {
   function Ensure-NoteProperty([object]$obj, [string]$name, $value) {
     if (-not $obj.PSObject.Properties[$name]) {
       $obj | Add-Member -NotePropertyName $name -NotePropertyValue $value
-    } else {
+    }
+    else {
       $obj.$name = $value
     }
   }
@@ -162,22 +145,20 @@ function PostInstall-NerdFonts {
 ########
 # WSL 2
 
-function PostInstall-WSL {
-  Write-Host "Installing WSL" -ForegroundColor Cyan
-
-  # Enable required Windows features
-  Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart -ErrorAction SilentlyContinue | Out-Null
-  Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart -ErrorAction SilentlyContinue | Out-Null
-
-  # Install WSL (includes Ubuntu by default)
-  wsl --install --no-launch -d Ubuntu
-
-  Write-Host "WSL installation complete" -ForegroundColor Green
+function Install-MyWSL {
+  try {
+    wsl --update
+    wsl --install --no-launch -d Ubuntu
+    wsl -d Ubuntu -u root -- bash -c "useradd -m -s /bin/bash mihai && echo 'mihai:changeme' | chpasswd && usermod -aG sudo mihai && echo '[user]' > /etc/wsl.conf && echo 'default=mihai' >> /etc/wsl.conf"
+  }
+  catch {
+    Write-Host "Error during WSL installation: $_" -ForegroundColor Red
+    return
+  }
 }
 
-PostInstall-WindowsUpdate
-PostInstall-Apps
-PostInstall-EdgeExtensions
-PostInstall-FirefoxExtensions
-PostInstall-NerdFonts
-PostInstall-WSL
+Install-MyApps
+Install-MyEdgeExtensions
+Install-MyFirefoxExtensions
+Install-MyNerdFonts
+Install-MyWSL
