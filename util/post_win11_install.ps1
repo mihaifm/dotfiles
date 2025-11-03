@@ -43,7 +43,7 @@ function Install-MyEdgeExtensions {
     $count++
   }
 
-  Write-Host "Edge extensions insalled" -ForegroundColor Green
+  Write-Host "Edge extensions installed" -ForegroundColor Green
 }
 
 #####################
@@ -139,18 +139,22 @@ function Install-MyNerdFonts {
   # start condrv automatically to prevent powershell init errors after reboot
   Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\condrv' -Name 'Start' -Type DWord -Value 2
 
-  Write-Host "Nerd Fonts Installed" -ForegroundColor Green
+  Write-Host "Nerd Fonts installed" -ForegroundColor Green
 }
 
 ########
 # WSL 2
 
 function Install-MyWSL {
+  Write-Host "Installing WSL" -ForegroundColor Cyan
+
   try {
     wsl --update
     wsl --install --no-launch -d Ubuntu
     wsl -d Ubuntu -u root -- bash -c "useradd -m -s /bin/bash mihai && echo 'mihai:changeme' | chpasswd && usermod -aG sudo mihai && echo '[user]' > /etc/wsl.conf && echo 'default=mihai' >> /etc/wsl.conf"
     wsl -d Ubuntu -u root -- bash -c "apt update"
+
+    Write-Host "WSL installed" -ForegroundColor Green
   }
   catch {
     Write-Host "Error during WSL installation: $_" -ForegroundColor Red
@@ -162,9 +166,13 @@ function Install-MyWSL {
 # AI tools
 
 function Install-MyAI {
+  Write-Host "Installing WSL AI tools" -ForegroundColor Cyan
+
   wsl -d Ubuntu -u root -- bash -c "apt install -y nodejs npm"
   wsl -d Ubuntu -u root -- bash -c "npm install -g @openai/codex"
   wsl -d Ubuntu -u root -- bash -c "npm install -g @anthropic-ai/claude-code"
+
+  Write-Host "WSL AI tools installed" -ForegroundColor Green
 }
 
 Install-MyApps

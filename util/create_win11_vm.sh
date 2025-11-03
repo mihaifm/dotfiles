@@ -2,33 +2,131 @@
 
 set -euo pipefail
 
-if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 autounattend.xml"
-  exit 1
-fi
+print_usage() {
+  cat <<'USAGE'
+Usage: create_win11_vm.sh --xml <autounattend.xml> [options]
 
-##############
-# Config area
+Required:
+  --xml PATH          Path to Autounattend.xml
+
+Optional:
+  --iso PATH          Path to Windows ISO file (default: /var/lib/vz/template/iso/Win11_25H2_NoPrompt.iso)
+  --cores N           CPU cores (default: 4)
+  --disksize GB       Disk size in GB (default: 64)
+  --maxram GB         Max RAM in GB (default: 16)
+  --minram GB         Min RAM in GB for ballooning (0 disables; default: 8)
+  --start             Start the VM after creation
+
+Examples:
+  ./create_win11_vm.sh --xml /path/to/Autounattend.xml \
+                    --iso /var/lib/vz/template/iso/Win11_25H2_NoPrompt.iso \
+                    --cores 6 --disksize 128 --maxram 24 --minram 12
+USAGE
+}
+
+########################
+# Default config values
 
 DISK_STORE="local-lvm"
 ISO_PATH="/var/lib/vz/template/iso"
 WIN_ISO="${ISO_PATH}/Win11_25H2_NoPrompt.iso"
 VIRTIO_ISO="${ISO_PATH}/virtio-win-0.1.285.iso"
-
 VM_CORES=4
-VM_DISK_SIZE=64  # GB
+VM_DISK_SIZE=64
 BRIDGE="vmbr0"
+VM_RAM_MAX=$((16 * 1024))
+VM_RAM_MIN=$((8 * 1024))
+START_VM=false
+XML_PATH=""
 
-# Max memory (MB) visible to guest
-VM_RAM_MAX=16384             
-# Ballooning - set to 0 to disable, or a value less than VM_RAM_MAX to enable
-VM_RAM_MIN=8192
+###################
+# Helper functions
+
+is_int() { [[ "$1" =~ ^[0-9]+$ ]]; }
+gb_to_mb() { echo $(( $1 * 1024 )); }
+
+##################
+# Parse arguments
+
+if [[ "$#" -eq 0 ]]; then
+  print_usage
+  exit 1
+fi
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    --iso)
+      WIN_ISO="$2"
+      ISO_PATH="$(dirname "$2")"
+      shift 2
+      ;;
+    --cores)
+      is_int "$2" || { echo "Invalid value for --cores"; exit 2; }
+      VM_CORES="$2"
+      shift 2
+      ;;
+    --disksize)
+      is_int "$2" || { echo "Invalid value for --disksize"; exit 2; }
+      VM_DISK_SIZE="$2"
+      shift 2
+      ;;
+    --maxram)
+      is_int "$2" || { echo "Invalid value for --maxram"; exit 2; }
+      VM_RAM_MAX="$(gb_to_mb "$2")"
+      shift 2
+      ;;
+    --minram)
+      is_int "$2" || { echo "Invalid value for --minram"; exit 2; }
+      VM_RAM_MIN="$(gb_to_mb "$2")"
+      shift 2
+      ;;
+    --xml)
+      XML_PATH="$2"
+      shift 2
+      ;;
+    --start)
+      START_VM=true
+      shift 1
+      ;;
+    --help|-h)
+      print_usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      print_usage
+      exit 1
+      ;;
+  esac
+done
+
+#################
+# Validate input
+
+if [[ -z "$XML_PATH" ]]; then
+  echo "Error: --xml parameter is required."
+  print_usage
+  exit 1
+fi
+
+if [[ ! -f "$XML_PATH" ]]; then
+  echo "Error: Autounattend file not found: $XML_PATH"
+  exit 1
+fi
+
+if (( VM_RAM_MIN > 0 && VM_RAM_MIN >= VM_RAM_MAX )); then
+  echo "Error: --minram must be less than --maxram (or 0 to disable ballooning)."
+  exit 1
+fi
+
+VIRTIO_ISO="${ISO_PATH}/$(basename "$VIRTIO_ISO")"
 
 ############################
 # Generate Autounattend.iso
 
-genisoimage -iso-level 4 -udf -o "${ISO_PATH}/Autounattend.iso" -V AUTOUNATTEND "$(dirname "$1")"
+mkdir -p "$ISO_PATH"
 UNATTEND_ISO="${ISO_PATH}/Autounattend.iso"
+genisoimage -iso-level 4 -udf -o "$UNATTEND_ISO" -V AUTOUNATTEND "$(dirname "$XML_PATH")"
 
 ################
 # Sanity checks 
@@ -93,7 +191,15 @@ fi
 qm set "$NEXTID" --boot 'order=scsi0;ide2'
 
 echo "VM created successfully!"
-echo "   VMID:  $NEXTID"
-echo "   Name:  $VMNAME"
-echo "   Console:  qm terminal $NEXTID  (or use the web UI)"
+echo "   VMID:     $NEXTID"
+echo "   Name:     $VMNAME"
+echo "   ISO:      $(basename "$WIN_ISO")"
+echo "   Disk:     ${VM_DISK_SIZE}G"
+echo "   vCPU:     ${VM_CORES}"
+echo "   RAM:      max ${VM_RAM_MAX} MB, min ${VM_RAM_MIN} MB"
 
+if [[ "$START_VM" == true ]]; then
+  echo "Starting VM $NEXTID..."
+  qm start "$NEXTID"
+  echo "VM started successfully!"
+fi
