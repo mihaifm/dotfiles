@@ -150,6 +150,7 @@ function Install-MyWSL {
     wsl --update
     wsl --install --no-launch -d Ubuntu
     wsl -d Ubuntu -u root -- bash -c "useradd -m -s /bin/bash mihai && echo 'mihai:changeme' | chpasswd && usermod -aG sudo mihai && echo '[user]' > /etc/wsl.conf && echo 'default=mihai' >> /etc/wsl.conf"
+    wsl -d Ubuntu -u root -- bash -c "apt update"
   }
   catch {
     Write-Host "Error during WSL installation: $_" -ForegroundColor Red
@@ -157,8 +158,18 @@ function Install-MyWSL {
   }
 }
 
+###########
+# AI tools
+
+function Install-MyAI {
+  wsl -d Ubuntu -u root -- bash -c "apt install -y nodejs npm"
+  wsl -d Ubuntu -u root -- bash -c "npm install -g @openai/codex"
+  wsl -d Ubuntu -u root -- bash -c "npm install -g @anthropic-ai/claude-code"
+}
+
 Install-MyApps
 Install-MyEdgeExtensions
 Install-MyFirefoxExtensions
 Install-MyNerdFonts
 Install-MyWSL
+Install-MyAI
