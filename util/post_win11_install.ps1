@@ -95,7 +95,7 @@ function Install-MyNerdFonts {
 
   $json = Get-Content $settingsPath -Raw | ConvertFrom-Json
 
-  function Ensure-Object([object]$parent, [string]$name) {
+  function Get-OrCreateObject([object]$parent, [string]$name) {
     if (-not $parent.PSObject.Properties[$name]) {
       $parent | Add-Member -NotePropertyName $name -NotePropertyValue ([pscustomobject]@{})
     }
@@ -105,7 +105,7 @@ function Install-MyNerdFonts {
     return $parent.$name
   }
 
-  function Ensure-NoteProperty([object]$obj, [string]$name, $value) {
+  function Set-NoteProperty([object]$obj, [string]$name, $value) {
     if (-not $obj.PSObject.Properties[$name]) {
       $obj | Add-Member -NotePropertyName $name -NotePropertyValue $value
     }
@@ -114,12 +114,12 @@ function Install-MyNerdFonts {
     }
   }
 
-  $defaultsFont = Ensure-Object $json.profiles 'defaults' | ForEach-Object { Ensure-Object $_ 'font' }
-  Ensure-NoteProperty $defaultsFont 'face' $chosenFontName
+  $defaultsFont = Get-OrCreateObject $json.profiles 'defaults' | ForEach-Object { Get-OrCreateObject $_ 'font' }
+  Set-NoteProperty $defaultsFont 'face' $chosenFontName
 
   foreach ($p in @($json.profiles.list)) {
-    $pf = Ensure-Object $p 'font'
-    Ensure-NoteProperty $pf 'face' $chosenFontName
+    $pf = Get-OrCreateObject $p 'font'
+    Set-NoteProperty $pf 'face' $chosenFontName
   }
 
   $json | ConvertTo-Json -Depth 50 | Set-Content $settingsPath -Encoding UTF8
