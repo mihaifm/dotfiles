@@ -16,6 +16,7 @@ function Install-MyApps {
   winget install --id Neovim.Neovim @wingetargs
   winget install --id GitHub.cli @wingetargs
   winget install --id Docker.DockerDesktop @wingetargs
+  winget install --id vim.vim @wingetargs
 }
 
 ##################
