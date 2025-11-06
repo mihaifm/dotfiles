@@ -16,7 +16,29 @@ function Install-MyApps {
   winget install --id Neovim.Neovim @wingetargs
   winget install --id GitHub.cli @wingetargs
   winget install --id Docker.DockerDesktop @wingetargs
+  winget install --id BurntSushi.ripgrep.MSVC @wingetargs
+  winget install --id junegunn.fzf @wingetargs
   winget install --id vim.vim @wingetargs
+
+  # Add Vim to System PATH
+  $vimRoot = "C:\Program Files\Vim"
+
+  if (-not (Test-Path $vimRoot)) { return }
+
+  $latestVimDir = Get-ChildItem -Path $vimRoot -Directory -Filter "vim*" |
+      Sort-Object Name -Descending |
+      Select-Object -First 1
+
+  if (-not $latestVimDir) { return }
+
+  $vimPath = $latestVimDir.FullName
+  $regPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+  $currentPath = (Get-ItemProperty -Path $regPath -Name Path).Path
+
+  if ($currentPath -notlike "*$vimPath*") {
+      $newPath = "$currentPath;$vimPath"
+      Set-ItemProperty -Path $regPath -Name Path -Value $newPath
+  }
 }
 
 ##################
