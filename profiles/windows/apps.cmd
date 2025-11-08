@@ -28,14 +28,9 @@ set neovide_conf_repo_folders[0]=neovide
 exit /b 0
 
 :do_bootstrap
-if "%VisualStudioVersion%"=="" (
-  echo run this from a Visual Studio Developer Command Prompt
-  exit /b 1
-)
 
 vim +PlugInstall! +qa
 nvim --headless +"Lazy^! install" +"qa"
-nvim --headless +"TSInstallSync^! c cpp lua vim vimdoc javascript python html bash markdown markdown_inline" +"qa"
 nvim --headless +"MasonInstall lua-language-server" +"qa"
 
 exit /b 0

@@ -345,45 +345,18 @@ local plugins = {
     end
   },
   {
-    -- NOTE open nvim from the VS2022 Command Prompt to install parsers on Windows
-    -- NOTE for Redhat run `source scl_source enable devtoolset-12`
-    "nvim-treesitter/nvim-treesitter",
-    enabled = true,
-    version = false,
-    -- build = ":TSUpdate",
-    config = function()
-      require("nvim-treesitter.configs").setup({
-        -- ensure_installed = { "c", "cpp", "lua", "vim", "vimdoc", "query", "javascript", "python", "html", "bash", "markdown", "markdown_inline" },
-        ensure_installed = { },
-        auto_install = false,
-        sync_install = false,
-        ignore_install = {},
-        modules = {},
-        highlight = {
-          enable = true,
-          disable = function(lang, _)
-            if lang == 'markdown' or lang == 'markdown_inline' then
-              return false
-            end
-            return true
-          end
-        },
-        indent = { enable = false },
-        incremental_selection = {
-          enable = true,
-          keymaps = {
-            init_selection = "<leader>rn",
-            node_incremental = "<leader>rn",
-            node_decremental = "<leader>rp",
-          },
-        }
-      })
+    -- NOTE nvim-treesitter requires the tree-sitter cli app, currently not bundled with neovim
+    'nvim-treesitter/nvim-treesitter',
+    lazy = false,
+    branch = 'main',
+    build = ':TSUpdate',
+    init = function()
+      local wanted = { "c","cpp","lua","vim","vimdoc","query","javascript", "python","html","bash","markdown","markdown_inline" }
+      local installed = require("nvim-treesitter.config").get_installed()
+      local missing = vim.iter(wanted):filter(function(lang) return not vim.tbl_contains(installed, lang) end):totable()
 
-      local has_wk, wk = pcall(require, 'which-key')
-      if has_wk then
-        wk.add({ { "<leader>r", group = "Treesitter" } })
-        wk.add({ { "<leader>rn", desc = "Select node incremental" } })
-        wk.add({ { "<leader>rp", desc = "Select node decremental" } })
+      if #missing > 0 then
+        require("nvim-treesitter").install(missing)
       end
     end
   },
@@ -416,35 +389,55 @@ local plugins = {
   },
   {
     "nvim-treesitter/nvim-treesitter-textobjects",
-    opts = {
-      textobjects = {
-        select = {
-          enable = true,
-          keymaps = {
-            ["af"] = "@function.outer",
-            ["if"] = "@function.inner",
-            ["ac"] = "@class.outer",
-            ["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
-            ["as"] = { query = "@scope", query_group = "locals", desc = "Select language scope" },
-          },
-        },
-        move = {
-          enable = true,
-          goto_next_start = { ["]f"] = "@function.outer", ["]c"] = "@class.outer", ["]a"] = "@parameter.inner" },
-          goto_next_end = { ["]F"] = "@function.outer", ["]C"] = "@class.outer", ["]A"] = "@parameter.inner" },
-          goto_previous_start = { ["[f"] = "@function.outer", ["[c"] = "@class.outer", ["[a"] = "@parameter.inner" },
-          goto_previous_end = { ["[F"] = "@function.outer", ["[C"] = "@class.outer", ["[A"] = "@parameter.inner" },
-        },
-        lsp_interop = {
-          enable = false
-        },
-        swap = {
-          enable = false
-        }
-      },
-    },
-    config = function(_, opts)
-      require("nvim-treesitter.configs").setup(opts)
+    enabled = true,
+    branch = 'main',
+    config = function()
+      require("nvim-treesitter-textobjects").setup()
+
+      vim.keymap.set({ "x", "o" }, "af", function()
+        require "nvim-treesitter-textobjects.select".select_textobject("@function.outer", "textobjects")
+      end)
+      vim.keymap.set({ "x", "o" }, "if", function()
+        require "nvim-treesitter-textobjects.select".select_textobject("@function.inner", "textobjects")
+      end)
+      vim.keymap.set({ "x", "o" }, "ac", function()
+        require "nvim-treesitter-textobjects.select".select_textobject("@class.outer", "textobjects")
+      end)
+      vim.keymap.set({ "x", "o" }, "ic", function()
+        require "nvim-treesitter-textobjects.select".select_textobject("@class.inner", "textobjects")
+      end)
+      vim.keymap.set({ "x", "o" }, "as", function()
+        require "nvim-treesitter-textobjects.select".select_textobject("@local.scope", "locals")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "]m", function()
+        require("nvim-treesitter-textobjects.move").goto_next_start("@function.outer", "textobjects")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "]s", function()
+        require("nvim-treesitter-textobjects.move").goto_next_start("@local.scope", "locals")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "]z", function()
+        require("nvim-treesitter-textobjects.move").goto_next_start("@fold", "folds")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "]M", function()
+        require("nvim-treesitter-textobjects.move").goto_next_end("@function.outer", "textobjects")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "[m", function()
+        require("nvim-treesitter-textobjects.move").goto_previous_start("@function.outer", "textobjects")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "[M", function()
+        require("nvim-treesitter-textobjects.move").goto_previous_end("@function.outer", "textobjects")
+      end)
+
+      local ts_repeat_move = require "nvim-treesitter-textobjects.repeatable_move"
+
+      -- repeat movement with ;
+      vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move)
+
+      -- make builtin f, F, t, T also repeatable with ;
+      vim.keymap.set({ "n", "x", "o" }, "f", ts_repeat_move.builtin_f_expr, { expr = true })
+      vim.keymap.set({ "n", "x", "o" }, "F", ts_repeat_move.builtin_F_expr, { expr = true })
+      vim.keymap.set({ "n", "x", "o" }, "t", ts_repeat_move.builtin_t_expr, { expr = true })
+      vim.keymap.set({ "n", "x", "o" }, "T", ts_repeat_move.builtin_T_expr, { expr = true })
     end
   },
   {
