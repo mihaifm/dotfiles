@@ -19,6 +19,7 @@ function Install-MyApps {
   winget install --id BurntSushi.ripgrep.MSVC @wingetargs
   winget install --id junegunn.fzf @wingetargs
   winget install --id vim.vim @wingetargs
+  winget install --id JesseDuffield.lazygit @wingetargs
 
   # Add Vim to System PATH
   $vimRoot = "C:\Program Files\Vim"
@@ -39,6 +40,30 @@ function Install-MyApps {
       $newPath = "$currentPath;$vimPath"
       Set-ItemProperty -Path $regPath -Name Path -Value $newPath
   }
+
+  # Download tree-sitter cli
+  $downloadUrl = "https://github.com/tree-sitter/tree-sitter/releases/latest/download/tree-sitter-windows-x64.gz"
+  $tempDir = "$env:TEMP\tree-sitter"
+  $archivePath = "$tempDir\tree-sitter.gz"
+  $exePath = "$tempDir\tree-sitter.exe"
+
+  New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
+
+  Write-Host "Downloading tree-sitter.exe"
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $archivePath
+
+  $inputStream  = [System.IO.File]::OpenRead($archivePath)
+  $outputStream = [System.IO.File]::Create($exePath)
+  $gzipStream   = New-Object System.IO.Compression.GzipStream($inputStream, [System.IO.Compression.CompressionMode]::Decompress)
+  $gzipStream.CopyTo($outputStream)
+  $gzipStream.Dispose()
+  $inputStream.Dispose()
+  $outputStream.Dispose()
+
+  $nvimPath = (Get-Command nvim.exe -ErrorAction Stop).Source
+  $nvimDir  = Split-Path $nvimPath
+
+  Move-Item -Path $exePath -Destination (Join-Path $nvimDir "tree-sitter.exe") -Force
 }
 
 ##################
