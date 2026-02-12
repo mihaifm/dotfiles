@@ -1,0 +1,256 @@
+---
+- name: Trixie VM config
+  hosts: debian_vms
+  become: true
+  gather_facts: true
+
+  vars:
+    dev_user: debian
+
+    base_packages:
+      - ca-certificates
+      - curl
+      - git
+      - gnupg
+      - unzip
+      - xz-utils
+      - fuse
+
+    dev_packages:
+      - tmux
+      - fzf
+      - ripgrep
+      - nodejs
+      - npm
+
+    desktop_packages:
+      - xfce4
+      - xfce4-goodies
+      - dbus-x11
+      - xrdp
+      - xorgxrdp
+
+    xsession_content: |
+      #!/bin/sh
+      unset DBUS_SESSION_BUS_ADDRESS
+      unset XDG_RUNTIME_DIR
+      exec startxfce4 &
+
+    polkit_rule_path: /etc/polkit-1/rules.d/49-xrdp.rules
+    polkit_rule_content: |
+      polkit.addRule(function(action, subject) {
+          if (subject.isInGroup("users")) {
+              return polkit.Result.YES;
+          }
+      });
+
+    # Neovim AppImage (latest)
+    nvim_install_path: "/opt/nvim/nvim"
+
+    # GitHub CLI apt repo
+    gh_keyring_path: "/etc/apt/keyrings/githubcli-archive-keyring.gpg"
+    gh_repo: "deb [arch={{ ansible_architecture | replace('x86_64','amd64') }} signed-by={{ gh_keyring_path }}] https://cli.github.com/packages stable main"
+
+    # Claude Code native installer
+    claude_install_script_url: "https://claude.ai/install.sh"
+    claude_install_script_path: "/tmp/claude-install.sh"
+    claude_user_bin: "/home/{{ dev_user }}/.local/bin/claude"
+    claude_system_link: "/usr/local/bin/claude"
+
+  handlers:
+    - name: Restart xrdp
+      ansible.builtin.service:
+        name: xrdp
+        state: restarted
+
+  tasks:
+    - name: Ensure debian user has a password for RDP
+      ansible.builtin.user:
+        name: debian
+        password: "$6$xpeyN4Bt9sBZFl73$7HqO4FvmkmIR98LkXlJDY6ONu.8zHYNkJEi6bOIRzUZq0P.Tg9XXFflSIT8woQoFEGyoExJwOAFEkTGECCfzA."
+
+    - name: Install base packages
+      ansible.builtin.apt:
+        name: "{{ base_packages }}"
+        state: present
+
+    - name: Install developer packages
+      ansible.builtin.apt:
+        name: "{{ dev_packages }}"
+        state: present
+
+    - name: Install desktop + RDP packages
+      ansible.builtin.apt:
+        name: "{{ desktop_packages }}"
+        state: present
+
+    # --------------------------
+    # Neovim (AppImage)
+    # --------------------------
+    - name: Ensure Neovim install dir exists
+      ansible.builtin.file:
+        path: "/opt/nvim"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Download/update Neovim AppImage (latest)
+      ansible.builtin.get_url:
+        url: "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage"
+        dest: "{{ nvim_install_path }}"
+        mode: "0755"
+      register: nvim_dl
+
+    - name: Symlink nvim into PATH
+      ansible.builtin.file:
+        src: "{{ nvim_install_path }}"
+        dest: "/usr/local/bin/nvim"
+        state: link
+        force: true
+
+    # --------------------------
+    # GitHub CLI (gh)
+    # --------------------------
+    - name: Ensure /etc/apt/keyrings exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Install GitHub CLI keyring
+      ansible.builtin.get_url:
+        url: "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
+        dest: "{{ gh_keyring_path }}"
+        mode: "0644"
+
+    - name: Add GitHub CLI apt repository
+      ansible.builtin.apt_repository:
+        repo: "{{ gh_repo }}"
+        filename: "github-cli"
+        state: present
+        update_cache: true
+
+    - name: Install GitHub CLI
+      ansible.builtin.apt:
+        name: gh
+        state: present
+
+    # --------------------------
+    # OpenAI Codex CLI (npm global)
+    # --------------------------
+    - name: Ensure npm global installs go to /usr/local (safe default)
+      ansible.builtin.command: "npm config set prefix /usr/local"
+      changed_when: false
+
+    - name: Install/Update OpenAI Codex CLI
+      ansible.builtin.command: "npm install -g @openai/codex"
+      args:
+        creates: "/usr/local/bin/codex"
+
+    # --------------------------
+    # Claude Code (native installer, user-level)
+    # --------------------------
+    # - name: Ensure {{ dev_user }} has ~/.local/bin
+    #   ansible.builtin.file:
+    #     path: "/home/{{ dev_user }}/.local/bin"
+    #     state: directory
+    #     owner: "{{ dev_user }}"
+    #     group: "{{ dev_user }}"
+    #     mode: "0755"
+
+    # - name: Download Claude Code installer (avoid curl|bash directly)
+    #   ansible.builtin.get_url:
+    #     url: "{{ claude_install_script_url }}"
+    #     dest: "{{ claude_install_script_path }}"
+    #     mode: "0755"
+    #     force: true
+
+    # - name: Install Claude Code for {{ dev_user }} (latest channel)
+    #   ansible.builtin.command: "bash {{ claude_install_script_path }}"
+    #   become: true
+    #   become_user: "{{ dev_user }}"
+    #   args:
+    #     creates: "{{ claude_user_bin }}"
+
+    # - name: Symlink claude into /usr/local/bin
+    #   ansible.builtin.file:
+    #     src: "{{ claude_user_bin }}"
+    #     dest: "{{ claude_system_link }}"
+    #     state: link
+    #     force: true
+
+    # --------------------------
+    # XRDP
+    # --------------------------
+
+    - name: Ensure xrdp is enabled and started
+      ansible.builtin.service:
+        name: xrdp
+        enabled: true
+        state: started
+
+    - name: Add xrdp user to ssl-cert group
+      ansible.builtin.user:
+        name: xrdp
+        groups: ssl-cert
+        append: true
+      notify: Restart xrdp
+
+    - name: Allow Xorg for non-console users (needed for XRDP)
+      ansible.builtin.copy:
+        dest: /etc/X11/Xwrapper.config
+        content: |
+          allowed_users=anybody
+          needs_root_rights=yes
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart xrdp
+
+    - name: Configure XRDP to start XFCE
+      ansible.builtin.copy:
+        dest: /etc/xrdp/startwm.sh
+        content: |
+          #!/bin/sh
+          unset DBUS_SESSION_BUS_ADDRESS
+          unset XDG_RUNTIME_DIR
+          exec startxfce4
+        owner: root
+        group: root
+        mode: "0755"
+      notify: Restart xrdp
+
+    - name: Install polkit rule for XRDP
+      ansible.builtin.copy:
+        dest: "{{ polkit_rule_path }}"
+        content: "{{ polkit_rule_content }}"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart xrdp
+
+    - name: Reboot to finalize desktop/RDP setup
+      ansible.builtin.reboot:
+        msg: "Rebooting after XFCE+XRDP install"
+        reboot_timeout: 900
+
+    # --------------------------
+    # Sanity checks
+    # --------------------------
+    - name: Show installed tool versions
+      ansible.builtin.command: "{{ item }}"
+      register: versions
+      changed_when: false
+      failed_when: false
+      loop:
+        - "nvim --version"
+        - "gh --version"
+        - "codex --version"
+        - "claude --version"
+
+    - name: Print versions
+      ansible.builtin.debug:
+        msg: "{{ item.stdout_lines | default([item.stdout]) }}"
+      loop: "{{ versions.results }}"
+

@@ -49,7 +49,7 @@ SNIP_NAME="trixie-${VMID}.yaml"
 
 if [[ ! -f "$SSH_PUBKEY_FILE" ]]; then
   echo "ERROR: Public key not found: $SSH_PUBKEY_FILE" >&2
-  echo "Create one with: ssh-keygen -t ed25519 -f ~/.ssh/trixie.key" >&2
+  echo "Create one with: ssh-keygen -t ed25519 -f ~/.ssh/trixie" >&2
   exit 1
 fi
 
