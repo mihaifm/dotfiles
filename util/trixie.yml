@@ -22,6 +22,8 @@
       - ripgrep
       - nodejs
       - npm
+      - firefox-esr
+      - kitty
 
     desktop_packages:
       - xfce4
@@ -29,33 +31,16 @@
       - dbus-x11
       - xrdp
       - xorgxrdp
+      - arc-theme
+      - papirus-icon-theme
 
-    xsession_content: |
-      #!/bin/sh
-      unset DBUS_SESSION_BUS_ADDRESS
-      unset XDG_RUNTIME_DIR
-      exec startxfce4 &
-
-    polkit_rule_path: /etc/polkit-1/rules.d/49-xrdp.rules
-    polkit_rule_content: |
-      polkit.addRule(function(action, subject) {
-          if (subject.isInGroup("users")) {
-              return polkit.Result.YES;
-          }
-      });
-
-    # Neovim AppImage (latest)
     nvim_install_path: "/opt/nvim/nvim"
 
-    # GitHub CLI apt repo
     gh_keyring_path: "/etc/apt/keyrings/githubcli-archive-keyring.gpg"
     gh_repo: "deb [arch={{ ansible_architecture | replace('x86_64','amd64') }} signed-by={{ gh_keyring_path }}] https://cli.github.com/packages stable main"
 
-    # Claude Code native installer
-    claude_install_script_url: "https://claude.ai/install.sh"
-    claude_install_script_path: "/tmp/claude-install.sh"
-    claude_user_bin: "/home/{{ dev_user }}/.local/bin/claude"
-    claude_system_link: "/usr/local/bin/claude"
+    xfce_gtk_theme: Arc-Dark
+    xfce_icon_theme: Papirus-Dark
 
   handlers:
     - name: Restart xrdp
@@ -67,6 +52,7 @@
     - name: Ensure debian user has a password for RDP
       ansible.builtin.user:
         name: debian
+        # password generated with: openssl passwd -6
         password: "$6$xpeyN4Bt9sBZFl73$7HqO4FvmkmIR98LkXlJDY6ONu.8zHYNkJEi6bOIRzUZq0P.Tg9XXFflSIT8woQoFEGyoExJwOAFEkTGECCfzA."
 
     - name: Install base packages
@@ -84,9 +70,9 @@
         name: "{{ desktop_packages }}"
         state: present
 
-    # --------------------------
-    # Neovim (AppImage)
-    # --------------------------
+    ##################
+    # Neovim AppImage
+
     - name: Ensure Neovim install dir exists
       ansible.builtin.file:
         path: "/opt/nvim"
@@ -109,9 +95,9 @@
         state: link
         force: true
 
-    # --------------------------
-    # GitHub CLI (gh)
-    # --------------------------
+    #############
+    # GitHub CLI 
+
     - name: Ensure /etc/apt/keyrings exists
       ansible.builtin.file:
         path: /etc/apt/keyrings
@@ -136,9 +122,9 @@
         name: gh
         state: present
 
-    # --------------------------
-    # OpenAI Codex CLI (npm global)
-    # --------------------------
+    ###################
+    # OpenAI Codex CLI
+
     - name: Ensure npm global installs go to /usr/local (safe default)
       ansible.builtin.command: "npm config set prefix /usr/local"
       changed_when: false
@@ -148,41 +134,32 @@
       args:
         creates: "/usr/local/bin/codex"
 
-    # --------------------------
-    # Claude Code (native installer, user-level)
-    # --------------------------
-    # - name: Ensure {{ dev_user }} has ~/.local/bin
-    #   ansible.builtin.file:
-    #     path: "/home/{{ dev_user }}/.local/bin"
-    #     state: directory
-    #     owner: "{{ dev_user }}"
-    #     group: "{{ dev_user }}"
-    #     mode: "0755"
+    ##############
+    # Claude Code
 
-    # - name: Download Claude Code installer (avoid curl|bash directly)
-    #   ansible.builtin.get_url:
-    #     url: "{{ claude_install_script_url }}"
-    #     dest: "{{ claude_install_script_path }}"
-    #     mode: "0755"
-    #     force: true
+    - name: Download Claude install script
+      get_url:
+        url: https://claude.ai/install.sh
+        dest: /tmp/claude-install.sh
+        mode: '0755'
 
-    # - name: Install Claude Code for {{ dev_user }} (latest channel)
-    #   ansible.builtin.command: "bash {{ claude_install_script_path }}"
-    #   become: true
-    #   become_user: "{{ dev_user }}"
-    #   args:
-    #     creates: "{{ claude_user_bin }}"
+    - name: Run Claude Code install script
+      become: false
+      become_user: "{{ dev_user }}"
+      shell: bash /tmp/claude-install.sh
+      args:
+        creates: "/home/{{ dev_user }}/.local/bin/claude"
 
-    # - name: Symlink claude into /usr/local/bin
-    #   ansible.builtin.file:
-    #     src: "{{ claude_user_bin }}"
-    #     dest: "{{ claude_system_link }}"
-    #     state: link
-    #     force: true
+    - name: Add ~/.local/bin to PATH in .bashrc
+      become: false
+      become_user: "{{ dev_user }}"
+      lineinfile:
+        path: "/home/{{ dev_user }}/.bashrc"
+        line: 'export PATH="$HOME/.local/bin:$PATH"'
+        state: present
 
-    # --------------------------
+    #######
     # XRDP
-    # --------------------------
 
     - name: Ensure xrdp is enabled and started
       ansible.builtin.service:
@@ -221,36 +198,34 @@
         mode: "0755"
       notify: Restart xrdp
 
-    - name: Install polkit rule for XRDP
+    ########################
+    # Destkop customization
+
+    - name: Ensure per-user xfconf directory exists
+      ansible.builtin.file:
+        path: "/home/{{ dev_user }}/.config/xfce4/xfconf/xfce-perchannel-xml"
+        state: directory
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        mode: "0755"
+
+    - name: Set Xfce theme + icons
       ansible.builtin.copy:
-        dest: "{{ polkit_rule_path }}"
-        content: "{{ polkit_rule_content }}"
-        owner: root
-        group: root
+        dest: "/home/{{ dev_user }}/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml"
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
         mode: "0644"
-      notify: Restart xrdp
+        content: |
+          <?xml version="1.0" encoding="UTF-8"?>
 
-    - name: Reboot to finalize desktop/RDP setup
-      ansible.builtin.reboot:
-        msg: "Rebooting after XFCE+XRDP install"
-        reboot_timeout: 900
+          <channel name="xsettings" version="1.0">
+          <property name="Net" type="empty">
+          <property name="ThemeName" type="string" value="{{ xfce_gtk_theme }}"/>
+          <property name="IconThemeName" type="string" value="{{ xfce_icon_theme }}"/>
+          </property>
+          </channel>
 
-    # --------------------------
-    # Sanity checks
-    # --------------------------
-    - name: Show installed tool versions
-      ansible.builtin.command: "{{ item }}"
-      register: versions
-      changed_when: false
-      failed_when: false
-      loop:
-        - "nvim --version"
-        - "gh --version"
-        - "codex --version"
-        - "claude --version"
-
-    - name: Print versions
-      ansible.builtin.debug:
-        msg: "{{ item.stdout_lines | default([item.stdout]) }}"
-      loop: "{{ versions.results }}"
-
+    - name: Set kitty as default x-terminal-emulator
+      ansible.builtin.alternatives:
+        name: x-terminal-emulator
+        path: /usr/bin/kitty
