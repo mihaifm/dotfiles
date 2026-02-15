@@ -15,6 +15,8 @@
       - unzip
       - xz-utils
       - fuse
+      - unzip
+      - fontconfig
 
     dev_packages:
       - tmux
@@ -26,6 +28,10 @@
       - kitty
 
     desktop_packages:
+      - spice-vdagent
+      - xserver-xorg-video-qxl
+      - xserver-xorg-input-libinput
+      - xinput
       - xfce4
       - xfce4-goodies
       - dbus-x11
@@ -33,6 +39,13 @@
       - xorgxrdp
       - arc-theme
       - papirus-icon-theme
+
+    nerd_fonts:
+      - JetBrainsMono
+      - FiraCode
+      - CascadiaCode
+
+    marker_dir: "/etc/markers"
 
     nvim_install_path: "/opt/nvim/nvim"
 
@@ -42,6 +55,10 @@
     xfce_gtk_theme: Arc-Dark
     xfce_icon_theme: Papirus-Dark
 
+    nerd_fonts_version: "v3.4.0"
+    nerd_fonts_dir: /usr/local/share/fonts/NerdFonts
+    nerd_fonts_marker: "{{ marker_dir }}/nerd_fonts_installed"
+
   handlers:
     - name: Restart xrdp
       ansible.builtin.service:
@@ -49,11 +66,9 @@
         state: restarted
 
   tasks:
-    - name: Ensure debian user has a password for RDP
-      ansible.builtin.user:
-        name: debian
-        # password generated with: openssl passwd -6
-        password: "$6$xpeyN4Bt9sBZFl73$7HqO4FvmkmIR98LkXlJDY6ONu.8zHYNkJEi6bOIRzUZq0P.Tg9XXFflSIT8woQoFEGyoExJwOAFEkTGECCfzA."
+
+    ###################
+    # Install packages
 
     - name: Install base packages
       ansible.builtin.apt:
@@ -69,6 +84,31 @@
       ansible.builtin.apt:
         name: "{{ desktop_packages }}"
         state: present
+
+    ################
+    # System tweaks
+
+    - name: Ensure marker directory exists
+      ansible.builtin.file:
+        path: "{{ marker_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Ensure virtio_input module is loaded now
+      ansible.builtin.modprobe:
+        name: virtio_input
+        state: present
+
+    - name: Persist virtio_input module across reboots
+      ansible.builtin.copy:
+        dest: /etc/modules-load.d/virtio-input.conf
+        mode: "0644"
+        content: "virtio_input\n"
+
+    - name: Restart LightDM
+      ansible.builtin.systemd:
+        name: lightdm
+        state: restarted
 
     ##################
     # Neovim AppImage
@@ -158,8 +198,61 @@
         line: 'export PATH="$HOME/.local/bin:$PATH"'
         state: present
 
+    #############
+    # Nerd Fonts
+
+    - name: Create Nerd Fonts directory
+      file:
+        path: "{{ nerd_fonts_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Check if fonts already installed
+      stat:
+        path: "{{ nerd_fonts_marker }}"
+      register: nerd_fonts_installed
+
+    - name: Download Nerd Fonts archives
+      get_url:
+        url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ nerd_fonts_version }}/{{ item }}.zip"
+        dest: "/tmp/{{ item }}.zip"
+        mode: '0644'
+      loop: "{{ nerd_fonts }}"
+      when: not nerd_fonts_installed.stat.exists
+
+    - name: Unzip Nerd Fonts
+      unarchive:
+        src: "/tmp/{{ item }}.zip"
+        dest: "{{ nerd_fonts_dir }}"
+        remote_src: true
+      loop: "{{ nerd_fonts }}"
+      when: not nerd_fonts_installed.stat.exists
+
+    - name: Remove downloaded archives
+      file:
+        path: "/tmp/{{ item }}.zip"
+        state: absent
+      loop: "{{ nerd_fonts }}"
+      when: not nerd_fonts_installed.stat.exists
+
+    - name: Rebuild font cache
+      command: fc-cache -f
+      when: not nerd_fonts_installed.stat.exists
+
+    - name: Create install marker
+      file:
+        path: "{{ nerd_fonts_marker }}"
+        state: touch
+      when: not nerd_fonts_installed.stat.exists
+
     #######
     # XRDP
+
+    - name: Ensure debian user has a password for RDP
+      ansible.builtin.user:
+        name: debian
+        # password generated with: openssl passwd -6
+        password: "$6$xpeyN4Bt9sBZFl73$7HqO4FvmkmIR98LkXlJDY6ONu.8zHYNkJEi6bOIRzUZq0P.Tg9XXFflSIT8woQoFEGyoExJwOAFEkTGECCfzA."
 
     - name: Ensure xrdp is enabled and started
       ansible.builtin.service:
@@ -197,6 +290,33 @@
         group: root
         mode: "0755"
       notify: Restart xrdp
+
+    ########
+    # SPICE
+
+    - name: Ensure spice-vdagentd socket is enabled and started
+      ansible.builtin.systemd:
+        name: spice-vdagentd.socket
+        enabled: true
+        state: started
+
+    - name: Ensure spice-vdagentd service is enabled and started
+      ansible.builtin.systemd:
+        name: spice-vdagentd.service
+        enabled: true
+        state: started
+
+    - name: Ensure SPICE vdagent autostarts for all desktop sessions
+      ansible.builtin.copy:
+        dest: /etc/xdg/autostart/spice-vdagent.desktop
+        mode: "0644"
+        content: |
+          [Desktop Entry]
+          Type=Application
+          Name=Spice vdagent
+          Exec=/usr/bin/spice-vdagent
+          NoDisplay=true
+          X-GNOME-Autostart-enabled=true
 
     ########################
     # Destkop customization

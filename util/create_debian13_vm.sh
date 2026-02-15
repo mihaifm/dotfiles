@@ -47,7 +47,7 @@ ALLOW_SSH_PASSWORD="${ALLOW_SSH_PASSWORD:-0}"
 # only used if ALLOW_SSH_PASSWORD=1
 CI_PASSWORD="${CI_PASSWORD:-}"
 
-IMAGE_NAME=debian-13-genericcloud-amd64.qcow2
+IMAGE_NAME=debian-13-generic-amd64.qcow2
 IMAGE_URL="${IMAGE_URL:-https://cloud.debian.org/images/cloud/trixie/latest/${IMAGE_NAME}}"
 IMAGE_CACHE_DIR="/var/lib/vz/template/cloud"
 CACHED_IMAGE_PATH="${IMAGE_CACHE_DIR}/${IMAGE_NAME}"
@@ -117,6 +117,10 @@ qm set "$VMID" --ipconfig0 "$IPCONFIG0"
 echo "Writing cloud-init snippet"
 mkdir -p "$SNIP_DIR"
 SNIP_PATH="${SNIP_DIR}/${SNIP_NAME}"
+
+echo "Updating SPICE settings"
+qm set "$VMID" --vga virtio
+qm set "$VMID" --spice_enhancements videostreaming=all
 
 if [[ "$ALLOW_SSH_PASSWORD" == "1" ]]; then
   if [[ -z "$CI_PASSWORD" ]]; then
