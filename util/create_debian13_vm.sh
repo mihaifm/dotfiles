@@ -275,5 +275,40 @@ cat > "${inventory_file}" <<EOF
 trixie${VMID} ansible_host=${ip} ansible_user=debian ansible_ssh_private_key_file=~/.ssh/trixie ansible_python_interpreter=/usr/bin/python3
 EOF
 
-echo "Inventory for VM $VMID written to: ${inventory_file}"
+######################################
+# Generate API token for SPICE access
+
+USER="spicer@pve"
+TOKENID="spicetoken${VMID}"
+ROLE="Spice"
+ACLPATH="/vms/${VMID}"
+
+echo "Preparing SPICE token for VM ${VMID}"
+
+EXPIRE_EPOCH=$(date -d "+1 year" +%s)
+EXPIRE_HUMAN=$(date -d "@${EXPIRE_EPOCH}")
+
+echo "Token will expire on: ${EXPIRE_HUMAN}"
+
+# delete existing token if present
+if pvesh get /access/users/${USER}/token/${TOKENID} &>/dev/null; then
+    echo "Existing token found. Deleting..."
+    pvesh delete /access/users/${USER}/token/${TOKENID}
+fi
+
+TOKEN_OUTPUT=$(pvesh create /access/users/${USER}/token/${TOKENID} -privsep 1 -expire ${EXPIRE_EPOCH} --output-format json)
+TOKEN_VALUE=$(echo "$TOKEN_OUTPUT" | jq -r '.value')
+
+if [ -z "$TOKEN_VALUE" ] || [ "$TOKEN_VALUE" == "null" ]; then
+    die "Failed to retrieve token value"
+fi
+
+echo "Assigning permission to ${ACLPATH}"
+pvesh set /access/acl -path "${ACLPATH}" -roles "${ROLE}" -tokens "${USER}!${TOKENID}" -propagate 0
+
+##########
+# The end
+
+echo "Ansible inventory for VM $VMID: ${inventory_file}"
+echo "API token: ${USER}!${TOKENID}=${TOKEN_VALUE}"
 
