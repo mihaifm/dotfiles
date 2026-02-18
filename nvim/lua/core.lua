@@ -346,19 +346,10 @@ local plugins = {
   },
   {
     -- NOTE nvim-treesitter requires the tree-sitter cli app, currently not bundled with neovim
+    -- NOTE no parsers installed by default, use TSInstall
     'nvim-treesitter/nvim-treesitter',
     lazy = false,
-    branch = 'main',
     build = ':TSUpdate',
-    init = function()
-      local wanted = { "c","cpp","lua","vim","vimdoc","query","javascript", "python","html","bash","markdown","markdown_inline" }
-      local installed = require("nvim-treesitter.config").get_installed()
-      local missing = vim.iter(wanted):filter(function(lang) return not vim.tbl_contains(installed, lang) end):totable()
-
-      if #missing > 0 then
-        require("nvim-treesitter").install(missing)
-      end
-    end
   },
   {
     'nvim-treesitter/nvim-treesitter-context',

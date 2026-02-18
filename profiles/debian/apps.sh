@@ -5,7 +5,6 @@ apps=(
   "neovim"
   "tmux"
   "nethack"
-  #"gitui"
 )
 
 vim_conf_live_folders=('~/.vim')
@@ -43,11 +42,24 @@ bootstrap() {
   vim +PlugInstall! +qa
 
   # Neovim
-  (nvim --headless +"Lazy! install" +"qa")
+  nvim --headless +"Lazy! install" +"qa"
+  nvim --headless +"MasonInstall lua-language-server" +"qa"
 
-  (nvim --headless \
-    +"TSInstallSync! c cpp lua vim vimdoc query javascript python html bash markdown markdown_inline" \
-    +"qa")
+  echo -e
 
-  (nvim --headless +"MasonInstall lua-language-server" +"qa")
+  if ! command -v tree-sitter >/dev/null 2>&1; then
+    echo "Error: tree-sitter CLI is not installed" >&2
+    exit 1
+  fi
+
+  if ! command -v cc >/dev/null 2>&1 && \
+     ! command -v gcc >/dev/null 2>&1 && \
+     ! command -v clang >/dev/null 2>&1; then
+      echo "Error: tree-sitter requires a C compiler (apt install build-essentials)" >&2
+      exit 1
+  fi
+
+  nvim --headless +"lua require('nvim-treesitter').install({ 'c', 'cpp', 'lua', 'vim', 'vimdoc', 'query', 'javascript', 'python', 'html', 'bash', 'markdown', 'markdown_inline' }):wait(60000)" +"qa"
+
+  echo -e
 }
