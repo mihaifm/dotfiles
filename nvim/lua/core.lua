@@ -592,6 +592,7 @@ local plugins = {
     dependencies = {
       {
         "garymjr/nvim-snippets",
+        enabled = true, -- causes clipboard refresh when entering insert mode, consider disabling
         opts = {
           friendly_snippets = true,
         },
