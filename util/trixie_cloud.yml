@@ -85,11 +85,22 @@
                 timeout: 60
 
         - name: Create a user
+        - name: Create main user
           ansible.builtin.user:
             name: "{{ main_user }}"
             password: "$6$xpeyN4Bt9sBZFl73$7HqO4FvmkmIR98LkXlJDY6ONu.8zHYNkJEi6bOIRzUZq0P.Tg9XXFflSIT8woQoFEGyoExJwOAFEkTGECCfzA."
             shell: /bin/bash
             create_home: true
+
+        - name: Create XRDP user
+          when: enable_xrdp == true
+          ansible.builtin.user:
+            name: "{{ xrdp_user }}"
+            password: "$6$pOt6mOTrWu5Ie44S$.MXXFgrPBaO9YN2YisRGmfs1zNVoSBr/cfNMpD5IXyfyhLIi4k0lg6NMoGuYxUAK.J/F9YFrpCdjy0WoHbqzr/"
+            shell: /bin/bash
+            create_home: true
+            groups: sudo
+            append: true
 
         - name: Ensure marker directory exists
           ansible.builtin.file:
@@ -249,17 +260,18 @@
 
                 - name: Ensure per-user xfconf directory exists
                   ansible.builtin.file:
-                    path: "/home/{{ main_user }}/.config/xfce4/xfconf/xfce-perchannel-xml"
+                    path: "/home/{{ item }}/.config/xfce4/xfconf/xfce-perchannel-xml"
                     state: directory
-                    owner: "{{ main_user }}"
-                    group: "{{ main_user }}"
+                    owner: "{{ item }}"
+                    group: "{{ item }}"
                     mode: "0755"
+                  loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
 
                 - name: Set Xfce theme + icons
                   ansible.builtin.copy:
-                    dest: "/home/{{ main_user }}/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml"
-                    owner: "{{ main_user }}"
-                    group: "{{ main_user }}"
+                    dest: "/home/{{ item }}/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml"
+                    owner: "{{ item }}"
+                    group: "{{ item }}"
                     mode: "0644"
                     content: |
                       <?xml version="1.0" encoding="UTF-8"?>
@@ -270,12 +282,13 @@
                       <property name="IconThemeName" type="string" value="{{ xfce_icon_theme }}"/>
                       </property>
                       </channel>
+                  loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
 
                 - name: Set Xfce window manager theme and button layout
                   ansible.builtin.copy:
-                    dest: "/home/{{ main_user }}/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
-                    owner: "{{ main_user }}"
-                    group: "{{ main_user }}"
+                    dest: "/home/{{ item }}/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
+                    owner: "{{ item }}"
+                    group: "{{ item }}"
                     mode: "0644"
                     content: |
                       <?xml version="1.0" encoding="UTF-8"?>
@@ -286,6 +299,7 @@
                           <property name="button_layout" type="string" value="O|SHMC"/>
                         </property>
                       </channel>
+                  loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
 
     #######
     # XRDP
@@ -297,15 +311,6 @@
           apt:
             name: ["xrdp", "xorgxrdp"]
             state: present
-
-        - name: Separate user for XRDP
-          ansible.builtin.user:
-            name: "{{ xrdp_user }}"
-            password: "$6$pOt6mOTrWu5Ie44S$.MXXFgrPBaO9YN2YisRGmfs1zNVoSBr/cfNMpD5IXyfyhLIi4k0lg6NMoGuYxUAK.J/F9YFrpCdjy0WoHbqzr/"
-            shell: /bin/bash
-            create_home: true
-            groups: sudo
-            append: true
 
         - name: Ensure xrdp is enabled and started
           ansible.builtin.service:
