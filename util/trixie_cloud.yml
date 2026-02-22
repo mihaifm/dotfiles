@@ -1,0 +1,490 @@
+---
+- name: Trixie VM modular config
+  hosts: debian_vms
+  become: true
+  gather_facts: true
+
+  vars:
+    enable_desktop: true
+    enable_xrdp: true
+    enable_spice: true
+    enable_dev: true
+    enable_ai: true
+    enable_fonts: true
+
+    apt_proxy: "" # "http://PROXY:3142"
+
+    desktop_environment: "gnome"
+    desktop_variant: "minimal"
+
+    main_user: debian
+    xrdp_user: rdeb
+
+    marker_dir: "/etc/markers"
+
+    valid_de:
+      - gnome
+      - kde
+      - xfce
+
+    valid_variant:
+      - minimal
+      - standard
+      - full
+
+  pre_tasks:
+    - name: Validate desktop environment
+      assert:
+        that:
+          - desktop_environment in valid_de
+        fail_msg: "desktop_environment must be one of: {{ valid_de | join(', ') }}"
+    - name: Validate desktop variant
+      assert:
+        that:
+          - desktop_variant in valid_variant
+        fail_msg: "desktop_variant must be one of: {{ valid_variant | join(', ') }}"
+
+  tasks:
+
+    #########
+    # System
+
+    - name: System tweaks
+      block:
+        - name: NetworkManager
+          when: enable_desktop == true
+          block:
+            - name: Install NetworkManager without starting it
+              shell: |
+                export RUNLEVEL=1
+                apt-get install -y network-manager
+              args:
+                creates: /usr/sbin/NetworkManager
+
+            - name: Check if systemd-networkd is active
+              command: systemctl is-active systemd-networkd
+              register: networkd_status
+              changed_when: false
+              failed_when: false
+
+            - name: Switch from systemd-networkd to NetworkManager
+              when: networkd_status.rc == 0
+              shell: |
+                systemctl disable --now systemd-networkd.socket
+                systemctl disable --now systemd-networkd
+                systemctl enable --now NetworkManager
+                nmcli device set eth0 managed yes
+              async: 45
+              poll: 0
+
+            - name: Wait for host network to come back
+              when: networkd_status.rc == 0
+              wait_for_connection:
+                delay: 5
+                timeout: 60
+
+        - name: Create a user
+          ansible.builtin.user:
+            name: "{{ main_user }}"
+            password: "$6$xpeyN4Bt9sBZFl73$7HqO4FvmkmIR98LkXlJDY6ONu.8zHYNkJEi6bOIRzUZq0P.Tg9XXFflSIT8woQoFEGyoExJwOAFEkTGECCfzA."
+            shell: /bin/bash
+            create_home: true
+
+        - name: Ensure marker directory exists
+          ansible.builtin.file:
+            path: "{{ marker_dir }}"
+            state: directory
+            mode: "0755"
+
+        - name: Ensure virtio_input module is loaded now
+          ansible.builtin.modprobe:
+            name: virtio_input
+            state: present
+
+        - name: Persist virtio_input module across reboots
+          ansible.builtin.copy:
+            dest: /etc/modules-load.d/virtio-input.conf
+            mode: "0644"
+            content: "virtio_input\n"
+
+    ############
+    # APT Proxy
+
+    - name: APT Proxy
+      block:
+        - name: Find mirror list files
+          find:
+            paths: /etc/apt/mirrors
+            patterns: "*.list"
+          register: mirror_list
+          when: apt_proxy | length > 0
+
+        - name: Replace HTTPS with HTTP in mirror list files
+          replace:
+            path: "{{ item.path }}"
+            regexp: 'https://deb\.debian\.org'
+            replace: 'http://deb.debian.org'
+          loop: "{{ mirror_list.files }}"
+          when: apt_proxy | length > 0
+
+        - name: Configure APT proxy if provided
+          copy:
+            dest: /etc/apt/apt.conf.d/02proxy
+            content: |
+              Acquire::http::Proxy "{{ apt_proxy }}";
+              Acquire::https::Proxy "DIRECT";
+              Acquire::http::Timeout "5";
+            owner: root
+            group: root
+            mode: '0644'
+          when: apt_proxy | length > 0
+
+        - name: Remove APT proxy config if not set
+          file:
+            path: /etc/apt/apt.conf.d/02proxy
+            state: absent
+          when: apt_proxy | length == 0
+
+        - name: Run apt update
+          apt:
+            update_cache: yes
+
+    ######################
+    # Desktop environment
+
+    - name: Desktop Environment
+      when: enable_desktop == true
+      block:
+        - name: Gnome
+          when: desktop_environment == "gnome"
+          block:
+            - name: Install GNOME minimal
+              apt:
+                name: ["gnome-core", "gdm3"]
+                state: present
+              when: desktop_variant == "minimal"
+
+            - name: Install GNOME standard
+              apt:
+                name: ["gnome", "gdm3"]
+                state: present
+              when: desktop_variant == "standard"
+
+            - name: Install GNOME full
+              apt:
+                name: ["task-gnome-desktop"]
+                state: present
+              when: desktop_variant == "full"
+
+            - name:
+              systemd:
+                name: gdm3
+                enabled: true
+                state: started
+
+        - name: KDE
+          when: desktop_environment == "kde"
+          block:
+            - name: Install KDE minimal
+              apt:
+                name: ["plasma-desktop", "sddm"]
+                state: present
+              when: desktop_variant == "minimal"
+
+            - name: Install KDE standard
+              apt:
+                name: ["kde-standard", "sddm"]
+                state: present
+              when: desktop_variant == "standard"
+
+            - name: Install KDE full
+              apt:
+                name: ["task-kde-desktop"]
+                state: present
+              when: desktop_variant == "full"
+
+            - name:
+              systemd:
+                name: sddm
+                enabled: true
+                state: started
+
+        - name: XFCE
+          when: desktop_environment == "xfce"
+          block:
+            - name: Install XFCE minimal
+              apt:
+                name: ["xfce4", "dbus-x11", "lightdm"]
+                state: present
+              when: desktop_variant == "minimal"
+
+            - name: Install XFCE standard
+              apt:
+                name: ["xfce4", "xfce4-goodies", "dbus-x11", "lightdm"]
+                state: present
+              when: desktop_variant == "standard"
+
+            - name: Install XFCE full
+              apt:
+                name: ["task-xfce-desktop", "dbus-x11"]
+                state: present
+              when: desktop_variant == "full"
+
+            - name:
+              systemd:
+                name: lightdm
+                enabled: true
+                state: started
+
+            - name: Customize xfce
+              vars:
+                xfce_gtk_theme: Arc-Dark
+                xfce_icon_theme: Papirus-Dark
+              block:
+                - name: Install theme and icon packages
+                  apt:
+                    name: ["arc-theme", "papirus-icon-theme"]
+                    state: present
+
+                - name: Ensure per-user xfconf directory exists
+                  ansible.builtin.file:
+                    path: "/home/{{ main_user }}/.config/xfce4/xfconf/xfce-perchannel-xml"
+                    state: directory
+                    owner: "{{ main_user }}"
+                    group: "{{ main_user }}"
+                    mode: "0755"
+
+                - name: Set Xfce theme + icons
+                  ansible.builtin.copy:
+                    dest: "/home/{{ main_user }}/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml"
+                    owner: "{{ main_user }}"
+                    group: "{{ main_user }}"
+                    mode: "0644"
+                    content: |
+                      <?xml version="1.0" encoding="UTF-8"?>
+
+                      <channel name="xsettings" version="1.0">
+                      <property name="Net" type="empty">
+                      <property name="ThemeName" type="string" value="{{ xfce_gtk_theme }}"/>
+                      <property name="IconThemeName" type="string" value="{{ xfce_icon_theme }}"/>
+                      </property>
+                      </channel>
+
+                - name: Set Xfce window manager theme and button layout
+                  ansible.builtin.copy:
+                    dest: "/home/{{ main_user }}/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
+                    owner: "{{ main_user }}"
+                    group: "{{ main_user }}"
+                    mode: "0644"
+                    content: |
+                      <?xml version="1.0" encoding="UTF-8"?>
+
+                      <channel name="xfwm4" version="1.0">
+                        <property name="general" type="empty">
+                          <property name="theme" type="string" value="{{ xfce_gtk_theme }}"/>
+                          <property name="button_layout" type="string" value="O|SHMC"/>
+                        </property>
+                      </channel>
+
+    #######
+    # XRDP
+
+    - name: XRDP
+      when: enable_xrdp == true
+      block:
+        - name: Install XRDP packages
+          apt:
+            name: ["xrdp", "xorgxrdp"]
+            state: present
+
+        - name: Separate user for XRDP
+          ansible.builtin.user:
+            name: "{{ xrdp_user }}"
+            password: "$6$pOt6mOTrWu5Ie44S$.MXXFgrPBaO9YN2YisRGmfs1zNVoSBr/cfNMpD5IXyfyhLIi4k0lg6NMoGuYxUAK.J/F9YFrpCdjy0WoHbqzr/"
+            shell: /bin/bash
+            create_home: true
+            groups: sudo
+            append: true
+
+        - name: Ensure xrdp is enabled and started
+          ansible.builtin.service:
+            name: xrdp
+            enabled: true
+            state: started
+
+    ########
+    # SPICE
+
+    - name: SPICE
+      when: enable_spice == true
+      block:
+        - name: Install SPICE packages
+          apt:
+            name: ["spice-vdagent"]
+            state: present
+
+        - name: Ensure spice-vdagentd socket is enabled and started
+          ansible.builtin.systemd:
+            name: spice-vdagentd.socket
+            enabled: true
+            state: started
+
+        - name: Ensure spice-vdagentd service is enabled and started
+          ansible.builtin.systemd:
+            name: spice-vdagentd.service
+            enabled: true
+            state: started
+
+    ####################
+    # Development tools
+
+    - name: Dev tools
+      when: enable_dev == true
+      vars:
+        nvim_install_path: "/opt/nvim/nvim"
+        gh_keyring_path: "/etc/apt/keyrings/githubcli-archive-keyring.gpg"
+      block:
+        - name: Install dev packages
+          apt:
+            name: [
+              "curl", "git", "gnupg", "unzip", "xz-utils", "fuse", "unzip", "fontconfig", "tmux",
+              "fzf", "ripgrep", "nodejs", "npm", "firefox-esr", "kitty", "lazygit"
+            ]
+            state: present
+
+        - name: Ensure Neovim install dir exists
+          ansible.builtin.file:
+            path: "/opt/nvim"
+            state: directory
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: Download/update Neovim AppImage (latest)
+          ansible.builtin.get_url:
+            url: "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage"
+            dest: "{{ nvim_install_path }}"
+            mode: "0755"
+          register: nvim_dl
+
+        - name: Symlink nvim into PATH
+          ansible.builtin.file:
+            src: "{{ nvim_install_path }}"
+            dest: "/usr/local/bin/nvim"
+            state: link
+            force: true
+
+        - name: Install GitHub CLI keyring
+          ansible.builtin.get_url:
+            url: "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
+            dest: "{{ gh_keyring_path }}"
+            mode: "0644"
+
+        - name: Add GitHub CLI apt repository
+          ansible.builtin.apt_repository:
+            repo: "deb [arch={{ ansible_architecture | replace('x86_64','amd64') }} signed-by={{ gh_keyring_path }}] https://cli.github.com/packages stable main"
+            filename: "github-cli"
+            state: present
+            update_cache: true
+
+        - name: Install GitHub CLI
+          ansible.builtin.apt:
+            name: gh
+            state: present
+
+        - name: Install tree-sitter CLI
+          ansible.builtin.command: "npm install -g tree-sitter-cli"
+          args:
+            creates: "/usr/local/bin/tree-sitter"
+
+        - name: Set kitty as default x-terminal-emulator
+          ansible.builtin.alternatives:
+            name: x-terminal-emulator
+            path: /usr/bin/kitty
+
+    ###########
+    # AI tools
+
+    - name: AI tools
+      when: enable_ai == true
+      block:
+        - name: Install/Update OpenAI Codex CLI
+          ansible.builtin.command: "npm install -g @openai/codex"
+          args:
+            creates: "/usr/local/bin/codex"
+
+        - name: Download Claude install script
+          get_url:
+            url: https://claude.ai/install.sh
+            dest: /tmp/claude-install.sh
+            mode: '0755'
+
+        - name: Run Claude Code install script
+          become: false
+          become_user: "{{ main_user }}"
+          shell: bash /tmp/claude-install.sh
+          args:
+            creates: "/home/{{ main_user }}/.local/bin/claude"
+
+        - name: Add ~/.local/bin to PATH in .bashrc
+          become: false
+          become_user: "{{ main_user }}"
+          lineinfile:
+            path: "/home/{{ main_user }}/.bashrc"
+            line: 'export PATH="$HOME/.local/bin:$PATH"'
+            state: present
+
+    #############
+    # Nerd Fonts
+
+    - name: Nerd Fonts
+      when: enable_fonts == true
+      vars:
+        nerd_fonts: ["JetBrainsMono", "FiraCode", "CascadiaCode"]
+        nerd_fonts_version: "v3.4.0"
+        nerd_fonts_dir: /usr/local/share/fonts/NerdFonts
+        nerd_fonts_marker: "{{ marker_dir }}/nerd_fonts_installed"
+      block:
+        - name: Create Nerd Fonts directory
+          file:
+            path: "{{ nerd_fonts_dir }}"
+            state: directory
+            mode: '0755'
+
+        - name: Check if fonts already installed
+          stat:
+            path: "{{ nerd_fonts_marker }}"
+          register: nerd_fonts_installed
+
+        - name: Download Nerd Fonts archives
+          get_url:
+            url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ nerd_fonts_version }}/{{ item }}.zip"
+            dest: "/tmp/{{ item }}.zip"
+            mode: '0644'
+          loop: "{{ nerd_fonts }}"
+          when: not nerd_fonts_installed.stat.exists
+
+        - name: Unzip Nerd Fonts
+          unarchive:
+            src: "/tmp/{{ item }}.zip"
+            dest: "{{ nerd_fonts_dir }}"
+            remote_src: true
+          loop: "{{ nerd_fonts }}"
+          when: not nerd_fonts_installed.stat.exists
+
+        - name: Remove downloaded archives
+          file:
+            path: "/tmp/{{ item }}.zip"
+            state: absent
+          loop: "{{ nerd_fonts }}"
+          when: not nerd_fonts_installed.stat.exists
+
+        - name: Rebuild font cache
+          command: fc-cache -f
+          when: not nerd_fonts_installed.stat.exists
+
+        - name: Create install marker
+          file:
+            path: "{{ nerd_fonts_marker }}"
+            state: touch
+          when: not nerd_fonts_installed.stat.exists

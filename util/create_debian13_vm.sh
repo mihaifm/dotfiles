@@ -23,7 +23,7 @@ need_cmd curl
 # Config area
 
 CORES="${CORES:-2}"
-MEMORY_MB="${MEMORY_MB:-2048}"
+MEMORY_MB="${MEMORY_MB:-4096}"
 DISK_SIZE_GB="${DISK_SIZE_GB:-20}"
 
 CI_USER="${CI_USER:-debian}"
@@ -37,6 +37,7 @@ STORAGE="${STORAGE:-local-lvm}"
 CI_STORAGE="${CI_STORAGE:-local-lvm}"
 SNIPPET_STORAGE="${SNIPPET_STORAGE:-local}"
 
+VGA="${VGA:-virtio-gl}"
 BRIDGE="${BRIDGE:-vmbr0}"
 IPCONFIG0="${IPCONFIG0:-ip=dhcp}"
 
@@ -119,7 +120,7 @@ mkdir -p "$SNIP_DIR"
 SNIP_PATH="${SNIP_DIR}/${SNIP_NAME}"
 
 echo "Updating SPICE settings"
-qm set "$VMID" --vga virtio
+qm set "$VMID" --vga "$VGA"
 qm set "$VMID" --spice_enhancements videostreaming=all
 
 if [[ "$ALLOW_SSH_PASSWORD" == "1" ]]; then
@@ -132,6 +133,16 @@ if [[ "$ALLOW_SSH_PASSWORD" == "1" ]]; then
 hostname: ${VMHOSTNAME}
 timezone: ${TIMEZONE}
 manage_etc_hosts: true
+
+write_files:
+  - path: /etc/netplan/99-mac-dhcp.yaml
+    content: |
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            dhcp4: true
+            dhcp-identifier: mac
 
 ssh_pwauth: true
 chpasswd:
@@ -154,6 +165,7 @@ packages:
   - qemu-guest-agent
 
 runcmd:
+  - netplan apply
   - systemctl enable qemu-guest-agent
   - systemctl start qemu-guest-agent
 EOF
@@ -164,6 +176,16 @@ else
 hostname: ${VMHOSTNAME}
 timezone: ${TIMEZONE}
 manage_etc_hosts: true
+
+write_files:
+  - path: /etc/netplan/99-mac-dhcp.yaml
+    content: |
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            dhcp4: true
+            dhcp-identifier: mac
 
 ssh_pwauth: false
 
@@ -182,6 +204,7 @@ packages:
   - qemu-guest-agent
 
 runcmd:
+  - netplan apply
   - systemctl enable qemu-guest-agent
   - systemctl start qemu-guest-agent
 EOF
@@ -309,6 +332,9 @@ pvesh set /access/acl -path "${ACLPATH}" -roles "${ROLE}" -tokens "${USER}!${TOK
 ##########
 # The end
 
-echo "Ansible inventory for VM $VMID: ${inventory_file}"
+echo -e
+echo "VMID: $VMID"
+echo "IP address: $ip"
+echo "Ansible inventory: ${inventory_file}"
 echo "API token: ${USER}!${TOKENID}=${TOKEN_VALUE}"
 
