@@ -56,8 +56,8 @@
           block:
             - name: Install NetworkManager without starting it
               shell: |
-                export RUNLEVEL=1
-                apt-get install -y network-manager
+                systemctl mask NetworkManager.service
+                apt install -y network-manager
               args:
                 creates: /usr/sbin/NetworkManager
 
@@ -72,6 +72,7 @@
               shell: |
                 systemctl disable --now systemd-networkd.socket
                 systemctl disable --now systemd-networkd
+                systemctl unmask NetworkManager.service
                 systemctl enable --now NetworkManager
                 nmcli device set eth0 managed yes
               async: 45
@@ -176,7 +177,7 @@
                 state: present
               when: desktop_variant == "full"
 
-            - name:
+            - name: Start gdm3
               systemd:
                 name: gdm3
                 enabled: true
@@ -203,7 +204,7 @@
                 state: present
               when: desktop_variant == "full"
 
-            - name:
+            - name: Start sddm
               systemd:
                 name: sddm
                 enabled: true
@@ -230,7 +231,7 @@
                 state: present
               when: desktop_variant == "full"
 
-            - name:
+            - name: Start ligthdm
               systemd:
                 name: lightdm
                 enabled: true
