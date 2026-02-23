@@ -46,45 +46,56 @@
 
   tasks:
 
+    ##################
+    # Network Manager
+
+    - name: NetworkManager
+      when: enable_desktop == true
+      block:
+        - name: Install NetworkManager without starting it
+          shell: |
+            systemctl mask NetworkManager.service
+            apt install -y network-manager
+          args:
+            creates: /usr/sbin/NetworkManager
+
+        - name: Check if systemd-networkd is active
+          command: systemctl is-active systemd-networkd
+          register: networkd_status
+          changed_when: false
+          failed_when: false
+
+        - name: Ensure NetworkManager manages all devices
+          copy:
+            dest: /etc/NetworkManager/conf.d/10-manage-all.conf
+            content: |
+              [device]
+              match-device=interface-name:{{ ansible_default_ipv4.interface }}
+              managed=1
+            mode: '0644'
+
+        - name: Switch from systemd-networkd to NetworkManager
+          when: networkd_status.rc == 0
+          shell: |
+            systemctl disable --now systemd-networkd.service systemd-networkd.socket
+            systemctl mask systemd-networkd.service systemd-networkd.socket
+            systemctl unmask NetworkManager.service
+            systemctl enable --now NetworkManager
+            nmcli device set {{ ansible_default_ipv4.interface }} managed yes
+          async: 45
+          poll: 0
+
+        - name: Wait for host network to come back
+          when: networkd_status.rc == 0
+          wait_for_connection:
+            delay: 5
+            timeout: 60
+
     #########
-    # System
+    # System 
 
     - name: System tweaks
       block:
-        - name: NetworkManager
-          when: enable_desktop == true
-          block:
-            - name: Install NetworkManager without starting it
-              shell: |
-                systemctl mask NetworkManager.service
-                apt install -y network-manager
-              args:
-                creates: /usr/sbin/NetworkManager
-
-            - name: Check if systemd-networkd is active
-              command: systemctl is-active systemd-networkd
-              register: networkd_status
-              changed_when: false
-              failed_when: false
-
-            - name: Switch from systemd-networkd to NetworkManager
-              when: networkd_status.rc == 0
-              shell: |
-                systemctl disable --now systemd-networkd.socket
-                systemctl disable --now systemd-networkd
-                systemctl unmask NetworkManager.service
-                systemctl enable --now NetworkManager
-                nmcli device set eth0 managed yes
-              async: 45
-              poll: 0
-
-            - name: Wait for host network to come back
-              when: networkd_status.rc == 0
-              wait_for_connection:
-                delay: 5
-                timeout: 60
-
-        - name: Create a user
         - name: Create main user
           ansible.builtin.user:
             name: "{{ main_user }}"
