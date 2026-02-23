@@ -57,7 +57,7 @@ SNIP_DIR="/var/lib/vz/snippets"
 SNIP_NAME="trixie-${VMID}.yaml"
 
 START_TIMEOUT="${START_TIMEOUT:-30}"
-AGENT_TIMEOUT="${AGENT_TIMEOUT:-30}"
+AGENT_TIMEOUT="${AGENT_TIMEOUT:-60}"
 CLOUDINIT_TIMEOUT="${CLOUDINIT_TIMEOUT:-30}"
 IP_TIMEOUT="${IP_TIMEOUT:-30}"
 SLEEP_STEP="${SLEEP_STEP:-2}"
@@ -122,6 +122,7 @@ SNIP_PATH="${SNIP_DIR}/${SNIP_NAME}"
 echo "Updating SPICE settings"
 qm set "$VMID" --vga "$VGA"
 qm set "$VMID" --spice_enhancements videostreaming=all
+qm set "$VMID" -audio0 device=ich9-intel-hda,driver=spice
 
 if [[ "$ALLOW_SSH_PASSWORD" == "1" ]]; then
   if [[ -z "$CI_PASSWORD" ]]; then

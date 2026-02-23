@@ -320,7 +320,7 @@
       block:
         - name: Install XRDP packages
           apt:
-            name: ["xrdp", "xorgxrdp"]
+            name: ["xrdp", "xorgxrdp", "pipewire-module-xrdp"]
             state: present
 
         - name: Ensure xrdp is enabled and started
