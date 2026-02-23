@@ -5,6 +5,7 @@ apps=(
   "neovim"
   "tmux"
   "nethack"
+  "kitty"
 )
 
 vim_conf_live_folders=('~/.vim')
@@ -28,6 +29,10 @@ tmux_data_snap_folders=('.tmux')
 nethack_conf_live_files=('~/.nethackrc')
 nethack_conf_snap_files=('.nethackrc')
 nethack_conf_repo_files=('nethack/nethackrc')
+
+kitty_conf_live_folders=('~/.config/kitty')
+kitty_conf_snap_folders=('.config/kitty')
+kitty_conf_repo_folders=('kitty')
 
 gitui_conf_live_folders=('~/.config/gitui')
 gitui_conf_snap_folders=('.config/gitui')
