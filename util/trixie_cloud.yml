@@ -312,6 +312,63 @@
                       </channel>
                   loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
 
+            - name: SPICE dynamic resolution
+              when: enable_spice == true
+              block:
+                - name: Ensure user script dir exists
+                  ansible.builtin.file:
+                    path: "/home/{{ main_user }}/.local/bin"
+                    state: directory
+                    owner: "{{ main_user }}"
+                    group: "{{ main_user }}"
+                    mode: "0755"
+
+                - name: Install XFCE SPICE autoresize script
+                  ansible.builtin.copy:
+                    dest: "/home/{{ main_user }}/.local/bin/xfce-spice-autoresize.sh"
+                    owner: "{{ main_user }}"
+                    group: "{{ main_user }}"
+                    mode: "0755"
+                    content: |
+                      #!/usr/bin/env bash
+                      set -euo pipefail
+
+                      sleep 2
+                      xrandr --output "$(xrandr | awk '/ connected/{print $1; exit; }')" --auto
+
+                      xev -root -event randr 2>/dev/null | \
+                      while IFS= read -r line; do
+                        case "$line" in
+                          *RRScreenChangeNotify*|*XRROutputChangeNotifyEvent*)
+                            xrandr --output "$(xrandr | awk '/ connected/{print $1; exit; }')" --auto
+                            ;;
+                        esac
+                      done
+
+                - name: Ensure user autostart dir exists
+                  ansible.builtin.file:
+                    path: "/home/{{ main_user }}/.config/autostart"
+                    state: directory
+                    owner: "{{ main_user }}"
+                    group: "{{ main_user }}"
+                    mode: "0755"
+
+                - name: Install XFCE autostart desktop entry
+                  ansible.builtin.copy:
+                    dest: "/home/{{ main_user }}/.config/autostart/xfce-spice-autoresize.desktop"
+                    owner: "{{ main_user }}"
+                    group: "{{ main_user }}"
+                    mode: "0644"
+                    content: |
+                      [Desktop Entry]
+                      Type=Application
+                      Name=SPICE Auto Resize (XFCE)
+                      Exec=/home/{{ main_user }}/.local/bin/xfce-spice-autoresize.sh
+                      OnlyShowIn=XFCE;
+                      X-GNOME-Autostart-enabled=true
+                      Terminal=false
+                      Hidden=false
+
     #######
     # XRDP
 
