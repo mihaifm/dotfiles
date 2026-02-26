@@ -178,6 +178,10 @@
     - name: Desktop Environment
       when: enable_desktop == true
       block:
+
+        #########
+        ## Gnome
+
         - name: Gnome
           when: desktop_environment == "gnome"
           block:
@@ -205,6 +209,9 @@
                 enabled: true
                 state: started
 
+        #######
+        ## KDE
+
         - name: KDE
           when: desktop_environment == "kde"
           block:
@@ -226,11 +233,49 @@
                 state: present
               when: desktop_variant == "full"
 
+            - name: Customize KDE
+              block:
+                - name: Ensure per-user KDE config directory exists
+                  ansible.builtin.file:
+                    path: "/home/{{ item }}/.config"
+                    state: directory
+                    owner: "{{ item }}"
+                    group: "{{ item }}"
+                    mode: "0755"
+                  loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
+
+                - name: Enable KDE autolock
+                  ansible.builtin.ini_file:
+                    path: "/home/{{ item }}/.config/kscreenlockerrc"
+                    section: Daemon
+                    option: Autolock
+                    value: "true"
+                    owner: "{{ item }}"
+                    group: "{{ item }}"
+                    mode: "0644"
+                    no_extra_spaces: true
+                  loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
+
+                - name: Set KDE lock timeout to 30 minutes
+                  ansible.builtin.ini_file:
+                    path: "/home/{{ item }}/.config/kscreenlockerrc"
+                    section: Daemon
+                    option: Timeout
+                    value: "30"
+                    owner: "{{ item }}"
+                    group: "{{ item }}"
+                    mode: "0644"
+                    no_extra_spaces: true
+                  loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
+
             - name: Start sddm
               systemd:
                 name: sddm
                 enabled: true
                 state: started
+
+        ########
+        ## XFCE
 
         - name: XFCE
           when: desktop_environment == "xfce"
@@ -252,12 +297,6 @@
                 name: ["task-xfce-desktop", "dbus-x11"]
                 state: present
               when: desktop_variant == "full"
-
-            - name: Start ligthdm
-              systemd:
-                name: lightdm
-                enabled: true
-                state: started
 
             - name: Customize xfce
               vars:
@@ -368,6 +407,12 @@
                       X-GNOME-Autostart-enabled=true
                       Terminal=false
                       Hidden=false
+
+            - name: Start ligthdm
+              systemd:
+                name: lightdm
+                enabled: true
+                state: started
 
     #######
     # XRDP
