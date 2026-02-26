@@ -100,6 +100,7 @@
           ansible.builtin.user:
             name: "{{ main_user }}"
             password: "$6$xpeyN4Bt9sBZFl73$7HqO4FvmkmIR98LkXlJDY6ONu.8zHYNkJEi6bOIRzUZq0P.Tg9XXFflSIT8woQoFEGyoExJwOAFEkTGECCfzA."
+            password_lock: false
             shell: /bin/bash
             create_home: true
 
@@ -129,6 +130,29 @@
             dest: /etc/modules-load.d/virtio-input.conf
             mode: "0644"
             content: "virtio_input\n"
+
+    ######
+    # SSH
+
+    - name: SSH authentication
+      block:
+        - name: Force SSH key and password authentication override
+          ansible.builtin.copy:
+            dest: /etc/ssh/sshd_config.d/99-authentication.conf
+            owner: root
+            group: root
+            mode: "0644"
+            content: |
+              Match all
+                PasswordAuthentication yes
+                PubkeyAuthentication yes
+          register: ssh_auth_config
+
+        - name: Restart SSH service if authentication settings changed
+          ansible.builtin.systemd:
+            name: ssh
+            state: restarted
+          when: ssh_auth_config.changed
 
     ############
     # APT Proxy

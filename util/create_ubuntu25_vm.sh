@@ -44,10 +44,6 @@ IPCONFIG0="${IPCONFIG0:-ip=dhcp}"
 VMHOSTNAME="${VMHOSTNAME:-ubuntu${VMID}}"
 TIMEZONE="${TIMEZONE:-UTC}"
 
-ALLOW_SSH_PASSWORD="${ALLOW_SSH_PASSWORD:-0}"
-# only used if ALLOW_SSH_PASSWORD=1
-CI_PASSWORD="${CI_PASSWORD:-}"
-
 UBUNTU_RELEASE="${UBUNTU_RELEASE:-25.10}"
 UBUNTU_CODENAME="${UBUNTU_CODENAME:-questing}"
 IMAGE_NAME="ubuntu-${UBUNTU_RELEASE}-server-cloudimg-amd64.img"
@@ -126,55 +122,7 @@ qm set "$VMID" --vga "$VGA"
 qm set "$VMID" --spice_enhancements videostreaming=all
 qm set "$VMID" -audio0 device=ich9-intel-hda,driver=spice
 
-if [[ "$ALLOW_SSH_PASSWORD" == "1" ]]; then
-  if [[ -z "$CI_PASSWORD" ]]; then
-    die "ALLOW_SSH_PASSWORD=1 requires CI_PASSWORD to be set"
-  fi
-
-  cat > "$SNIP_PATH" <<EOF
-#cloud-config
-hostname: ${VMHOSTNAME}
-timezone: ${TIMEZONE}
-manage_etc_hosts: true
-
-write_files:
-  - path: /etc/netplan/99-mac-dhcp.yaml
-    content: |
-      network:
-        version: 2
-        ethernets:
-          eth0:
-            dhcp4: true
-            dhcp-identifier: mac
-
-ssh_pwauth: true
-chpasswd:
-  list: |
-    ${CI_USER}:${CI_PASSWORD}
-  expire: false
-
-users:
-  - name: ${CI_USER}
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    shell: /bin/bash
-    groups: [sudo]
-    lock_passwd: false
-    ssh_authorized_keys:
-      - ${SSH_KEY}
-
-package_update: true
-package_upgrade: false
-packages:
-  - qemu-guest-agent
-
-runcmd:
-  - netplan apply
-  - systemctl enable qemu-guest-agent
-  - systemctl start qemu-guest-agent
-EOF
-
-else
-  cat > "$SNIP_PATH" <<EOF
+cat > "$SNIP_PATH" <<EOF
 #cloud-config
 hostname: ${VMHOSTNAME}
 timezone: ${TIMEZONE}
@@ -211,7 +159,6 @@ runcmd:
   - systemctl enable qemu-guest-agent
   - systemctl start qemu-guest-agent
 EOF
-fi
 
 echo "Attaching snippet to VM"
 qm set "$VMID" --cicustom "user=${SNIPPET_STORAGE}:snippets/${SNIP_NAME}"
