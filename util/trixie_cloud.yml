@@ -49,47 +49,60 @@
     ##################
     # Network Manager
 
-    - name: NetworkManager
-      when: enable_desktop | bool
+    - name: Migrate netplan from networkd to NetworkManager
       block:
-        - name: Install NetworkManager without starting it
-          shell: |
-            systemctl mask NetworkManager.service
-            apt install -y network-manager
-          args:
-            creates: /usr/sbin/NetworkManager
+        - name: Install NetworkManager
+          apt:
+            name:
+              - network-manager
+            state: present
+            update_cache: true
 
-        - name: Check if systemd-networkd is active
-          command: systemctl is-active systemd-networkd
-          register: networkd_status
-          changed_when: false
-          failed_when: false
-
-        - name: Ensure NetworkManager manages all devices
+        - name: Ensure netplan uses NetworkManager renderer
           copy:
-            dest: /etc/NetworkManager/conf.d/10-manage-all.conf
+            dest: /etc/netplan/01-renderer-networkmanager.yaml
+            owner: root
+            group: root
+            mode: '0600'
             content: |
-              [device]
-              match-device=interface-name:{{ ansible_default_ipv4.interface }}
-              managed=1
-            mode: '0644'
+              network:
+                version: 2
+                renderer: NetworkManager
+          register: nm_renderer
 
-        - name: Switch from systemd-networkd to NetworkManager
-          when: networkd_status.rc == 0
-          shell: |
-            systemctl disable --now systemd-networkd.service systemd-networkd.socket
-            systemctl mask systemd-networkd.service systemd-networkd.socket
-            systemctl unmask NetworkManager.service
-            systemctl enable --now NetworkManager
-            nmcli device set {{ ansible_default_ipv4.interface }} managed yes
-          async: 45
-          poll: 0
+        - name: Generate netplan configuration
+          command: netplan generate
+          when: nm_renderer.changed
+
+        - name: Apply netplan configuration
+          command: netplan apply
+          when: nm_renderer.changed
+
+        - name: Ensure NetworkManager is enabled and started
+          systemd:
+            name: NetworkManager
+            enabled: true
+            state: restarted
+          when: nm_renderer.changed
+
+        - name: Stop/disable/mask systemd-networkd
+          systemd:
+            name: "{{ item }}"
+            state: stopped
+            enabled: false
+            masked: true
+          loop:
+            - systemd-networkd.service
+            - systemd-networkd.socket
+            - systemd-networkd-wait-online.service
+          ignore_errors: true
+          when: nm_renderer.changed
 
         - name: Wait for host network to come back
-          when: networkd_status.rc == 0
           wait_for_connection:
-            delay: 5
+            delay: 3
             timeout: 60
+          when: nm_renderer.changed
 
     #########
     # System 

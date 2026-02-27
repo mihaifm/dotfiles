@@ -130,6 +130,8 @@ manage_etc_hosts: true
 
 write_files:
   - path: /etc/netplan/99-mac-dhcp.yaml
+    owner: root:root
+    permissions: '0600'
     content: |
       network:
         version: 2
