@@ -105,7 +105,7 @@
             create_home: true
 
         - name: Create XRDP user
-          when: enable_xrdp == true
+          when: enable_xrdp | bool
           ansible.builtin.user:
             name: "{{ xrdp_user }}"
             password: "$6$pOt6mOTrWu5Ie44S$.MXXFgrPBaO9YN2YisRGmfs1zNVoSBr/cfNMpD5IXyfyhLIi4k0lg6NMoGuYxUAK.J/F9YFrpCdjy0WoHbqzr/"
@@ -185,7 +185,7 @@
     # Desktop environment
 
     - name: Desktop Environment
-      when: enable_desktop == true
+      when: enable_desktop | bool
       block:
 
         #########
@@ -403,7 +403,7 @@
                   loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
 
             - name: SPICE dynamic resolution
-              when: enable_spice == true
+              when: enable_spice | bool
               block:
                 - name: Ensure user script dir exists
                   ansible.builtin.file:
@@ -469,7 +469,7 @@
     # XRDP
 
     - name: XRDP
-      when: enable_xrdp == true
+      when: enable_xrdp | bool
       block:
         - name: Install XRDP packages
           apt:
@@ -486,7 +486,7 @@
     # SPICE
 
     - name: SPICE
-      when: enable_spice == true
+      when: enable_spice | bool
       block:
         - name: Install SPICE packages
           apt:
@@ -509,7 +509,7 @@
     # Development tools
 
     - name: Dev tools
-      when: enable_dev == true
+      when: enable_dev | bool
       vars:
         nvim_install_path: "/opt/nvim/nvim"
         gh_keyring_path: "/etc/apt/keyrings/githubcli-archive-keyring.gpg"
@@ -576,7 +576,7 @@
     # AI tools
 
     - name: AI tools
-      when: enable_ai == true
+      when: enable_ai | bool
       block:
         - name: Install/Update OpenAI Codex CLI
           ansible.builtin.command: "npm install -g @openai/codex"
@@ -608,7 +608,7 @@
     # Nerd Fonts
 
     - name: Nerd Fonts
-      when: enable_fonts == true
+      when: enable_fonts | bool
       vars:
         nerd_fonts: ["JetBrainsMono", "FiraCode", "CascadiaCode"]
         nerd_fonts_version: "v3.4.0"
