@@ -257,13 +257,13 @@
           block:
             - name: Install KDE minimal
               apt:
-                name: ["plasma-desktop", "sddm"]
+                name: ["plasma-desktop", "xorg", "sddm"]
                 state: present
               when: desktop_variant == "minimal"
 
             - name: Install KDE standard
               apt:
-                name: ["kde-standard", "sddm"]
+                name: ["kde-standard", "xorg", "sddm"]
                 state: present
               when: desktop_variant == "standard"
 

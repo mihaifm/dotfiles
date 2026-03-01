@@ -284,19 +284,19 @@
           block:
             - name: Install KDE minimal
               apt:
-                name: ["plasma-desktop",  "plasma-session-x11", "sddm"]
+                name: ["plasma-desktop",  "xorg", "plasma-session-x11", "sddm"]
                 state: present
               when: desktop_variant == "minimal"
 
             - name: Install KDE standard
               apt:
-                name: ["kde-standard",  "plasma-session-x11", "sddm"]
+                name: ["kde-standard",  "xorg", "plasma-session-x11", "sddm"]
                 state: present
               when: desktop_variant == "standard"
 
             - name: Install KDE full
               apt:
-                name: ["kubuntu-desktop", "plasma-session-x11"]
+                name: ["kubuntu-desktop", "xorg", "plasma-session-x11"]
                 state: present
               when: desktop_variant == "full"
 
