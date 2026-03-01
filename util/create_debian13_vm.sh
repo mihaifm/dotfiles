@@ -240,8 +240,8 @@ echo "VM $VMID has IP addres: $ip"
 ##################################
 # Generate Ansible inventory file
 
-mkdir -p "$USER_HOME/ansible"
-inventory_file="$USER_HOME/ansible/inventory${VMID}.ini"
+mkdir -p "$USER_HOME/.ansible/inventory"
+inventory_file="$USER_HOME/.ansible/inventory/inventory${VMID}.ini"
 
 cat > "${inventory_file}" <<EOF
 [debian_vms]

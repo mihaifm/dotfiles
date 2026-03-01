@@ -4,6 +4,9 @@
   become: true
   gather_facts: true
 
+  vars_files:
+    - vault.yml
+
   vars:
     enable_desktop: true
     enable_xrdp: true
@@ -112,7 +115,7 @@
         - name: Create main user
           ansible.builtin.user:
             name: "{{ main_user }}"
-            password: "$6$xpeyN4Bt9sBZFl73$7HqO4FvmkmIR98LkXlJDY6ONu.8zHYNkJEi6bOIRzUZq0P.Tg9XXFflSIT8woQoFEGyoExJwOAFEkTGECCfzA."
+            password: "{{ ubuntu_main_user_pwd_hash }}"
             password_lock: false
             shell: /bin/bash
             create_home: true
@@ -121,7 +124,7 @@
           when: enable_xrdp | bool
           ansible.builtin.user:
             name: "{{ xrdp_user }}"
-            password: "$6$pOt6mOTrWu5Ie44S$.MXXFgrPBaO9YN2YisRGmfs1zNVoSBr/cfNMpD5IXyfyhLIi4k0lg6NMoGuYxUAK.J/F9YFrpCdjy0WoHbqzr/"
+            password: "{{ ubuntu_xrdp_user_pwd_hash }}"
             shell: /bin/bash
             create_home: true
             groups: sudo
@@ -281,19 +284,19 @@
           block:
             - name: Install KDE minimal
               apt:
-                name: ["plasma-desktop", "sddm"]
+                name: ["plasma-desktop",  "plasma-session-x11", "sddm"]
                 state: present
               when: desktop_variant == "minimal"
 
             - name: Install KDE standard
               apt:
-                name: ["kde-standard", "sddm"]
+                name: ["kde-standard",  "plasma-session-x11", "sddm"]
                 state: present
               when: desktop_variant == "standard"
 
             - name: Install KDE full
               apt:
-                name: ["kubuntu-desktop"]
+                name: ["kubuntu-desktop", "plasma-session-x11"]
                 state: present
               when: desktop_variant == "full"
 
@@ -482,7 +485,10 @@
     # XRDP
 
     - name: XRDP
-      when: enable_xrdp | bool
+      when:
+        - enable_desktop | bool
+        - enable_xrdp | bool
+        - desktop_environment != "gnome"
       block:
         - name: Install XRDP packages
           apt:
@@ -494,6 +500,98 @@
             name: xrdp
             enabled: true
             state: started
+
+    #######################
+    # Gnome Remote Desktop
+
+    - name: Gnome Remote Desktop
+      when:
+        - enable_desktop | bool
+        - desktop_environment == "gnome"
+      vars:
+        grd_marker: "{{ marker_dir }}/gnome_remote_desktop_installed"
+
+        rdp_username: "{{ gnome_remote_desktop_user}}"
+        rdp_password: "{{ gnome_remote_desktop_pass }}"
+
+        grd_tls_dir: "/var/lib/gnome-remote-desktop"
+        grd_tls_cert: "/var/lib/gnome-remote-desktop/rdp-tls.crt"
+        grd_tls_key: "/var/lib/gnome-remote-desktop/rdp-tls.key"
+      block:
+        - name: Check if Gnome Remote Desktop already installed
+          stat:
+            path: "{{ grd_marker }}"
+          register: grd_installed
+
+        - name: Install required packages
+          when: not grd_installed.stat.exists
+          ansible.builtin.apt:
+            update_cache: true
+            name:
+              - gnome-remote-desktop
+              - openssl
+            state: present
+
+        - name: Ensure TLS directory exists
+          when: not grd_installed.stat.exists
+          ansible.builtin.file:
+            path: "{{ grd_tls_dir }}"
+            state: directory
+            owner: gnome-remote-desktop
+            group: gnome-remote-desktop
+            mode: "0750"
+
+        - name: Generate self-signed TLS cert/key for GNOME RDP
+          when: not grd_installed.stat.exists
+          ansible.builtin.command:
+            cmd: >
+              openssl req -x509 -newkey rsa:4096
+              -keyout {{ grd_tls_key }}
+              -out {{ grd_tls_cert }}
+              -sha256 -days 3650 -nodes
+              -subj "/CN={{ ansible_fqdn | default(ansible_hostname) }}"
+          args:
+            creates: "{{ grd_tls_cert }}"
+
+        - name: Fix TLS key permissions/ownership
+          when: not grd_installed.stat.exists
+          ansible.builtin.file:
+            path: "{{ item.path }}"
+            owner: gnome-remote-desktop
+            group: gnome-remote-desktop
+            mode: "{{ item.mode }}"
+          loop:
+            - { path: "{{ grd_tls_cert }}", mode: "0644" }
+            - { path: "{{ grd_tls_key }}",  mode: "0600" }
+
+        - name: Configure GNOME RDP to use TLS cert
+          when: not grd_installed.stat.exists
+          ansible.builtin.command: "grdctl --system rdp set-tls-cert {{ grd_tls_cert }}"
+
+        - name: Configure GNOME RDP to use TLS key
+          when: not grd_installed.stat.exists
+          ansible.builtin.command: "grdctl --system rdp set-tls-key {{ grd_tls_key }}"
+
+        - name: Enable GNOME RDP (system)
+          when: not grd_installed.stat.exists
+          ansible.builtin.command: "grdctl --system rdp enable"
+
+        - name: Set RDP credentials if missing
+          when: not grd_installed.stat.exists
+          ansible.builtin.command: "grdctl --system rdp set-credentials {{ rdp_username }} {{ rdp_password }}"
+
+        - name: restart gnome-remote-desktop
+          when: not grd_installed.stat.exists
+          ansible.builtin.systemd:
+            name: gnome-remote-desktop
+            enabled: true
+            state: restarted
+
+        - name: Create Gnome Remote Desktop install marker
+          file:
+            path: "{{ grd_marker }}"
+            state: touch
+          when: not grd_installed.stat.exists
 
     ########
     # SPICE
