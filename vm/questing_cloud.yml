@@ -481,6 +481,17 @@
                 enabled: true
                 state: started
 
+    #############
+    # App Center
+
+    - name: App Center
+      when: enable_desktop | bool
+      block:
+        - name: Install snap-store
+          ansible.builtin.command: snap install snap-store
+          args:
+            creates: /snap/bin/snap-store
+
     #######
     # XRDP
 
