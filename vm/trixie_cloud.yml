@@ -509,7 +509,7 @@
           apt:
             name: [
               "curl", "git", "gnupg", "unzip", "xz-utils", "fuse", "unzip", "fontconfig", "tmux",
-              "fzf", "ripgrep", "nodejs", "npm", "firefox-esr", "kitty", "lazygit"
+              "fzf", "ripgrep", "nodejs", "npm", "firefox-esr", "kitty", "lazygit", "zsh", "ansible"
             ]
             state: present
 

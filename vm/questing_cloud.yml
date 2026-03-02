@@ -640,7 +640,7 @@
           apt:
             name: [
               "curl", "git", "gnupg", "unzip", "xz-utils", "fuse", "unzip", "fontconfig", "tmux",
-              "fzf", "ripgrep", "nodejs", "npm", "firefox", "kitty", "lazygit"
+              "fzf", "ripgrep", "nodejs", "npm", "firefox", "kitty", "lazygit", "zsh", "ansible"
             ]
             state: present
 
