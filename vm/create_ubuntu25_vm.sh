@@ -23,15 +23,15 @@ need_cmd curl
 # Config area
 
 CORES="${CORES:-2}"
-MEMORY_MB="${MEMORY_MB:-4096}"
+MEMORY_GB="${MEMORY_GB:-4}"
 DISK_SIZE_GB="${DISK_SIZE_GB:-20}"
 
 CI_USER="${CI_USER:-ubuntu}"
 SSH_PUBKEY_FILE="${SSH_PUBKEY_FILE:-${USER_HOME}/.ssh/ubuntu.pub}"
 
 # allocate next available VMID
-VMID=$(pvesh get /cluster/nextid)
-VMNAME="Ubuntu${VMID}"
+VMID="${VMID:-$(pvesh get /cluster/nextid)}"
+VMNAME="${VMNAME:-Ubuntu${VMID}}"
 
 STORAGE="${STORAGE:-local-lvm}"
 CI_STORAGE="${CI_STORAGE:-local-lvm}"
@@ -62,6 +62,11 @@ SLEEP_STEP="${SLEEP_STEP:-2}"
 
 ####################
 # Validation checks
+
+if [[ ! "$MEMORY_GB" =~ ^[1-9][0-9]*$ ]]; then
+  die "MEMORY_GB must be a positive number of GB"
+fi
+MEMORY_MB="$(( MEMORY_GB * 1024 ))"
 
 if [[ ! -f "$SSH_PUBKEY_FILE" ]]; then
   die "Public key not found: $SSH_PUBKEY_FILE"
