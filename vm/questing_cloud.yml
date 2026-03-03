@@ -14,6 +14,8 @@
     enable_dev: true
     enable_ai: true
     enable_fonts: true
+    enable_sunshine: false
+    enable_dcv: false
 
     apt_proxy: "" # "http://PROXY:3142"
 
@@ -22,6 +24,7 @@
 
     main_user: ubuntu
     xrdp_user: rubu
+    dcv_user: dubu
 
     marker_dir: "/etc/markers"
 
@@ -626,6 +629,126 @@
             name: spice-vdagentd.service
             enabled: true
             state: started
+
+    ###########
+    # Sunshine
+
+    - name: Sunshine
+      when: enable_sunshine | bool
+      vars:
+        sunshine_deb_url: "https://github.com/LizardByte/Sunshine/releases/download/v2026.302.133823/sunshine-debian-trixie-amd64.deb"
+        sunshine_deb_path: "/tmp/sunshine-debian-trixie-amd64.deb"
+        sunshine_kms: false
+      block:
+        - name: Download Sunshine package
+          ansible.builtin.get_url:
+            url: "{{ sunshine_deb_url }}"
+            dest: "{{ sunshine_deb_path }}"
+            mode: "0644"
+
+        - name: Install Sunshine package dependencies
+          ansible.builtin.apt:
+            name:
+              - miniupnpc
+              - libminiupnpc18
+            state: present
+
+        - name: Install Sunshine package
+          ansible.builtin.apt:
+            deb: "{{ sunshine_deb_path }}"
+
+        - name: Ensure Sunshine cursor environment variables are present
+          when: sunshine_kms | bool
+          ansible.builtin.lineinfile:
+            path: /etc/environment
+            regexp: "^{{ item.key }}="
+            line: "{{ item.key }}={{ item.value }}"
+            state: present
+          loop:
+            - { key: "KWIN_FORCE_SW_CURSOR", value: "1" }
+            - { key: "MUTTER_DEBUG_DISABLE_HW_CURSORS", value: "1" }
+
+        - name: Get main user UID
+          ansible.builtin.command: "id -u {{ main_user }}"
+          register: main_user_uid
+          changed_when: false
+
+        - name: Enable and start sunshine-kms user service
+          when: sunshine_kms | bool
+          become: false
+          become_user: "{{ main_user }}"
+          ansible.builtin.command: systemctl --user --now enable sunshine-kms
+          environment:
+            XDG_RUNTIME_DIR: "/run/user/{{ main_user_uid.stdout }}"
+
+        - name: Enable and start sunshine user service
+          when: not (sunshine_kms | bool)
+          become: false
+          become_user: "{{ main_user }}"
+          ansible.builtin.command: systemctl --user --now enable sunshine
+          environment:
+            XDG_RUNTIME_DIR: "/run/user/{{ main_user_uid.stdout }}"
+
+    #############
+    # Amazon DCV
+
+    - name: Amazon DCV
+      when:
+        - enable_dcv | bool
+        - desktop_environment == "xfce"
+      vars:
+        dcv_server_url: "https://d1uj6qtbmh3dt5.cloudfront.net/2025.0/Servers/nice-dcv-2025.0-20103-ubuntu2404-x86_64.tgz"
+        dcv_archive_path: "/tmp/nice-dcv-2025.0-20103-ubuntu2404-x86_64.tgz"
+        dcv_extract_dir: "/tmp/nice-dcv-2025.0-20103-ubuntu2404-x86_64"
+        dcv_session_marker: "{{ marker_dir }}/dcv_mysession_created"
+      block:
+        - name: Download Amazon DCV server archive
+          ansible.builtin.get_url:
+            url: "{{ dcv_server_url }}"
+            dest: "{{ dcv_archive_path }}"
+            mode: "0644"
+
+        - name: Extract Amazon DCV server archive
+          ansible.builtin.unarchive:
+            src: "{{ dcv_archive_path }}"
+            dest: /tmp
+            remote_src: true
+            creates: "{{ dcv_extract_dir }}"
+
+        - name: Install Amazon DCV deb packages
+          ansible.builtin.shell: "apt-get install -y {{ dcv_extract_dir }}/*.deb"
+          args:
+            creates: /usr/bin/dcv
+
+        - name: Ensure dcvserver is enabled and started
+          ansible.builtin.systemd:
+            name: dcvserver
+            enabled: true
+            state: started
+
+        - name: Create Amazon DCV user
+          ansible.builtin.user:
+            name: "{{ dcv_user }}"
+            password: "{{ ubuntu_dcv_user_pwd_hash }}"
+            shell: /bin/bash
+            create_home: true
+            groups: sudo
+            append: true
+
+        - name: Check if Amazon DCV session already exists
+          ansible.builtin.stat:
+            path: "{{ dcv_session_marker }}"
+          register: dcv_session_created
+
+        - name: Create Amazon DCV session
+          ansible.builtin.command: "dcv create-session mysession --type virtual --owner {{ dcv_user }}"
+          when: not dcv_session_created.stat.exists
+
+        - name: Mark Amazon DCV session as created
+          ansible.builtin.file:
+            path: "{{ dcv_session_marker }}"
+            state: touch
+          when: not dcv_session_created.stat.exists
 
     ####################
     # Development tools
