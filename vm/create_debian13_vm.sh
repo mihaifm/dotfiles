@@ -42,7 +42,7 @@ BRIDGE="${BRIDGE:-vmbr0}"
 IPCONFIG0="${IPCONFIG0:-ip=dhcp}"
 
 VMHOSTNAME="${VMHOSTNAME:-trixie${VMID}}"
-TIMEZONE="${TIMEZONE:-UTC}"
+TIMEZONE="${TIMEZONE:-Europe/Bucharest}"
 
 IMAGE_NAME=debian-13-generic-amd64.qcow2
 IMAGE_URL="${IMAGE_URL:-https://cloud.debian.org/images/cloud/trixie/latest/${IMAGE_NAME}}"
