@@ -657,6 +657,14 @@
           ansible.builtin.apt:
             deb: "{{ sunshine_deb_path }}"
 
+        - name: Generate Sunshine UI credentials
+          become: false
+          become_user: "{{ main_user }}"
+          no_log: true
+          ansible.builtin.command: "sunshine --creds {{ sunshine_ui_user }} {{ sunshine_ui_pass }}"
+          args:
+            creates: "/home/{{ main_user }}/.config/sunshine/sunshine_state.json"
+
         - name: Ensure Sunshine cursor environment variables are present
           when: sunshine_kms | bool
           ansible.builtin.lineinfile:
@@ -673,21 +681,42 @@
           register: main_user_uid
           changed_when: false
 
-        - name: Enable and start sunshine-kms user service
+        - name: Enable sunshine-kms user service
           when: sunshine_kms | bool
           become: false
           become_user: "{{ main_user }}"
-          ansible.builtin.command: systemctl --user --now enable sunshine-kms
+          ansible.builtin.command: systemctl --user enable sunshine-kms
           environment:
             XDG_RUNTIME_DIR: "/run/user/{{ main_user_uid.stdout }}"
 
-        - name: Enable and start sunshine user service
+        - name: Enable sunshine user service
           when: not (sunshine_kms | bool)
           become: false
           become_user: "{{ main_user }}"
-          ansible.builtin.command: systemctl --user --now enable sunshine
+          ansible.builtin.command: systemctl --user enable sunshine
           environment:
             XDG_RUNTIME_DIR: "/run/user/{{ main_user_uid.stdout }}"
+
+        - name: Ensure Sunshine autostart directory exists
+          ansible.builtin.file:
+            path: "/home/{{ main_user }}/.config/autostart"
+            state: directory
+            owner: "{{ main_user }}"
+            group: "{{ main_user }}"
+            mode: "0755"
+
+        - name: Install Sunshine desktop autostart entry
+          ansible.builtin.copy:
+            dest: "/home/{{ main_user }}/.config/autostart/sunshine.desktop"
+            owner: "{{ main_user }}"
+            group: "{{ main_user }}"
+            mode: "0644"
+            content: |
+              [Desktop Entry]
+              Type=Application
+              Name=Sunshine
+              Exec=/usr/bin/systemctl --user start {{ 'sunshine-kms' if (sunshine_kms | bool) else 'sunshine' }}
+              Terminal=false
 
     #############
     # Amazon DCV
