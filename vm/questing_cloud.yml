@@ -496,6 +496,111 @@
           args:
             creates: /snap/bin/snap-store
 
+    ########
+    # x11vnc
+
+    - name: x11vnc
+      when: false
+        # - enable_desktop | bool
+        # - enable_vnc | bool
+        # - desktop_environment in ["xfce", "kde"]
+      vars:
+        x11vnc_pw_file: /etc/x11vnc.pass
+      block:
+        - name: Install x11vnc package
+          ansible.builtin.apt:
+            name: x11vnc
+            state: present
+
+        - name: Create x11vnc password file
+          no_log: true
+          ansible.builtin.command:
+            cmd: "x11vnc -storepasswd {{ x11vnc_pass }} {{ x11vnc_pw_file }}"
+          args:
+            creates: "{{ x11vnc_pw_file }}"
+
+        - name: Restrict x11vnc password file permissions
+          ansible.builtin.file:
+            path: "{{ x11vnc_pw_file }}"
+            owner: root
+            group: root
+            mode: "0600"
+
+        - name: Install x11vnc launcher script
+          ansible.builtin.copy:
+            dest: /usr/local/bin/x11vnc-launcher.sh
+            owner: root
+            group: root
+            mode: "0755"
+            content: |
+              #!/bin/sh
+              set -eu
+
+              auth_file=""
+
+              if [ -f /run/lightdm/root/:0 ]; then
+                auth_file=/run/lightdm/root/:0
+              elif [ -f /var/run/lightdm/root/:0 ]; then
+                auth_file=/var/run/lightdm/root/:0
+              else
+                for candidate in /run/sddm/* /var/run/sddm/*; do
+                  if [ -f "$candidate" ]; then
+                    auth_file="$candidate"
+                    break
+                  fi
+                done
+              fi
+              if [ -z "$auth_file" ]; then
+                echo "Unable to locate an Xauthority file for {{ desktop_environment }}" >&2
+                exit 1
+              fi
+
+              exec /usr/bin/x11vnc -auth "$auth_file" -display :0 -forever -loop -noxdamage -repeat -rfbauth {{ x11vnc_pw_file }} -rfbport 5900 -shared
+          register: x11vnc_launcher
+
+        - name: Install x11vnc systemd unit
+          ansible.builtin.copy:
+            dest: /etc/systemd/system/x11vnc.service
+            owner: root
+            group: root
+            mode: "0644"
+            content: |
+              [Unit]
+              Description=x11vnc server for the active X11 desktop
+              After=display-manager.service network.target
+              Wants=display-manager.service
+
+              [Service]
+              Type=simple
+              ExecStart=/usr/local/bin/x11vnc-launcher.sh
+              Restart=on-failure
+              RestartSec=3
+
+              [Install]
+              WantedBy=graphical.target
+          register: x11vnc_unit
+
+        - name: Reload systemd for x11vnc unit changes
+          ansible.builtin.systemd:
+            daemon_reload: true
+          when: x11vnc_unit.changed or x11vnc_launcher.changed
+
+        - name: Ensure x11vnc is enabled
+          ansible.builtin.systemd:
+            name: x11vnc
+            enabled: true
+        - name: Restart x11vnc after unit changes
+          ansible.builtin.systemd:
+            name: x11vnc
+            state: restarted
+          when: x11vnc_unit.changed or x11vnc_launcher.changed
+
+        - name: Start x11vnc when unit is unchanged
+          ansible.builtin.systemd:
+            name: x11vnc
+            state: started
+          when: not (x11vnc_unit.changed or x11vnc_launcher.changed)
+
     #######
     # XRDP
 
