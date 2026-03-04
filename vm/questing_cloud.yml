@@ -16,6 +16,7 @@
     enable_fonts: true
     enable_sunshine: false
     enable_dcv: false
+    enable_vnc: false
 
     apt_proxy: "" # "http://PROXY:3142"
 
@@ -514,6 +515,91 @@
             name: xrdp
             enabled: true
             state: started
+
+    ###########
+    # TigerVNC
+
+    - name: TigerVNC server setup
+      when:
+        - enable_desktop | bool
+        - enable_vnc | bool
+        - desktop_environment in ["xfce", "kde"]
+      vars:
+        vnc_user: "{{ main_user }}"
+        vnc_password: "{{ tigervnc_pass }}"
+        vnc_display: ":1"
+        vnc_port: 5901
+        vnc_geometry: "1920x1080"
+      block:
+        - name: Install TigerVNC and desktop environment
+          apt:
+            name:
+              - tigervnc-standalone-server
+              - tigervnc-common
+            state: present
+
+        - name: Create VNC config directory
+          file:
+            path: "/home/{{ vnc_user }}/.vnc"
+            state: directory
+            owner: "{{ vnc_user }}"
+            group: "{{ vnc_user }}"
+            mode: "0755"
+
+        - name: Set VNC password
+          shell: |
+            echo "{{ vnc_password }}" | vncpasswd -f > /home/{{ vnc_user }}/.vnc/passwd
+          args:
+            creates: "/home/{{ vnc_user }}/.vnc/passwd"
+          become_user: "{{ vnc_user }}"
+          no_log: true
+
+        - name: Set VNC password file permissions
+          file:
+            path: "/home/{{ vnc_user }}/.vnc/passwd"
+            owner: "{{ vnc_user }}"
+            group: "{{ vnc_user }}"
+            mode: "0600"
+
+        - name: Configure TigerVNC server defaults
+          copy:
+            dest: "/etc/tigervnc/vncserver-config-defaults"
+            content: |
+              $geometry = "{{ vnc_geometry }}";
+              $depth = 24;
+              $localhost = "no";
+              $SecurityTypes = "VncAuth";
+            mode: "0644"
+
+        - name: Configure xstartup
+          copy:
+            dest: "/home/{{ vnc_user }}/.vnc/xstartup"
+            content: |
+              #!/bin/sh
+              unset SESSION_MANAGER
+              unset DBUS_SESSION_BUS_ADDRESS
+              {% if desktop_environment == 'xfce' %}
+              exec dbus-launch --exit-with-session startxfce4
+              {% elif desktop_environment == 'kde' %}
+              exec dbus-launch --exit-with-session startplasma-x11
+              {% endif %}
+            owner: "{{ vnc_user }}"
+            group: "{{ vnc_user }}"
+            mode: "0755"
+
+        - name: Map user to VNC display
+          copy:
+            dest: /etc/tigervnc/vncserver.users
+            content: |
+              {{ vnc_display }}={{ vnc_user }}
+            mode: "0644"
+
+        - name: Enable and start TigerVNC systemd service
+          systemd:
+            name: "tigervncserver@{{ vnc_display }}.service"
+            enabled: true
+            state: started
+            daemon_reload: true
 
     #######################
     # Gnome Remote Desktop
