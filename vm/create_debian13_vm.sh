@@ -24,6 +24,7 @@ need_cmd curl
 
 CORES="${CORES:-2}"
 MEMORY_GB="${MEMORY_GB:-4}"
+MEMORY_MIN_GB="${MEMORY_MIN_GB:-$MEMORY_GB}"
 DISK_SIZE_GB="${DISK_SIZE_GB:-20}"
 
 CI_USER="${CI_USER:-debian}"
@@ -66,6 +67,20 @@ if [[ ! "$MEMORY_GB" =~ ^[1-9][0-9]*$ ]]; then
 fi
 MEMORY_MB="$(( MEMORY_GB * 1024 ))"
 
+if [[ ! "$MEMORY_MIN_GB" =~ ^[1-9][0-9]*$ ]]; then
+  die "MEMORY_MIN_GB must be a positive integer number of GB"
+fi
+
+if (( MEMORY_MIN_GB > MEMORY_GB )); then
+  die "MEMORY_MIN_GB cannot be greater than MEMORY_GB"
+fi
+
+if (( MEMORY_MIN_GB == MEMORY_GB )); then
+  BALLOON_MB=0
+else
+  BALLOON_MB="$(( MEMORY_MIN_GB * 1024 ))"
+fi
+
 if [[ ! -f "$SSH_PUBKEY_FILE" ]]; then
   die "Public key not found: $SSH_PUBKEY_FILE"
 fi
@@ -100,6 +115,7 @@ echo "Creating VM $VMID"
 qm create "$VMID" \
   --name "$VMNAME" \
   --memory "$MEMORY_MB" \
+  --balloon "$BALLOON_MB" \
   --cores "$CORES" \
   --cpu host \
   --net0 "virtio,bridge=${BRIDGE}" \
