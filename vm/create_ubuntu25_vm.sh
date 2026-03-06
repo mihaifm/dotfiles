@@ -2,6 +2,20 @@
 
 set -euo pipefail
 
+print_usage() {
+  cat <<'USAGE'
+Usage: create_ubuntu25_vm.sh [options]
+
+Options:
+  --cores N        CPU cores (default: 2)
+  --storage GB     Disk size in GB (default: 20)
+  --memory GB      Max RAM in GB (default: 4)
+  --minmemory GB   Min RAM in GB for ballooning; same as --memory disables ballooning
+  --vmid ID        Proxmox VM ID (default: next available)
+  --help, -h       Show this help text
+USAGE
+}
+
 ###############
 # Utility area
 
@@ -11,6 +25,7 @@ else
     USER_HOME="$HOME"
 fi
 
+is_int() { [[ "$1" =~ ^[0-9]+$ ]]; }
 die() { echo "ERROR: $*" >&2; exit 1; }
 
 need_cmd() { command -v "$1" >/dev/null 2>&1 ||  die "Missing required command: $1"; }
@@ -18,6 +33,52 @@ need_cmd qm
 need_cmd jq
 need_cmd pvesh
 need_cmd curl
+
+parse_args() {
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --cores)
+        [[ "${2:-}" ]] || die "Missing value for --cores"
+        is_int "$2" || die "Invalid value for --cores: $2"
+        CORES="$2"
+        shift 2
+        ;;
+      --storage)
+        [[ "${2:-}" ]] || die "Missing value for --storage"
+        is_int "$2" || die "Invalid value for --storage: $2"
+        DISK_SIZE_GB="$2"
+        shift 2
+        ;;
+      --memory)
+        [[ "${2:-}" ]] || die "Missing value for --memory"
+        is_int "$2" || die "Invalid value for --memory: $2"
+        MEMORY_GB="$2"
+        shift 2
+        ;;
+      --minmemory)
+        [[ "${2:-}" ]] || die "Missing value for --minmemory"
+        is_int "$2" || die "Invalid value for --minmemory: $2"
+        MEMORY_MIN_GB="$2"
+        shift 2
+        ;;
+      --vmid)
+        [[ "${2:-}" ]] || die "Missing value for --vmid"
+        is_int "$2" || die "Invalid value for --vmid: $2"
+        VMID="$2"
+        shift 2
+        ;;
+      --help|-h)
+        print_usage
+        exit 0
+        ;;
+      *)
+        die "Unknown option: $1"
+        ;;
+    esac
+  done
+}
+
+parse_args "$@"
 
 ##############
 # Config area
