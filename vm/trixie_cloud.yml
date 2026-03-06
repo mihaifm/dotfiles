@@ -243,6 +243,13 @@
                 state: present
               when: desktop_variant == "full"
 
+            - name: Customize gnome
+              block:
+                - name: Install Gnome Extension Manager
+                  apt:
+                    name: "gnome-shell-extension-manager"
+                    state: present
+
             - name: Start gdm3
               systemd:
                 name: gdm3
