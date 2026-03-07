@@ -29,6 +29,8 @@
 
     marker_dir: "/etc/markers"
 
+    distro: "ubuntu"
+
     valid_de:
       - gnome
       - kde

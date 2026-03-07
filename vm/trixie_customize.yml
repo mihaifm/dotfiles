@@ -1,6 +1,6 @@
 ---
-- name: Ubuntu VM desktop customization
-  hosts: ubuntu_vms
+- name: Debian VM desktop customization
+  hosts: debian_vms
   become: true
   gather_facts: false
 
@@ -12,10 +12,10 @@
     enable_spice: true
 
     desktop_environment: "none"
-    main_user: "{{ ubuntu_main_user }}"
-    xrdp_user: "{{ ubuntu_xrdp_user }}"
+    main_user: "{{ trixie_main_user }}"
+    xrdp_user: "{{ trixie_xrdp_user }}"
 
-    distro: "ubuntu"
+    distro: "debian"
 
   tasks:
     - name: Desktop customization
