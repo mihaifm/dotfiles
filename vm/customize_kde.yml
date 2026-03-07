@@ -1,0 +1,35 @@
+---
+- name: Customize KDE
+  block:
+    - name: Ensure per-user KDE config directory exists
+      ansible.builtin.file:
+        path: "/home/{{ item }}/.config"
+        state: directory
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: "0755"
+      loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
+
+    - name: Enable KDE autolock
+      ansible.builtin.ini_file:
+        path: "/home/{{ item }}/.config/kscreenlockerrc"
+        section: Daemon
+        option: Autolock
+        value: "true"
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: "0644"
+        no_extra_spaces: true
+      loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
+
+    - name: Set KDE lock timeout to 30 minutes
+      ansible.builtin.ini_file:
+        path: "/home/{{ item }}/.config/kscreenlockerrc"
+        section: Daemon
+        option: Timeout
+        value: "30"
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: "0644"
+        no_extra_spaces: true
+      loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"

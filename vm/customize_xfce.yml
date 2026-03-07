@@ -1,0 +1,110 @@
+---
+- name: Customize xfce
+  vars:
+    xfce_gtk_theme: Arc-Dark
+    xfce_icon_theme: Papirus-Dark
+  block:
+    - name: Install theme and icon packages
+      ansible.builtin.apt:
+        name: ["arc-theme", "papirus-icon-theme"]
+        state: present
+
+    - name: Ensure per-user xfconf directory exists
+      ansible.builtin.file:
+        path: "/home/{{ item }}/.config/xfce4/xfconf/xfce-perchannel-xml"
+        state: directory
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: "0755"
+      loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
+
+    - name: Set Xfce theme + icons
+      ansible.builtin.copy:
+        dest: "/home/{{ item }}/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml"
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: "0644"
+        content: |
+          <?xml version="1.0" encoding="UTF-8"?>
+
+          <channel name="xsettings" version="1.0">
+          <property name="Net" type="empty">
+          <property name="ThemeName" type="string" value="{{ xfce_gtk_theme }}"/>
+          <property name="IconThemeName" type="string" value="{{ xfce_icon_theme }}"/>
+          </property>
+          </channel>
+      loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
+
+    - name: Set Xfce window manager theme and button layout
+      ansible.builtin.copy:
+        dest: "/home/{{ item }}/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: "0644"
+        content: |
+          <?xml version="1.0" encoding="UTF-8"?>
+
+          <channel name="xfwm4" version="1.0">
+            <property name="general" type="empty">
+              <property name="theme" type="string" value="{{ xfce_gtk_theme }}"/>
+              <property name="button_layout" type="string" value="O|SHMC"/>
+            </property>
+          </channel>
+      loop: "{{ [main_user] + ([xrdp_user] if (enable_xrdp | bool) else []) }}"
+
+- name: SPICE dynamic resolution
+  when: enable_spice | bool
+  block:
+    - name: Ensure user script dir exists
+      ansible.builtin.file:
+        path: "/home/{{ main_user }}/.local/bin"
+        state: directory
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: "0755"
+
+    - name: Install XFCE SPICE autoresize script
+      ansible.builtin.copy:
+        dest: "/home/{{ main_user }}/.local/bin/xfce-spice-autoresize.sh"
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: "0755"
+        content: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          sleep 2
+          xrandr --output "$(xrandr | awk '/ connected/{print $1; exit; }')" --auto
+
+          xev -root -event randr 2>/dev/null | \
+          while IFS= read -r line; do
+            case "$line" in
+              *RRScreenChangeNotify*|*XRROutputChangeNotifyEvent*)
+                xrandr --output "$(xrandr | awk '/ connected/{print $1; exit; }')" --auto
+                ;;
+            esac
+          done
+
+    - name: Ensure user autostart dir exists
+      ansible.builtin.file:
+        path: "/home/{{ main_user }}/.config/autostart"
+        state: directory
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: "0755"
+
+    - name: Install XFCE autostart desktop entry
+      ansible.builtin.copy:
+        dest: "/home/{{ main_user }}/.config/autostart/xfce-spice-autoresize.desktop"
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: "0644"
+        content: |
+          [Desktop Entry]
+          Type=Application
+          Name=SPICE Auto Resize (XFCE)
+          Exec=/home/{{ main_user }}/.local/bin/xfce-spice-autoresize.sh
+          OnlyShowIn=XFCE;
+          X-GNOME-Autostart-enabled=true
+          Terminal=false
+          Hidden=false

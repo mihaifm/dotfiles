@@ -1,0 +1,28 @@
+---
+- name: Ubuntu VM desktop customization
+  hosts: ubuntu_vms
+  become: true
+  gather_facts: false
+
+  vars_files:
+    - vault.yml
+
+  vars:
+    enable_xrdp: true
+    enable_spice: true
+
+    desktop_environment: "none"
+    main_user: "{{ ubuntu_main_user }}"
+    xrdp_user: "{{ ubuntu_xrdp_user }}"
+
+  tasks:
+    - name: Desktop customization
+      block:
+        - ansible.builtin.import_tasks: customize_gnome.yml
+          when: desktop_environment == "gnome"
+
+        - ansible.builtin.import_tasks: customize_kde.yml
+          when: desktop_environment == "kde"
+
+        - ansible.builtin.import_tasks: customize_xfce.yml
+          when: desktop_environment == "xfce"

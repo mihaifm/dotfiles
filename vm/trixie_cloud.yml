@@ -20,8 +20,8 @@
     desktop_environment: "gnome"
     desktop_variant: "minimal"
 
-    main_user: debian
-    xrdp_user: rdeb
+    main_user: "{{ trixie_main_user }}"
+    xrdp_user: "{{ trixie_xrdp_user }}"
 
     marker_dir: "/etc/markers"
 
