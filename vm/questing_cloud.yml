@@ -306,6 +306,8 @@
                     group: "{{ main_user }}"
                     mode: "0755"
                     remote_src: false
+                  args:
+                    creates: "/home/{{ main_user }}/.local/share/gnome-shell/extensions/{{ item.uuid }}/metadata.json"
                   loop: "{{ gnome_extensions }}"
                   loop_control:
                     label: "{{ item.uuid }}"
@@ -329,6 +331,8 @@
                     group: "{{ main_user }}"
                     mode: "0755"
                     remote_src: true
+                  args:
+                    creates: "/home/{{ main_user }}/.local/share/gnome-shell/extensions/{{ item.uuid }}/metadata.json"
                   loop: "{{ gnome_extensions }}"
                   loop_control:
                     label: "{{ item.uuid }}"
@@ -893,7 +897,7 @@
     - name: Sunshine
       when: enable_sunshine | bool
       vars:
-        sunshine_release: "v2026.303.140026"
+        sunshine_release: "v2026.306.10834"
         sunshine_deb_url: "https://github.com/LizardByte/Sunshine/releases/download/{{ sunshine_release }}/sunshine-debian-trixie-amd64.deb"
         sunshine_deb_path: "/tmp/sunshine-debian-trixie-amd64.deb"
         sunshine_kms: false
@@ -939,11 +943,19 @@
           register: main_user_uid
           changed_when: false
 
+        - name: Enable lingering for main user
+          ansible.builtin.command: "loginctl enable-linger {{ main_user }}"
+          args:
+            creates: "/var/lib/systemd/linger/{{ main_user }}"
+
         - name: Enable sunshine-kms user service
           when: sunshine_kms | bool
           become: false
           become_user: "{{ main_user }}"
-          ansible.builtin.command: systemctl --user enable sunshine-kms
+          ansible.builtin.systemd:
+            name: sunshine-kms
+            scope: user
+            enabled: true
           environment:
             XDG_RUNTIME_DIR: "/run/user/{{ main_user_uid.stdout }}"
 
@@ -951,7 +963,10 @@
           when: not (sunshine_kms | bool)
           become: false
           become_user: "{{ main_user }}"
-          ansible.builtin.command: systemctl --user enable sunshine
+          ansible.builtin.systemd:
+            name: sunshine
+            scope: user
+            enabled: true
           environment:
             XDG_RUNTIME_DIR: "/run/user/{{ main_user_uid.stdout }}"
 
