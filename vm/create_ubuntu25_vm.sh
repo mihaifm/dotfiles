@@ -290,6 +290,15 @@ cloudinit_done() {
   qm guest exec "$VMID" -- bash -lc  'command -v cloud-init >/dev/null 2>&1 && cloud-init status --wait >/dev/null 2>&1' >/dev/null 2>&1
 }
 
+remove_cidata_from_guest() {
+  qm guest exec "$VMID" -- bash -lc '
+    umount /media/ubuntu/cidata 2>/dev/null || true
+    if [[ -e /sys/block/sr0/device/delete ]]; then
+      echo 1 > /sys/block/sr0/device/delete
+    fi
+  ' >/dev/null 2>&1
+}
+
 get_ipv4() {
   agent_network_get_interfaces | jq -r '
     [.[] | .["ip-addresses"][]?
@@ -320,6 +329,14 @@ wait_until "$IP_TIMEOUT" has_ipv4 || die "No non-loopback IPv4 address found wit
 
 ip="$(get_ipv4)"
 echo "VM $VMID has IP addres: $ip"
+
+echo "Detaching Cloud-Init drive from ide2"
+qm set "$VMID" --delete ide2
+
+echo "Removing Cloud-Init media from the running guest"
+if ! remove_cidata_from_guest; then
+  echo "Could not remove Cloud-Init media from the running guest"
+fi
 
 ##################################
 # Generate Ansible inventory file
