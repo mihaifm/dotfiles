@@ -851,3 +851,28 @@
             path: "{{ nerd_fonts_marker }}"
             state: touch
           when: not nerd_fonts_installed.stat.exists
+
+    ###############
+    # First reboot
+
+    - name: First reboot
+      vars:
+        first_reboot_marker: "{{ marker_dir }}/first_reboot"
+        enable_first_reboot: false
+      when: enable_first_reboot | bool
+      block:
+        - name: Check if first reboot already happened
+          stat:
+            path: "{{ first_reboot_marker }}"
+          register: first_reboot
+
+        - name: Reboot
+          ansible.builtin.reboot:
+            reboot_timeout: 300
+          when: not first_reboot.stat.exists
+
+        - name: Create first reboot marker
+          file:
+            path: "{{ first_reboot_marker }}"
+            state: touch
+          when: not first_reboot.stat.exists
