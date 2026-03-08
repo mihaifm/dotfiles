@@ -189,9 +189,9 @@
         mode: "0755"
 
     - name: Ensure GNOME initial setup is marked complete
-      ansible.builtin.file:
-        path: "/home/{{ main_user }}/.config/gnome-initial-setup-done"
-        state: touch
+      ansible.builtin.copy:
+        dest: "/home/{{ main_user }}/.config/gnome-initial-setup-done"
+        content: ""
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: "0644"
@@ -260,7 +260,7 @@
       ansible.builtin.command:
         cmd: >-
           dbus-run-session -- dconf write /org/gnome/desktop/session/idle-delay "{{ gnome_idle_delay_seconds }}"
-      when: (gnome_idle_delay.stdout | trim) != "{{ gnome_idle_delay_seconds }}"
+      when: (gnome_idle_delay.stdout | trim) != gnome_idle_delay_seconds
 
     - name: Read GNOME dock favorites
       become_user: "{{ main_user }}"
@@ -274,7 +274,7 @@
       ansible.builtin.command:
         cmd: >-
           dbus-run-session -- dconf write /org/gnome/shell/favorite-apps "{{ gnome_pinned_apps }}"
-      when: (gnome_favorite_apps.stdout | trim) != "{{gnome_pinned_apps}}"
+      when: (gnome_favorite_apps.stdout | trim) != gnome_pinned_apps
 
     - name: Configure default resolution
       ansible.builtin.copy:
