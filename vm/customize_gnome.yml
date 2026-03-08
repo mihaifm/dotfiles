@@ -20,6 +20,10 @@
       - uuid: "switcher@landau.fi"
         download_url: "https://extensions.gnome.org/review/download/66226.shell-extension.zip"
         enabled: false
+
+    # dconf read /org/gnome/shell/favorite-apps
+    gnome_pinned_apps: "['kitty.desktop', 'firefox_firefox.desktop', 'org.gnome.Nautilus.desktop', 'snap-store_snap-store.desktop', 'com.mattjakeman.ExtensionManager.desktop']"
+    gnome_idle_delay_seconds: "uint32 1800"
   block:
     - name: Install Gnome Extension Manager
       ansible.builtin.apt:
@@ -183,6 +187,94 @@
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: "0755"
+
+    - name: Ensure GNOME initial setup is marked complete
+      ansible.builtin.file:
+        path: "/home/{{ main_user }}/.config/gnome-initial-setup-done"
+        state: touch
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: "0644"
+
+    - name: Read GNOME software usage stats setting
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: "dbus-run-session -- dconf read /org/gnome/desktop/privacy/send-software-usage-stats"
+      register: gnome_send_software_usage_stats
+      changed_when: false
+
+    - name: Disable GNOME software usage stats
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: "dbus-run-session -- dconf write /org/gnome/desktop/privacy/send-software-usage-stats false"
+      when: (gnome_send_software_usage_stats.stdout | trim) != 'false'
+
+    - name: Read GNOME technical problem reporting setting
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: "dbus-run-session -- dconf read /org/gnome/desktop/privacy/report-technical-problems"
+      register: gnome_report_technical_problems
+      changed_when: false
+
+    - name: Disable GNOME technical problem reporting
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: "dbus-run-session -- dconf write /org/gnome/desktop/privacy/report-technical-problems false"
+      when: (gnome_report_technical_problems.stdout | trim) != 'false'
+
+    - name: Read dash-to-dock trash visibility
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: "dbus-run-session -- dconf read /org/gnome/shell/extensions/dash-to-dock/show-trash"
+      register: dash_to_dock_show_trash
+      changed_when: false
+
+    - name: Disable dash-to-dock trash
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: "dbus-run-session -- dconf write /org/gnome/shell/extensions/dash-to-dock/show-trash false"
+      when: (dash_to_dock_show_trash.stdout | trim) != 'false'
+
+    - name: Read just-perfection animation setting
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: "dbus-run-session -- dconf read /org/gnome/shell/extensions/just-perfection/animation"
+      register: just_perfection_animation
+      changed_when: false
+
+    - name: Set just-perfection animation level
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: "dbus-run-session -- dconf write /org/gnome/shell/extensions/just-perfection/animation 2"
+      when: (just_perfection_animation.stdout | trim) != '2'
+
+    - name: Read GNOME screen inactivity timer
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: "dbus-run-session -- dconf read /org/gnome/desktop/session/idle-delay"
+      register: gnome_idle_delay
+      changed_when: false
+
+    - name: Set GNOME screen inactivity timer
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: >-
+          dbus-run-session -- dconf write /org/gnome/desktop/session/idle-delay "{{ gnome_idle_delay_seconds }}"
+      when: (gnome_idle_delay.stdout | trim) != "{{ gnome_idle_delay_seconds }}"
+
+    - name: Read GNOME dock favorites
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: "dbus-run-session -- dconf read /org/gnome/shell/favorite-apps"
+      register: gnome_favorite_apps
+      changed_when: false
+
+    - name: Set GNOME dock favorites
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: >-
+          dbus-run-session -- dconf write /org/gnome/shell/favorite-apps "{{ gnome_pinned_apps }}"
+      when: (gnome_favorite_apps.stdout | trim) != "{{gnome_pinned_apps}}"
 
     - name: Configure default resolution
       ansible.builtin.copy:
