@@ -1,0 +1,52 @@
+---
+- name: Ubuntu/Debian VM dotfiles install
+  hosts: ubuntu_vms:debian_vms
+  become: true
+  gather_facts: false
+
+  vars_files:
+    - vault.yml
+
+  vars:
+    main_user: >-
+      {{
+        ubuntu_main_user
+        if 'ubuntu_vms' in group_names
+        else
+        trixie_main_user
+        if 'debian_vms' in group_names
+        else
+        'none'
+      }}
+    dotfiles_repo: "https://github.com/mihaifm/dotfiles"
+    dotfiles_dir: "/home/{{ main_user }}/dotfiles"
+
+  tasks:
+    - name: Ensure git is installed
+      ansible.builtin.apt:
+        name: git
+        state: present
+        update_cache: true
+
+    - name: Clone dotfiles repository
+      become_user: "{{ main_user }}"
+      ansible.builtin.git:
+        repo: "{{ dotfiles_repo }}"
+        dest: "{{ dotfiles_dir }}"
+        update: true
+
+    - name: Install dotfiles repo files
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: ./install.sh repo
+        chdir: "{{ dotfiles_dir }}"
+      environment:
+        HOME: "/home/{{ main_user }}"
+
+    - name: Bootstrap dotfiles
+      become_user: "{{ main_user }}"
+      ansible.builtin.command:
+        cmd: ./install.sh bootstrap
+        chdir: "{{ dotfiles_dir }}"
+      environment:
+        HOME: "/home/{{ main_user }}"
