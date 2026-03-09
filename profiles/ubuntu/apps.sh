@@ -30,6 +30,11 @@ kitty_conf_snap_folders=('.config/kitty')
 kitty_conf_repo_folders=('kitty')
 
 bootstrap() {
+  # Kitty
+  if command -v gnome-shell >/dev/null 2>&1; then
+    echo "hide_window_decorations yes" > ~/.kitty.local.conf
+  fi
+
   # Tmux
   git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
   ~/.tmux/plugins/tpm/scripts/install_plugins.sh
