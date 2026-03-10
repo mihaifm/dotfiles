@@ -40,7 +40,11 @@ bootstrap() {
   ~/.tmux/plugins/tpm/scripts/install_plugins.sh
 
   # Vim
-  vim +PlugInstall! +qa
+  if ! vim +PlugInstall! +qa >/dev/null 2>&1; then
+    # to capture the actual output: redirect to a file and use ansifilter
+    echo "Error: Vim plugins failed to install" >&2
+    exit 1
+  fi
 
   # Neovim
   nvim --headless +"Lazy! install" +"qa"
