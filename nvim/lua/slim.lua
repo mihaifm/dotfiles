@@ -183,7 +183,7 @@ local function setup_osc52()
   if vim.g.clipboard ~= nil then return end
 
   local function osc52_send(s)
-    local b64 = vim.fn.system("base64", s):gsub("%s+$","")
+    local b64 = vim.base64.encode(s)
     local osc = "\x1b]52;c;" .. b64 .. "\x07"
 
     local ok = pcall(function()
