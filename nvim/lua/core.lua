@@ -43,7 +43,8 @@ local plugins = {
     init = function()
       vim.g.BufstopAutoSpeedToggle = 1
       vim.g.BufstopSplit = 'topleft'
-
+    end,
+    config = function()
       vim.keymap.set('n', '<leader>b', function() vim.cmd('Bufstop') end, { desc = 'Bufstop' })
 
       local has_wk, wk = pcall(require, 'which-key')
