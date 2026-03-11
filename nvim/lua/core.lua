@@ -488,10 +488,9 @@ local plugins = {
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
       require('mason').setup()
-      local ensure_installed = vim.tbl_keys(servers or {})
 
       require('mason-lspconfig').setup {
-        ensure_installed = ensure_installed,
+        -- ensure_installed = vim.tbl_keys(servers),
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
