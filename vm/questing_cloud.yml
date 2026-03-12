@@ -282,19 +282,19 @@
           block:
             - name: Install XFCE minimal
               apt:
-                name: ["xfce4", "dbus-x11", "lightdm"]
+                name: ["xfce4", "dbus-x11", "xfce-polkit", "lightdm"]
                 state: present
               when: desktop_variant == "minimal"
 
             - name: Install XFCE standard
               apt:
-                name: ["xfce4", "xfce4-goodies", "dbus-x11", "lightdm"]
+                name: ["xfce4", "xfce4-goodies", "xfce-polkit", "dbus-x11", "lightdm"]
                 state: present
               when: desktop_variant == "standard"
 
             - name: Install XFCE full
               apt:
-                name: ["xubuntu-desktop", "dbus-x11"]
+                name: ["xubuntu-desktop", "mate-polkit", "dbus-x11"]
                 state: present
               when: desktop_variant == "full"
 
