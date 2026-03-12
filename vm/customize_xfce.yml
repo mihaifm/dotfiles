@@ -73,14 +73,32 @@
           #!/usr/bin/env bash
           set -euo pipefail
 
+          get_primary_output() {
+            xrandr | awk '/ connected/{print $1; exit}'
+          }
+
+          apply_resize() {
+            local output
+            output="$(get_primary_output)"
+            [ -n "$output" ] || return 0
+
+            xrandr --output "$output" --auto
+            sleep 0.5
+
+            # xrandr can leave spice client cursor out of sync - restart the agent
+            pkill -x spice-vdagent || true
+            sleep 0.5
+            spice-vdagent >/dev/null 2>&1 &
+          }
+
           sleep 2
-          xrandr --output "$(xrandr | awk '/ connected/{print $1; exit; }')" --auto
+          apply_resize
 
           xev -root -event randr 2>/dev/null | \
           while IFS= read -r line; do
             case "$line" in
               *RRScreenChangeNotify*|*XRROutputChangeNotifyEvent*)
-                xrandr --output "$(xrandr | awk '/ connected/{print $1; exit; }')" --auto
+                apply_resize
                 ;;
             esac
           done
