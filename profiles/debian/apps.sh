@@ -6,6 +6,7 @@ apps=(
   "tmux"
   "nethack"
   "kitty"
+  "codex"
 )
 
 vim_conf_live_folders=('~/.vim')
@@ -29,6 +30,10 @@ tmux_data_snap_folders=('.tmux')
 nethack_conf_live_files=('~/.nethackrc')
 nethack_conf_snap_files=('.nethackrc')
 nethack_conf_repo_files=('nethack/nethackrc')
+
+codex_conf_live_folders=('~/.codex/skills')
+codex_conf_snap_folders=('.codex/skills')
+codex_conf_repo_folders=('codex/skills')
 
 kitty_conf_live_folders=('~/.config/kitty')
 kitty_conf_snap_folders=('.config/kitty')

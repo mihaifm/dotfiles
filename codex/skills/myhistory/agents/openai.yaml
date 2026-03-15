@@ -1,0 +1,4 @@
+interface:
+  display_name: "My History"
+  short_description: "Summarize Codex sessions fast"
+  default_prompt: "Use $myhistory to list Codex sessions from ~/.codex/sessions in a readable summary."

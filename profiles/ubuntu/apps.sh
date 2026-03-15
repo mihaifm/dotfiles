@@ -5,6 +5,7 @@ apps=(
   "neovim"
   "tmux"
   "kitty"
+  "codex"
 )
 
 vim_conf_live_folders=('~/.vim')
@@ -24,6 +25,10 @@ tmux_conf_snap_files=('.tmux.conf')
 tmux_conf_repo_files=('tmux/tmux.conf')
 tmux_data_live_folders=('~/.tmux')
 tmux_data_snap_folders=('.tmux')
+
+codex_conf_live_folders=('~/.codex/skills')
+codex_conf_snap_folders=('.codex/skills')
+codex_conf_repo_folders=('codex')
 
 kitty_conf_live_folders=('~/.config/kitty')
 kitty_conf_snap_folders=('.config/kitty')
