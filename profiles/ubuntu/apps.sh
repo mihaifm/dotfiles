@@ -6,6 +6,7 @@ apps=(
   "tmux"
   "kitty"
   "codex"
+  "claude"
 )
 
 vim_conf_live_folders=('~/.vim')
@@ -29,6 +30,10 @@ tmux_data_snap_folders=('.tmux')
 codex_conf_live_folders=('~/.codex/skills')
 codex_conf_snap_folders=('.codex/skills')
 codex_conf_repo_folders=('codex')
+
+claude_conf_live_folders=('~/.claude/commands')
+claude_conf_snap_folders=('.claude/commands')
+claude_conf_repo_folders=('claude/commands')
 
 kitty_conf_live_folders=('~/.config/kitty')
 kitty_conf_snap_folders=('.config/kitty')

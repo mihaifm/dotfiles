@@ -7,6 +7,7 @@ apps=(
   "nethack"
   "kitty"
   "codex"
+  "claude"
 )
 
 vim_conf_live_folders=('~/.vim')
@@ -34,6 +35,10 @@ nethack_conf_repo_files=('nethack/nethackrc')
 codex_conf_live_folders=('~/.codex/skills')
 codex_conf_snap_folders=('.codex/skills')
 codex_conf_repo_folders=('codex/skills')
+
+claude_conf_live_folders=('~/.claude/commands')
+claude_conf_snap_folders=('.claude/commands')
+claude_conf_repo_folders=('claude/commands')
 
 kitty_conf_live_folders=('~/.config/kitty')
 kitty_conf_snap_folders=('.config/kitty')
