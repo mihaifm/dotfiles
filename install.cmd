@@ -8,6 +8,6 @@ if /I [%1]==[bootstrap] (
   goto end
 )
 
-call scripts\subcommands.cmd %*
+call func\subcommands.cmd %*
 
 :end

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. "scripts/profile_detector.sh"
+. "func/profile_detector.sh"
 detect_profile
 echo "Using profile $DOTFILES_PROFILE"
 
@@ -10,7 +10,7 @@ if [ -n "$DOTFILES_PROFILE" ] && [ -d "profiles/$DOTFILES_PROFILE" ]; then
   . "profiles/$DOTFILES_PROFILE/apps.sh"
 fi
 
-. "scripts/subcommands.sh"
+. "func/subcommands.sh"
 
 case "$1" in
   snap)
