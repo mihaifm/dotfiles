@@ -54,10 +54,10 @@ if not "!typ!"=="" (
       if not "!live_folder!"=="" (
         call set snap_folder=%%!snap_folders![!live_folders_index!]%%
 
-        echo snapping !live_folder! to snap\!snap_folder!
+        echo snapping !live_folder! to !snap_folder!
 
-        mkdir "snap\!snap_folder!" 
-        xcopy /I /Y /S /E /H /Q "!live_folder!" "snap\!snap_folder!"
+        mkdir "!snap_folder!" 
+        xcopy /I /Y /S /E /H /Q "!live_folder!" "!snap_folder!"
 
         set /a live_folders_index+=1
         goto snap_live_folders_loop
@@ -91,9 +91,9 @@ if not "!typ!"=="" (
       if not "!live_file!"=="" (
         call set snap_file=%%!snap_files![!live_files_index!]%%
 
-        echo snapping !live_file! to snap\!snap_file!
+        echo snapping !live_file! to !snap_file!
 
-        xcopy /I /Y /S /E /H /Q "!live_file!" "snap\!snap_file!*"
+        xcopy /I /Y /S /E /H /Q "!live_file!" "!snap_file!*"
 
         set /a live_files_index+=1
         goto snap_live_files_loop
@@ -145,7 +145,7 @@ if not "!typ!"=="" (
       if not "!live_folder!"=="" (
         call set snap_folder=%%!snap_folders![!live_folders_index!]%%
 
-        echo restoring snap\!snap_folder! to !live_folder!
+        echo restoring !snap_folder! to !live_folder!
 
         echo removing !live_folder!.old
         rmdir /S /Q !live_folder!.old
@@ -153,8 +153,8 @@ if not "!typ!"=="" (
         echo moving !live_folder! to !live_folder!.old
         move !live_folder! !live_folder!.old
 
-        echo copying snap\!snap_folder! to !live_folder!
-        xcopy /I /Y /S /E /H /Q "snap\!snap_folder!" "!live_folder!" 
+        echo copying !snap_folder! to !live_folder!
+        xcopy /I /Y /S /E /H /Q "!snap_folder!" "!live_folder!" 
 
         set /a live_folders_index+=1
         goto restore_live_folders_loop
@@ -188,7 +188,7 @@ if not "!typ!"=="" (
       if not "!live_file!"=="" (
         call set snap_file=%%!snap_files![!live_files_index!]%%
 
-        echo restoring snap\!snap_file! to !live_file!
+        echo restoring !snap_file! to !live_file!
 
         echo removing !live_file!.old
         del !live_file!.old
@@ -196,8 +196,8 @@ if not "!typ!"=="" (
         echo moving !live_file! to !live_file!.old
         move "!live_file!" "!live_file!.old"
 
-        echo copying snap\!snap_file! to !live_file!
-        xcopy /I /Y /S /E /H /Q "snap\!snap_file!" "!live_file!*"
+        echo copying !snap_file! to !live_file!
+        xcopy /I /Y /S /E /H /Q "!snap_file!" "!live_file!*"
 
         set /a live_files_index+=1
         goto restore_live_files_loop

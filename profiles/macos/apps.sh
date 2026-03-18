@@ -8,25 +8,25 @@ apps=(
 )
 
 vim_conf_live_folders=('~/.vim')
-vim_conf_snap_folders=('.vim')
+vim_conf_snap_folders=('snap/.vim')
 vim_conf_repo_folders=('app/vim')
 vim_data_live_folders=('~/.vimdata')
-vim_data_snap_folders=('.vimdata')
+vim_data_snap_folders=('snap/.vimdata')
 
 neovim_conf_live_folders=('~/.config/nvim')
-neovim_conf_snap_folders=('.config/nvim')
+neovim_conf_snap_folders=('snap/.config/nvim')
 neovim_conf_repo_folders=('app/nvim')
 neovim_data_live_folders=('~/.local/share/nvim' '~/.local/state/nvim')
-neovim_data_snap_folders=('.local/share/nvim' '.local/state/nvim')
+neovim_data_snap_folders=('snap/.local/share/nvim' 'snap/.local/state/nvim')
 
 tmux_conf_live_files=('~/.tmux.conf')
-tmux_conf_snap_files=('.tmux.conf')
+tmux_conf_snap_files=('snap/.tmux.conf')
 tmux_conf_repo_files=('app/tmux/tmux.conf')
 tmux_data_live_folders=('~/.tmux')
-tmux_data_snap_folders=('.tmux')
+tmux_data_snap_folders=('snap/.tmux')
 
 nethack_conf_live_files=('~/.nethackrc')
-nethack_conf_snap_files=('.nethackrc')
+nethack_conf_snap_files=('snap/.nethackrc')
 nethack_conf_repo_files=('app/nethack/nethackrc')
 
 bootstrap() {

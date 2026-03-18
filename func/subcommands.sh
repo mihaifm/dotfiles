@@ -15,8 +15,6 @@
 #   <app>_data_snap_folders
 
 cmd_snap() {
-  mkdir -p snap
-
   for type in conf data; do
     # folders
     for app in "${apps[@]}"; do
@@ -35,10 +33,10 @@ cmd_snap() {
           eval "l_folder=$live_folder"
           eval "s_folder=$snap_folder"
 
-          echo "snapping $l_folder to snap/$s_folder"
+          echo "snapping $l_folder to $s_folder"
 
-          mkdir -p "snap/$s_folder"
-          cp -r "$l_folder/." "snap/$s_folder"
+          mkdir -p "$s_folder"
+          cp -r "$l_folder/." "$s_folder"
         done
         echo
       fi
@@ -61,16 +59,19 @@ cmd_snap() {
           eval "l_file=$live_file"
           eval "s_file=$snap_file"
 
-          echo "snapping $l_file to snap/$s_file"
-          cp "$l_file" "snap/$s_file"
+          echo "snapping $l_file to $s_file"
+          cp "$l_file" "$s_file"
         done
         echo
       fi
     done
   done
 
+  echo "creating dotfiles archive"
   tar -czf ../dotfiles.tar.gz -C .. dotfiles
-  rm -rf snap
+  echo "removing snapped items"
+  [ -n snap ] && [ -d snap ] && rm -rf -- snap/{*,.[!.]*,..?*}
+  echo
 
   echo 'Done snapping'
 }
@@ -96,7 +97,7 @@ cmd_restore() {
           eval "live_folder=$live_folder"
           eval "snap_folder=$snap_folder"
 
-          echo "restoring snap/$snap_folder to $live_folder"
+          echo "restoring $snap_folder to $live_folder"
 
           echo "removing $live_folder.old"
           rm -rf "$live_folder.old"
@@ -104,8 +105,8 @@ cmd_restore() {
           echo "moving $live_folder to $live_folder.old"
           mv "$live_folder" "$live_folder.old"
 
-          echo "copying snap/$snap_folder to $live_folder"
-          cp -r "snap/$snap_folder/." "$live_folder"
+          echo "copying $snap_folder to $live_folder"
+          cp -r "$snap_folder/." "$live_folder"
         done
         echo
       fi
@@ -128,7 +129,7 @@ cmd_restore() {
           eval "live_file=$live_file"
           eval "snap_file=$snap_file"
 
-          echo "restoring snap/$snap_file to $live_file"
+          echo "restoring $snap_file to $live_file"
 
           echo "removing $live_file.old"
           rm -rf "$live_file.old"
@@ -136,8 +137,8 @@ cmd_restore() {
           echo "moving $live_file to $live_file.old"
           mv "$live_file" "$live_file.old"
 
-          echo "copying snap/$snap_file to $live_file"
-          cp -r "snap/$snap_file" "$live_file"
+          echo "copying $snap_file to $live_file"
+          cp -r "$snap_file" "$live_file"
         done
         echo
       fi
