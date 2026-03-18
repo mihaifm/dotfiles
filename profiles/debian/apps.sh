@@ -12,41 +12,41 @@ apps=(
 
 vim_conf_live_folders=('~/.vim')
 vim_conf_snap_folders=('.vim')
-vim_conf_repo_folders=('vim')
+vim_conf_repo_folders=('app/vim')
 vim_data_live_folders=('~/.vimdata')
 vim_data_snap_folders=('.vimdata')
 
 neovim_conf_live_folders=('~/.config/nvim')
 neovim_conf_snap_folders=('.config/nvim')
-neovim_conf_repo_folders=('nvim')
+neovim_conf_repo_folders=('app/nvim')
 neovim_data_live_folders=('~/.local/share/nvim' '~/.local/state/nvim')
 neovim_data_snap_folders=('.local/share/nvim' '.local/state/nvim')
 
 tmux_conf_live_files=('~/.tmux.conf')
 tmux_conf_snap_files=('.tmux.conf')
-tmux_conf_repo_files=('tmux/tmux.conf')
+tmux_conf_repo_files=('app/tmux/tmux.conf')
 tmux_data_live_folders=('~/.tmux')
 tmux_data_snap_folders=('.tmux')
 
 nethack_conf_live_files=('~/.nethackrc')
 nethack_conf_snap_files=('.nethackrc')
-nethack_conf_repo_files=('nethack/nethackrc')
+nethack_conf_repo_files=('app/nethack/nethackrc')
 
 codex_conf_live_folders=('~/.codex/skills')
 codex_conf_snap_folders=('.codex/skills')
-codex_conf_repo_folders=('codex/skills')
+codex_conf_repo_folders=('app/codex/skills')
 
 claude_conf_live_folders=('~/.claude/commands')
 claude_conf_snap_folders=('.claude/commands')
-claude_conf_repo_folders=('claude/commands')
+claude_conf_repo_folders=('app/claude/commands')
 
 kitty_conf_live_folders=('~/.config/kitty')
 kitty_conf_snap_folders=('.config/kitty')
-kitty_conf_repo_folders=('kitty')
+kitty_conf_repo_folders=('app/kitty')
 
 gitui_conf_live_folders=('~/.config/gitui')
 gitui_conf_snap_folders=('.config/gitui')
-gitui_conf_repo_folders=('gitui')
+gitui_conf_repo_folders=('app/gitui')
 
 bootstrap() {
   # Tmux
