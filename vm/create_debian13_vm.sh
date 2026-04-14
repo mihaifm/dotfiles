@@ -11,6 +11,7 @@ Options:
   --storage GB     Disk size in GB (default: 20)
   --memory GB      Max RAM in GB (default: 4)
   --minmemory GB   Min RAM in GB for ballooning; same as --memory disables ballooning
+  --swap GB        Create a /swapfile of the given size, 0 to disable (default: 2)
   --vmid ID        Proxmox VM ID (default: next available)
   --help, -h       Show this help text
 USAGE
@@ -61,6 +62,12 @@ parse_args() {
         MEMORY_MIN_GB="$2"
         shift 2
         ;;
+      --swap)
+        [[ "${2:-}" ]] || die "Missing value for --swap"
+        is_int "$2" || die "Invalid value for --swap: $2"
+        SWAP_GB="$2"
+        shift 2
+        ;;
       --vmid)
         [[ "${2:-}" ]] || die "Missing value for --vmid"
         is_int "$2" || die "Invalid value for --vmid: $2"
@@ -87,6 +94,7 @@ CORES="${CORES:-2}"
 MEMORY_GB="${MEMORY_GB:-4}"
 MEMORY_MIN_GB="${MEMORY_MIN_GB:-$MEMORY_GB}"
 DISK_SIZE_GB="${DISK_SIZE_GB:-20}"
+SWAP_GB="${SWAP_GB:-2}"
 
 CI_USER="${CI_USER:-debian}"
 SSH_PUBKEY_FILE="${SSH_PUBKEY_FILE:-${USER_HOME}/.ssh/trixie.pub}"
@@ -140,6 +148,19 @@ if (( MEMORY_MIN_GB == MEMORY_GB )); then
   BALLOON_MB=0
 else
   BALLOON_MB="$(( MEMORY_MIN_GB * 1024 ))"
+fi
+
+if [[ ! "$SWAP_GB" =~ ^[0-9]+$ ]]; then
+  die "SWAP_GB must be a non-negative integer number of GB"
+fi
+
+if (( SWAP_GB > 0 )); then
+  SWAP_BLOCK=$'\n'"swap:
+  filename: /swapfile
+  size: ${SWAP_GB}G
+  maxsize: ${SWAP_GB}G"
+else
+  SWAP_BLOCK=""
 fi
 
 if [[ ! -f "$SSH_PUBKEY_FILE" ]]; then
@@ -240,6 +261,7 @@ runcmd:
   - netplan apply
   - systemctl enable qemu-guest-agent
   - systemctl start qemu-guest-agent
+${SWAP_BLOCK}
 EOF
 
 echo "Attaching snippet to VM"
