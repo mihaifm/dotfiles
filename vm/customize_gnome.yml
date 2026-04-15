@@ -6,7 +6,7 @@
     # - package: distro package name for system-installed extensions
     # - archive_src: local zip/tar path from the Ansible controller
     # - download_url: remote archive URL fetched on the guest
-    # - enabled: whether to enable it for main_user on first GNOME login
+    # - enabled: whether to enable it on first GNOME login
     gnome_extensions:
       - uuid: "tactile@lundal.io"
         download_url: "https://extensions.gnome.org/review/download/65140.shell-extension.zip"
@@ -40,14 +40,6 @@
       loop_control:
         label: "{{ item.uuid }}"
 
-    - name: Ensure per-user GNOME extensions dir exists
-      ansible.builtin.file:
-        path: "/home/{{ main_user }}/.local/share/gnome-shell/extensions"
-        state: directory
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: "0755"
-
     - name: Install packaged GNOME extensions
       ansible.builtin.apt:
         name: "{{ item.package }}"
@@ -56,33 +48,6 @@
       loop_control:
         label: "{{ item.uuid }}"
       when: item.package is defined
-
-    - name: Ensure unpacked GNOME extension dirs exist
-      ansible.builtin.file:
-        path: "/home/{{ main_user }}/.local/share/gnome-shell/extensions/{{ item.uuid }}"
-        state: directory
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: "0755"
-      loop: "{{ gnome_extensions }}"
-      loop_control:
-        label: "{{ item.uuid }}"
-      when: item.archive_src is defined or item.download_url is defined
-
-    - name: Install local-archive GNOME extensions
-      ansible.builtin.unarchive:
-        src: "{{ item.archive_src }}"
-        dest: "/home/{{ main_user }}/.local/share/gnome-shell/extensions/{{ item.uuid }}"
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: "0755"
-        remote_src: false
-      args:
-        creates: "/home/{{ main_user }}/.local/share/gnome-shell/extensions/{{ item.uuid }}/metadata.json"
-      loop: "{{ gnome_extensions }}"
-      loop_control:
-        label: "{{ item.uuid }}"
-      when: item.archive_src is defined
 
     - name: Download remote GNOME extension archives
       ansible.builtin.get_url:
@@ -94,184 +59,8 @@
         label: "{{ item.uuid }}"
       when: item.download_url is defined
 
-    - name: Install downloaded GNOME extensions
-      ansible.builtin.unarchive:
-        src: "/tmp/{{ item.uuid }}.zip"
-        dest: "/home/{{ main_user }}/.local/share/gnome-shell/extensions/{{ item.uuid }}"
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: "0755"
-        remote_src: true
-      args:
-        creates: "/home/{{ main_user }}/.local/share/gnome-shell/extensions/{{ item.uuid }}/metadata.json"
-      loop: "{{ gnome_extensions }}"
+    - name: Apply GNOME customization for each configured desktop user
+      ansible.builtin.include_tasks: customize_gnome_user.yml
+      loop: "{{ customize_users }}"
       loop_control:
-        label: "{{ item.uuid }}"
-      when: item.download_url is defined
-
-    - name: Compile GNOME extension schemas
-      ansible.builtin.command:
-        cmd: "glib-compile-schemas /home/{{ main_user }}/.local/share/gnome-shell/extensions/{{ item.uuid }}/schemas"
-      loop: "{{ gnome_extensions }}"
-      loop_control:
-        label: "{{ item.uuid }}"
-      when: item.archive_src is defined or item.download_url is defined
-      args:
-        creates: "/home/{{ main_user }}/.local/share/gnome-shell/extensions/{{ item.uuid }}/schemas/gschemas.compiled"
-
-    - name: Ensure GNOME autostart dir exists
-      ansible.builtin.file:
-        path: "/home/{{ main_user }}/.config/autostart"
-        state: directory
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: "0755"
-
-    - name: Ensure GNOME extension bootstrap state dir exists
-      ansible.builtin.file:
-        path: "/home/{{ main_user }}/.local/state"
-        state: directory
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: "0755"
-
-    - name: Ensure per-user local bin dir exists
-      ansible.builtin.file:
-        path: "/home/{{ main_user }}/.local/bin"
-        state: directory
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: "0755"
-
-    - name: Install GNOME extension first-login bootstrap script
-      ansible.builtin.copy:
-        dest: "/home/{{ main_user }}/.local/bin/enable-gnome-extensions.sh"
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: "0755"
-        content: |
-          #!/usr/bin/env bash
-          set -euo pipefail
-
-          marker="$HOME/.local/state/gnome-extensions-bootstrap.done"
-          if [[ -f "$marker" ]]; then
-            exit 0
-          fi
-
-          {% for extension in gnome_extensions if extension.enabled | default(false) %}
-          gnome-extensions enable {{ extension.uuid | quote }} || true
-          {% endfor %}
-
-          touch "$marker"
-      when: gnome_extensions | selectattr('enabled', 'defined') | selectattr('enabled', 'equalto', true) | list | length > 0
-
-    - name: Install GNOME extension first-login autostart entry
-      ansible.builtin.copy:
-        dest: "/home/{{ main_user }}/.config/autostart/enable-gnome-extensions.desktop"
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: "0644"
-        content: |
-          [Desktop Entry]
-          Type=Application
-          Name=Enable GNOME Extensions
-          Exec=/home/{{ main_user }}/.local/bin/enable-gnome-extensions.sh
-          X-GNOME-Autostart-enabled=true
-          NoDisplay=true
-      when: gnome_extensions | selectattr('enabled', 'defined') | selectattr('enabled', 'equalto', true) | list | length > 0
-
-    - name: Ensure per-user GNOME config dir exists
-      ansible.builtin.file:
-        path: "/home/{{ main_user }}/.config"
-        state: directory
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: "0755"
-
-    - name: Ensure GNOME initial setup is marked complete
-      ansible.builtin.copy:
-        dest: "/home/{{ main_user }}/.config/gnome-initial-setup-done"
-        content: ""
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: "0644"
-
-    - name: Read GNOME software usage stats setting
-      become_user: "{{ main_user }}"
-      ansible.builtin.command:
-        cmd: "dbus-run-session -- dconf read /org/gnome/desktop/privacy/send-software-usage-stats"
-      register: gnome_send_software_usage_stats
-      changed_when: false
-
-    - name: Disable GNOME software usage stats
-      become_user: "{{ main_user }}"
-      ansible.builtin.command:
-        cmd: "dbus-run-session -- dconf write /org/gnome/desktop/privacy/send-software-usage-stats false"
-      when: (gnome_send_software_usage_stats.stdout | trim) != 'false'
-
-    - name: Read GNOME technical problem reporting setting
-      become_user: "{{ main_user }}"
-      ansible.builtin.command:
-        cmd: "dbus-run-session -- dconf read /org/gnome/desktop/privacy/report-technical-problems"
-      register: gnome_report_technical_problems
-      changed_when: false
-
-    - name: Disable GNOME technical problem reporting
-      become_user: "{{ main_user }}"
-      ansible.builtin.command:
-        cmd: "dbus-run-session -- dconf write /org/gnome/desktop/privacy/report-technical-problems false"
-      when: (gnome_report_technical_problems.stdout | trim) != 'false'
-
-    - name: Read dash-to-dock trash visibility
-      become_user: "{{ main_user }}"
-      ansible.builtin.command:
-        cmd: "dbus-run-session -- dconf read /org/gnome/shell/extensions/dash-to-dock/show-trash"
-      register: dash_to_dock_show_trash
-      changed_when: false
-
-    - name: Disable dash-to-dock trash
-      become_user: "{{ main_user }}"
-      ansible.builtin.command:
-        cmd: "dbus-run-session -- dconf write /org/gnome/shell/extensions/dash-to-dock/show-trash false"
-      when: (dash_to_dock_show_trash.stdout | trim) != 'false'
-
-    - name: Read just-perfection animation setting
-      become_user: "{{ main_user }}"
-      ansible.builtin.command:
-        cmd: "dbus-run-session -- dconf read /org/gnome/shell/extensions/just-perfection/animation"
-      register: just_perfection_animation
-      changed_when: false
-
-    - name: Set just-perfection animation level
-      become_user: "{{ main_user }}"
-      ansible.builtin.command:
-        cmd: "dbus-run-session -- dconf write /org/gnome/shell/extensions/just-perfection/animation 2"
-      when: (just_perfection_animation.stdout | trim) != '2'
-
-    - name: Read GNOME screen inactivity timer
-      become_user: "{{ main_user }}"
-      ansible.builtin.command:
-        cmd: "dbus-run-session -- dconf read /org/gnome/desktop/session/idle-delay"
-      register: gnome_idle_delay
-      changed_when: false
-
-    - name: Set GNOME screen inactivity timer
-      become_user: "{{ main_user }}"
-      ansible.builtin.command:
-        cmd: >-
-          dbus-run-session -- dconf write /org/gnome/desktop/session/idle-delay "{{ gnome_idle_delay_seconds }}"
-      when: (gnome_idle_delay.stdout | trim) != gnome_idle_delay_seconds
-
-    - name: Read GNOME dock favorites
-      become_user: "{{ main_user }}"
-      ansible.builtin.command:
-        cmd: "dbus-run-session -- dconf read /org/gnome/shell/favorite-apps"
-      register: gnome_favorite_apps
-      changed_when: false
-
-    - name: Set GNOME dock favorites
-      become_user: "{{ main_user }}"
-      ansible.builtin.command:
-        cmd: >-
-          dbus-run-session -- dconf write /org/gnome/shell/favorite-apps "{{ gnome_pinned_apps }}"
-      when: (gnome_favorite_apps.stdout | trim) != gnome_pinned_apps
+        loop_var: customize_user

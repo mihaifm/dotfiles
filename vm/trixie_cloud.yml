@@ -14,6 +14,7 @@
     enable_dev: true
     enable_ai: true
     enable_fonts: true
+    enable_dcv: false
 
     apt_proxy: "" # "http://PROXY:3142"
 
@@ -22,6 +23,18 @@
 
     main_user: "{{ trixie_main_user }}"
     xrdp_user: "{{ trixie_xrdp_user }}"
+    dcv_user: "{{ trixie_dcv_user }}"
+    customize_users: >-
+      {{
+        [
+          main_user,
+          (xrdp_user if (enable_xrdp | bool) else ''),
+          (dcv_user if (enable_dcv | bool) else '')
+        ]
+        | reject('equalto', '')
+        | unique
+        | list
+      }}
 
     marker_dir: "/etc/markers"
 

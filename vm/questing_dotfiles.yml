@@ -18,8 +18,41 @@
         else
         'none'
       }}
+    enable_xrdp: true
+    enable_dcv: false
+    xrdp_user: >-
+      {{
+        ubuntu_xrdp_user
+        if 'ubuntu_vms' in group_names
+        else
+        trixie_xrdp_user
+        if 'debian_vms' in group_names
+        else
+        'none'
+      }}
+    dcv_user: >-
+      {{
+        ubuntu_dcv_user
+        if 'ubuntu_vms' in group_names
+        else
+        trixie_dcv_user
+        if 'debian_vms' in group_names
+        else
+        'none'
+      }}
+    customize_users: >-
+      {{
+        [
+          main_user,
+          (xrdp_user if (enable_xrdp | bool) else ''),
+          (dcv_user if (enable_dcv | bool) else '')
+        ]
+        | reject('equalto', '')
+        | reject('equalto', 'none')
+        | unique
+        | list
+      }}
     dotfiles_repo: "https://github.com/mihaifm/dotfiles"
-    dotfiles_dir: "/home/{{ main_user }}/dotfiles"
 
   tasks:
     - name: Ensure git is installed
@@ -29,24 +62,33 @@
         update_cache: true
 
     - name: Clone dotfiles repository
-      become_user: "{{ main_user }}"
+      become_user: "{{ dotfiles_user }}"
       ansible.builtin.git:
         repo: "{{ dotfiles_repo }}"
-        dest: "{{ dotfiles_dir }}"
+        dest: "/home/{{ dotfiles_user }}/dotfiles"
         update: true
+      loop: "{{ customize_users }}"
+      loop_control:
+        loop_var: dotfiles_user
 
     - name: Install dotfiles repo files
-      become_user: "{{ main_user }}"
+      become_user: "{{ dotfiles_user }}"
       ansible.builtin.command:
         cmd: ./install.sh repo
-        chdir: "{{ dotfiles_dir }}"
+        chdir: "/home/{{ dotfiles_user }}/dotfiles"
       environment:
-        HOME: "/home/{{ main_user }}"
+        HOME: "/home/{{ dotfiles_user }}"
+      loop: "{{ customize_users }}"
+      loop_control:
+        loop_var: dotfiles_user
 
     - name: Bootstrap dotfiles
-      become_user: "{{ main_user }}"
+      become_user: "{{ dotfiles_user }}"
       ansible.builtin.command:
         cmd: ./install.sh bootstrap
-        chdir: "{{ dotfiles_dir }}"
+        chdir: "/home/{{ dotfiles_user }}/dotfiles"
       environment:
-        HOME: "/home/{{ main_user }}"
+        HOME: "/home/{{ dotfiles_user }}"
+      loop: "{{ customize_users }}"
+      loop_control:
+        loop_var: dotfiles_user

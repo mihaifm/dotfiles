@@ -1,0 +1,30 @@
+---
+- name: Ensure per-user KDE config directory exists
+  ansible.builtin.file:
+    path: "/home/{{ customize_user }}/.config"
+    state: directory
+    owner: "{{ customize_user }}"
+    group: "{{ customize_user }}"
+    mode: "0755"
+
+- name: Enable KDE autolock
+  ansible.builtin.ini_file:
+    path: "/home/{{ customize_user }}/.config/kscreenlockerrc"
+    section: Daemon
+    option: Autolock
+    value: "true"
+    owner: "{{ customize_user }}"
+    group: "{{ customize_user }}"
+    mode: "0644"
+    no_extra_spaces: true
+
+- name: Set KDE lock timeout to 30 minutes
+  ansible.builtin.ini_file:
+    path: "/home/{{ customize_user }}/.config/kscreenlockerrc"
+    section: Daemon
+    option: Timeout
+    value: "30"
+    owner: "{{ customize_user }}"
+    group: "{{ customize_user }}"
+    mode: "0644"
+    no_extra_spaces: true
