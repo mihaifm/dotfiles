@@ -14,6 +14,7 @@
     enable_dev: true
     enable_ai: true
     enable_fonts: true
+    enable_syncthing: true
     enable_sunshine: false
     enable_dcv: false
     enable_vnc: false
@@ -327,6 +328,23 @@
           ansible.builtin.command: snap install snap-store
           args:
             creates: /snap/bin/snap-store
+
+    ###########
+    # Syncthing
+
+    - name: Syncthing
+      when: enable_syncthing | bool
+      block:
+        - name: Install Syncthing
+          ansible.builtin.apt:
+            name: syncthing
+            state: present
+
+        - name: Ensure Syncthing is enabled and started for main user
+          ansible.builtin.systemd:
+            name: "syncthing@{{ main_user }}"
+            enabled: true
+            state: started
 
     #######
     # XRDP
